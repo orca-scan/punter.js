@@ -2,14 +2,15 @@
 
 A lightweight, dependency-free JavaScript 2D game engine for the browser. Drop in a script tag and start building.
 
-**Why punter.js:**
+**Why punter.js?**
 * **No build step** - pure ES5, one script tag, no bundler or transpiler needed
 * **Auto-scaling canvas** - fixed internal coordinates scale to any screen; sprites reposition automatically on resize
 * **Retina support** - renders at device pixel ratio (up to 2×) automatically
 * **Pixel-accurate collision** - bounding boxes ignore transparent pixels, so irregular shapes collide correctly
 * **Unified touch and mouse** - one input path handles both mouse clicks and mobile taps
 * **Fixed-timestep game loop** - game logic runs at consistent speed regardless of frame rate
-* **CSS/HTML state hooks** - writes `data-punter-*` attributes and CSS variables to `<html>` for pure-CSS loading screens and scene transitions
+* **HTML state attributes** - adds `data-punter-*` attributes to `<html>` (scene, orientation, device, loading) so you can drive CSS from game state
+* **CSS variables** - sets `--punter-vpw` and `--punter-vph` on `<html>`, updated on every resize
 
 ## Contents
 
