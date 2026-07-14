@@ -44,7 +44,7 @@
     };
     var htmlEl = document.documentElement;
 
-    htmlEl.setAttribute('data-engine-loading', 'true');
+    htmlEl.setAttribute('data-punter-loading', 'true');
 
     var keys = {};
     var mouse = { x: 0, y: 0, clicked: false };
@@ -169,7 +169,7 @@
         })
         .then(function() {
             _initilised = true;
-            htmlEl.removeAttribute('data-engine-loading');
+            htmlEl.removeAttribute('data-punter-loading');
             eventHandlers.ready();
         })
         .catch(function() {
@@ -999,7 +999,7 @@
      */
     function startLoop() {
 
-        if (!_initilised) throw new Error('engine.init must be called first');
+        if (!_initilised) throw new Error('punter.init must be called first');
 
         _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true });
         _canvasCtx.imageSmoothingEnabled = false;
@@ -1062,7 +1062,7 @@
 
     function pauseLoop() {
 
-        if (!_initilised) throw new Error('engine.init must be called first');
+        if (!_initilised) throw new Error('punter.init must be called first');
 
         if (_loopId !== null) {
             cancelAnimationFrame(_loopId);
@@ -1085,7 +1085,7 @@
      */
     function playSound(name, options) {
 
-        if (!_initilised) throw new Error('engine.init must be called first');
+        if (!_initilised) throw new Error('punter.init must be called first');
 
         var buffer = sounds[name];
         if (!buffer) return;
@@ -1126,7 +1126,7 @@
 
     function stopSound(name) {
 
-        if (!_initilised) throw new Error('engine.init must be called first');
+        if (!_initilised) throw new Error('punter.init must be called first');
 
         var arr = playingSounds[name];
         if (!arr || !arr.length) return;
@@ -1174,17 +1174,17 @@
 
         // css variables
         var docStyle = htmlEl.style;
-        docStyle.setProperty('--engine-vpw', vpSize.width + 'px');
-        docStyle.setProperty('--engine-vph', vpSize.height + 'px');
+        docStyle.setProperty('--punter-vpw', vpSize.width + 'px');
+        docStyle.setProperty('--punter-vph', vpSize.height + 'px');
 
         // html attributes
-        setAttribute(htmlEl, 'data-engine-debug', _debuggingEnabled ? 'true' : '');
-        setAttribute(htmlEl, 'data-engine-device', _isMobile ? 'mobile' : 'desktop');
-        setAttribute(htmlEl, 'data-engine-orientation', engine.orientation);
+        setAttribute(htmlEl, 'data-punter-debug', _debuggingEnabled ? 'true' : '');
+        setAttribute(htmlEl, 'data-punter-device', _isMobile ? 'mobile' : 'desktop');
+        setAttribute(htmlEl, 'data-punter-orientation', engine.orientation);
 
         // only set scene if we have a value (dev might hard code start scene)
         if (engine.sceneName) {
-            setAttribute(htmlEl, 'data-engine-scene', engine.sceneName);
+            setAttribute(htmlEl, 'data-punter-scene', engine.sceneName);
         }
 
         // force a CSS reflow
@@ -1298,8 +1298,8 @@
         },
         go: function (name) {
 
-            if (!_initilised) throw new Error('engine.init must be called first');
-            if (!_scenes[name]) throw new Error('engine.go: unknown scene "' + name + '"');
+            if (!_initilised) throw new Error('punter.init must be called first');
+            if (!_scenes[name]) throw new Error('punter.go: unknown scene "' + name + '"');
 
             // remove existing game loop handlers
             eventHandlers.update = function () {};
@@ -1314,7 +1314,7 @@
 
             setDevVars();
 
-            log('engine.currentScene = ' + _currentScene);
+            log('punter.currentScene = ' + _currentScene);
 
             // auto-start loop if not running
             if (_loopId === null && _canvas && _initilised) {
@@ -1349,7 +1349,7 @@
 
         // sprite factory
         createSprite: function(opts) {
-            if (!_initilised) throw new Error('createSprite: engine.init must be called first');
+            if (!_initilised) throw new Error('createSprite: punter.init must be called first');
             return new Sprite(opts);
         },
         getSprite: function(id) {
@@ -1363,7 +1363,7 @@
 
         // event listeners
         on: function (event, handler) {
-            if (!eventHandlers.hasOwnProperty(event)) throw new Error('engine.on: unknown event "' + event + '"');
+            if (!eventHandlers.hasOwnProperty(event)) throw new Error('punter.on: unknown event "' + event + '"');
             eventHandlers[event] = handler;
         },
 
@@ -1480,12 +1480,13 @@
         }
     });
 
-    global.engine = api;
+    var engine = api;
+    global.punter = api;
 
     document.addEventListener('DOMContentLoaded', function () {
-        _debugBackgroundColor = getCssVar('engine-debug-background', 'rgba(255,255,255,0.7)');
-        _debugTextColor = getCssVar('engine-debug-text', 'red');
-        _debugFont = getCssVar('engine-debug-font', '12px monospace');
+        _debugBackgroundColor = getCssVar('punter-debug-background', 'rgba(255,255,255,0.7)');
+        _debugTextColor = getCssVar('punter-debug-text', 'red');
+        _debugFont = getCssVar('punter-debug-font', '12px monospace');
 
         setDevVars();
     });
