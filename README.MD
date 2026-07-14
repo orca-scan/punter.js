@@ -11,8 +11,6 @@ A lightweight, dependency-free JavaScript 2D game engine for the browser. Drop i
 * **Fixed-timestep game loop** - game logic runs at consistent speed regardless of frame rate
 * **CSS/HTML state hooks** - writes `data-punter-*` attributes and CSS variables to `<html>` for pure-CSS loading screens and scene transitions
 
----
-
 ## Contents
 
 - [Requirements](#requirements)
@@ -36,14 +34,10 @@ A lightweight, dependency-free JavaScript 2D game engine for the browser. Drop i
 - [Debug Mode](#debug-mode)
 - [Browser Support](#browser-support)
 
----
-
 ## Requirements
 
 - A modern browser with `fetch`, `Promise`, and `AudioContext` support
 - A `<canvas>` element on the page
-
----
 
 ## Installation
 
@@ -56,8 +50,6 @@ Download `punter.js` and include it with a script tag - before your game code:
   // your game code here
 </script>
 ```
-
----
 
 ## Quick Start
 
@@ -103,8 +95,6 @@ Download `punter.js` and include it with a script tag - before your game code:
 </script>
 ```
 
----
-
 ## `punter.init()`
 
 **What this does:** This is the engine's start-up call. You tell it which canvas to draw on, which images to preload, and which sounds to load. Nothing else will work until `init` has finished loading everything - that's what the `ready` event is for.
@@ -132,14 +122,11 @@ punter.on('ready', function () {
 
 ### Config Options
 
-Option    | Type                            | Required | Description
-----------|---------------------------------|----------|-------------------------------------------------------------------------
+Option    | Type                            | Required | Description-------|---------------------------------|----------|-------------------------------------------------------------------------
 `canvas`  | `string` or `HTMLCanvasElement` | Yes      | A CSS selector (`'#game'`) or a direct canvas element reference
 `debug`   | `boolean`                       | No       | Enables the debug overlay (FPS, sprite bounds, labels). Default: `false`
 `sprites` | `object`                        | No       | Key/URL pairs of images to preload: `{ key: 'path/to/image.png' }`
 `sounds`  | `object`                        | No       | Key/URL pairs of audio files to preload: `{ key: 'path/to/sound.mp3' }`
-
----
 
 ## Scenes
 
@@ -174,12 +161,9 @@ punter.go('menu');
 
 ### Methods
 
-Method                   | Description
--------------------------|-------------------------------------------------------------------------------------------------------
+Method                   | Description----------------------|-------------------------------------------------------------------------------------------------------
 `punter.scene(name, fn)` | Registers a scene. `name` is a string key; `fn` is the setup function that runs when the scene starts.
 `punter.go(name)`        | Switches to the named scene. Starts the game loop if it isn't already running. Clears all input state.
-
----
 
 ## Events
 
@@ -212,8 +196,7 @@ punter.on('go', function (sceneName) {
 
 ### Event Reference
 
-Event    | Callback signature    | When it fires
----------|-----------------------|--------------------------------------------------------------
+Event    | Callback signature    | When it fires------|-----------------------|--------------------------------------------------------------
 `ready`  | `function()`          | Once, after all sprites and sounds have finished loading
 `update` | `function()`          | Every logic tick (~60/sec) - put movement and game logic here
 `draw`   | `function()`          | Every render frame - `this` is the canvas 2D context
@@ -221,8 +204,6 @@ Event    | Callback signature    | When it fires
 `go`     | `function(sceneName)` | When `punter.go()` is called; receives the new scene name
 
 > Each event can only have one handler at a time. Calling `punter.on('update', fn)` again replaces the previous handler. Switching scenes via `punter.go()` automatically clears the `update` and `draw` handlers.
-
----
 
 ## Sprites
 
@@ -251,8 +232,7 @@ var background = punter.createSprite({
 
 ### Creation Options
 
-Option           | Type                   | Default    | Description
------------------|------------------------|------------|-----------------------------------------------------------------------------------------------------------
+Option           | Type                   | Default    | Description--------------|------------------------|------------|-----------------------------------------------------------------------------------------------------------
 `id`             | `string`               | -          | **Required.** Unique identifier for this sprite.
 `key`            | `string` or `string[]` | -          | **Required.** Image key from `config.sprites`. Pass an array for animation frames: `['frame1', 'frame2']`.
 `x`              | `number` or `string`   | -          | **Required.** Horizontal position in pixels or as `'50%'`.
@@ -271,8 +251,7 @@ Option           | Type                   | Default    | Description
 
 After creation, these properties are available on the sprite object:
 
-Property      | Type                 | Writable | Description
---------------|----------------------|----------|---------------------------------------------------------------------------------------------
+Property      | Type                 | Writable | Description-----------|----------------------|----------|---------------------------------------------------------------------------------------------
 `x`           | `number`             | Yes      | Current horizontal position in pixels.
 `y`           | `number`             | Yes      | Current vertical position in pixels.
 `w`           | `number`             | Yes      | Current width in pixels.
@@ -338,8 +317,7 @@ punter.on('update', function () {
 });
 ```
 
-Parameter | Type     | Default | Description
-----------|----------|---------|--------------------------------------------------
+Parameter | Type     | Default | Description-------|----------|---------|--------------------------------------------------
 `range`   | `number` | `8`     | Max pixels to move up/down from `initialY`.
 `speed`   | `number` | `10`    | Controls how fast the bounce is. Higher = slower.
 
@@ -442,8 +420,7 @@ punter.on('update', function () {
 });
 ```
 
-Parameter        | Type     | Description
------------------|----------|----------------------------------------------------------------------
+Parameter        | Type     | Description--------------|----------|----------------------------------------------------------------------
 `speed`          | `number` | Pixels per frame. Negative = left, positive = right.
 `respawnAfterMs` | `number` | Milliseconds to wait before reappearing from the opposite edge.
 `offset`         | `number` | Extra pixels beyond the screen edge before respawning. Default: `50`.
@@ -470,7 +447,6 @@ punter.on('update', function () {
 });
 ```
 
----
 
 ## Sound
 
@@ -502,8 +478,7 @@ punter.stopSound('music');
 
 Plays a preloaded sound. If the sound is already playing, it stops and restarts it.
 
-Option   | Type      | Default | Description
----------|-----------|---------|--------------------------------------------------------------------
+Option   | Type      | Default | Description------|-----------|---------|--------------------------------------------------------------------
 `volume` | `number`  | `1`     | Volume from `0` (silent) to `1` (full).
 `loop`   | `boolean` | `false` | If `true`, the sound repeats indefinitely.
 `once`   | `boolean` | `false` | If `true`, the sound is not tracked - `stopSound()` cannot stop it.
@@ -513,7 +488,6 @@ Option   | Type      | Default | Description
 
 Stops all currently playing instances of the named sound.
 
----
 
 ## Input
 
@@ -549,8 +523,7 @@ punter.on('update', function () {
 });
 ```
 
-Property               | Type      | Description
------------------------|-----------|------------------------------------------------------------
+Property               | Type      | Description--------------------|-----------|------------------------------------------------------------
 `punter.mouse.x`       | `number`  | Horizontal position of the last click/tap in canvas pixels.
 `punter.mouse.clicked` | `boolean` | `true` for one frame after a click or tap.
 
@@ -569,7 +542,6 @@ punter.on('update', function () {
 });
 ```
 
----
 
 ## Game Loop Control
 
@@ -587,20 +559,17 @@ punter.resume();
 punter.redraw();
 ```
 
-Method            | Description
-------------------|-------------------------------------------------------
+Method            | Description---------------|-------------------------------------------------------
 `punter.pause()`  | Stops the game loop. The screen freezes.
 `punter.resume()` | Restarts the game loop.
 `punter.redraw()` | Redraws all sprites once without advancing game logic.
 
----
 
 ## Engine Properties
 
 These are read-only properties available on the `punter` object at any time:
 
-Property             | Type                       | Description
----------------------|----------------------------|----------------------------------------------------------------------------
+Property             | Type                       | Description------------------|----------------------------|----------------------------------------------------------------------------
 `punter.width`       | `number`                   | Internal canvas width in pixels (adjusted for device pixel ratio).
 `punter.height`      | `number`                   | Internal canvas height in pixels (adjusted for device pixel ratio).
 `punter.frame`       | `number`                   | Current frame counter, cycling 1–60.
@@ -626,7 +595,6 @@ var player = punter.getSprite('player');
 if (player) player.moveX(5);
 ```
 
----
 
 ## CSS & HTML Hooks
 
@@ -636,8 +604,7 @@ if (player) player.moveX(5);
 
 The engine adds these attributes to the `<html>` element:
 
-Attribute                 | Values                       | Description
---------------------------|------------------------------|--------------------------------------------------------------
+Attribute                 | Values                       | Description-----------------------|------------------------------|--------------------------------------------------------------
 `data-punter-loading`     | `"true"` / removed           | Present while assets are loading; removed when `ready` fires.
 `data-punter-debug`       | `"true"` / removed           | Present when debug mode is on.
 `data-punter-device`      | `"mobile"` / `"desktop"`     | Set based on user agent detection.
@@ -661,8 +628,7 @@ html[data-punter-orientation="portrait"]  .controls { flex-direction: column; }
 
 These are set on the `<html>` element and updated whenever the window resizes:
 
-Variable       | Description
----------------|------------------------------------------
+Variable       | Description------------|------------------------------------------
 `--punter-vpw` | Viewport width in pixels (e.g. `375px`).
 `--punter-vph` | Viewport height in pixels (e.g. `667px`).
 
@@ -673,7 +639,6 @@ Variable       | Description
 }
 ```
 
----
 
 ## Debug Mode
 
@@ -710,13 +675,11 @@ The overlay colours and font are pulled from CSS variables on `:root`. Add these
 }
 ```
 
-Variable                    | Default                 | Description
-----------------------------|-------------------------|----------------------------------------
+Variable                    | Default                 | Description-------------------------|-------------------------|----------------------------------------
 `--punter-debug-background` | `rgba(255,255,255,0.7)` | Background colour of debug label boxes.
 `--punter-debug-text`       | `red`                   | Text colour of debug labels.
 `--punter-debug-font`       | `12px monospace`        | Font for debug labels.
 
----
 
 ## Browser Support
 
