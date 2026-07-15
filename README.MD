@@ -1,16 +1,15 @@
 # punter.js
 
-A lightweight, dependency-free JavaScript 2D game engine for the browser. Drop in a script tag and start building.
+A dependency-free JavaScript 2D game engine for the browser, one script tag and you're building. Built by the [Orca Scan Team](https://orcascan.com/about-us) to power [OrcaCam](https://orcascan.com/game)
 
-**Why punter.js?**
-* **No build step** - pure ES5, one script tag, no bundler or transpiler needed
-* **Auto-scaling canvas** - fixed internal coordinates scale to any screen; sprites reposition automatically on resize
-* **Retina support** - renders at device pixel ratio (up to 2×) automatically
-* **Pixel-accurate collision** - bounding boxes ignore transparent pixels, so irregular shapes collide correctly
-* **Unified touch and mouse** - one input path handles both mouse clicks and mobile taps
-* **Fixed-timestep game loop** - game logic runs at consistent speed regardless of frame rate
-* **HTML state attributes** - adds `data-punter-*` attributes to `<html>` (scene, orientation, device, loading) so you can drive CSS from game state
-* **CSS variables** - sets `--punter-vpw` and `--punter-vph` on `<html>`, updated on every resize
+**Why?** To teach game-loop fundamentals without the weight of a "real" engine. `punter.js` covers sprites, animation, sound, and collision in one plain, readable file — no ES6, build step, or transpiler. It's built to be read top to bottom and understood, simple enough for production use, but designed for clarity over cleverness.
+
+**Features**
+* **Auto-scaling canvas** — fixed internal coordinates scale to any screen; sprites reposition automatically on resize
+* **Retina support** — renders at up to 2× device pixel ratio automatically
+* **Pixel-accurate collision** — bounding boxes ignore transparent pixels, so irregular shapes collide correctly
+* **HTML state attributes** — `data-punter-*` attributes on `<html>` (scene, orientation, device, loading) let you drive CSS from game state
+* **CSS variables** — `--punter-vpw`/`--punter-vph` on `<html>`, updated on every resize
 
 ## Contents
 
