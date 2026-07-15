@@ -98,7 +98,7 @@ punter.on('ready', function () {
 
 ## `punter.init()`
 
-**What this does:** This is the engine's start-up call. You tell it which canvas to draw on, which images to preload, and which sounds to load. Nothing else will work until `init` has finished loading everything - that's what the `ready` event is for.
+This is the engine's start-up call. You tell it which canvas to draw on, which images to preload, and which sounds to load. Nothing else will work until `init` has finished loading everything - that's what the `ready` event is for.
 
 ```js
 punter.init({
@@ -132,7 +132,7 @@ Option    | Type                            | Required | Description
 
 ## Scenes
 
-**What this does:** Scenes are the different "screens" in your game - the main menu, level 1, a game over screen, etc. You define each scene as a named function, then switch between them with `punter.go()`.
+Scenes are the different "screens" in your game - the main menu, level 1, a game over screen, etc. You define each scene as a named function, then switch between them with `punter.go()`.
 
 ```js
 // Define scenes anywhere before calling punter.go()
@@ -170,7 +170,7 @@ Method                   | Description
 
 ## Events
 
-**What this does:** Events let your code react to things the engine does. The two you'll use most are `update` (run your game logic here) and `draw` (draw your sprites here). These are called automatically by the engine ~60 times per second.
+Events let your code react to things the engine does. The two you'll use most are `update` (run your game logic here) and `draw` (draw your sprites here). These are called automatically by the engine ~60 times per second.
 
 ```js
 punter.on('ready', function () {
@@ -211,7 +211,7 @@ Event    | Callback signature    | When it fires
 
 ## Sprites
 
-**What this does:** A sprite is any image in your game - a character, an obstacle, a background, a coin. You create a sprite by giving it an ID, pointing it at a preloaded image, and setting its starting position. The engine handles scaling, cropping, and drawing it to the canvas.
+A sprite is any image in your game - a character, an obstacle, a background, a coin. You create a sprite by giving it an ID, pointing it at a preloaded image, and setting its starting position. The engine handles scaling, cropping, and drawing it to the canvas.
 
 ### Creating a Sprite
 
@@ -359,7 +359,7 @@ if (player.isCollidingWith(enemy)) {
 
 ### Collision Detection
 
-**What this does:** Collision detection lets you know when two sprites are touching or overlapping. The engine uses each image's actual pixel content to build a tight bounding box - transparent areas around the image are ignored - so collisions feel accurate even for irregularly shaped sprites.
+Collision detection lets you know when two sprites are touching or overlapping. The engine uses each image's actual pixel content to build a tight bounding box - transparent areas around the image are ignored - so collisions feel accurate even for irregularly shaped sprites.
 
 ```js
 punter.on('update', function () {
@@ -458,7 +458,7 @@ punter.on('update', function () {
 
 ## Sound
 
-**What this does:** punter.js preloads audio files and lets you play and stop them by name. Works on mobile too - sounds are decoded using the Web Audio API, so they play instantly without delay.
+punter.js preloads audio files and lets you play and stop them by name. Works on mobile too - sounds are decoded using the Web Audio API, so they play instantly without delay.
 
 ```js
 punter.init({
@@ -500,7 +500,7 @@ Stops all currently playing instances of the named sound.
 
 ## Input
 
-**What this does:** The engine tracks keyboard keys and mouse/touch taps for you. You check the current state of these in your `update` handler each frame. Touch events on mobile are automatically translated into mouse events, so the same code works on phones and desktops.
+The engine tracks keyboard keys and mouse/touch taps for you. You check the current state of these in your `update` handler each frame. Touch events on mobile are automatically translated into mouse events, so the same code works on phones and desktops.
 
 ### Keyboard
 
@@ -554,7 +554,7 @@ punter.on('update', function () {
 
 ## Game Loop Control
 
-**What this does:** The game loop is what makes `update` and `draw` fire continuously. It starts automatically when you call `punter.go()`. These methods let you pause and resume it manually - for example, when showing a pause menu.
+The game loop is what makes `update` and `draw` fire continuously. It starts automatically when you call `punter.go()`. These methods let you pause and resume it manually - for example, when showing a pause menu.
 
 ```js
 // Pause the loop (stops update and draw from firing)
@@ -609,7 +609,7 @@ if (player) player.moveX(5);
 
 ## CSS & HTML Hooks
 
-**What this does:** As the engine runs, it automatically sets CSS variables and HTML attributes on the `<html>` element. You can use these in your CSS to style the page differently based on the current game state - for example, hiding the loader once assets are ready, or applying a different layout in landscape mode.
+As the engine runs, it automatically sets CSS variables and HTML attributes on the `<html>` element. You can use these in your CSS to style the page differently based on the current game state - for example, hiding the loader once assets are ready, or applying a different layout in landscape mode.
 
 ### HTML Attributes
 
@@ -655,7 +655,7 @@ Variable       | Description
 
 ## Debug Mode
 
-**What this does:** Turning on debug mode overlays useful information directly onto the game canvas - handy when you're trying to understand why a sprite is in the wrong place or why a collision isn't triggering.
+Turning on debug mode overlays useful information directly onto the game canvas - handy when you're trying to understand why a sprite is in the wrong place or why a collision isn't triggering.
 
 Enable it in `punter.init()`:
 
