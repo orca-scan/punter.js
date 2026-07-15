@@ -1,8 +1,8 @@
 # punter.js
 
-A dependency-free JavaScript 2D game engine for the browser, one script tag and you're building. Built by the [Orca Scan Team](https://orcascan.com/about-us) to power [OrcaCam](https://orcascan.com/game)
+A simple, dependency-free 2D game engine for the browser. Built by the [Orca Scan Team](https://orcascan.com/about-us) to power [OrcaCam](https://orcascan.com/game).
 
-**Why?** To teach game-loop fundamentals without the weight of a "real" engine. `punter.js` covers sprites, animation, sound, and collision in one plain, readable file — no ES6, build step, or transpiler. It's built to be read top to bottom and understood, simple enough for production use, but designed for clarity over cleverness.
+**Why?** On the Amiga, AMOS let you build games in BASIC without touching assembly - sprites, sound, and input just worked, so you could get a character moving in minutes. `punter.js` brings that same philosophy to the browser: no build step, no ES6, no dependencies — just a small, readable API. It won't out-feature Phaser or Pixi, and that's the point.
 
 **Features**
 * **Auto-scaling canvas** — fixed internal coordinates scale to any screen; sprites reposition automatically on resize
