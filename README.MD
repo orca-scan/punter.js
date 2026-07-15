@@ -16,6 +16,7 @@ A simple, dependency-free 2D game engine for the browser.
 ## Contents
 
 - [Installation](#installation)
+- [Running the Example](#running-the-example)
 - [Quick Start](#quick-start)
 - [punter.init()](#punter-init)
 - [Scenes](#scenes)
@@ -53,6 +54,18 @@ Download `punter.js` and include it with a script tag - before your game code:
   </body>
 </html>
 ```
+
+## Running the Example
+
+The repo includes a Pong game in `games/pong.html`. Because it loads local files, you need a simple web server rather than opening the file directly in a browser.
+
+```bash
+npm start
+```
+
+Then open **http://localhost:3000/games/pong.html** in your browser.
+
+> `npm start` uses `npx serve` — no install step needed beyond having Node.js.
 
 ## Quick Start
 
