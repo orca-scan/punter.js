@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Punter.js Test Fixture</title>
+    <style>
+        html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
+    </style>
+</head>
+<body>
+<canvas id="game" width="375" height="667"></canvas>
+<script src="/punter.js"></script>
+<script>
+    // 1x1 red pixel PNG as data URL (valid image for sprite loading)
+    var heroImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
+
+    window.__ready = false;
+
+    punter.on('ready', function () {
+        window.__ready = true;
+    });
+
+    punter.init({
+        canvas: '#game',
+        sprites: { hero: heroImg },
+        sounds: { beep: '/tests/fixtures/silence.wav' }
+    });
+</script>
+</body>
+</html>
