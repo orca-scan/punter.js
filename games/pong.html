@@ -23,19 +23,49 @@
       var COLOR_SCORE = '#f5c518';
 
       // =========================================================
-      // GAME SETTINGS
-      // DPR ensures everything is the same physical size on both
-      // normal and high-resolution (retina) screens.
+      // HELPERS
       // =========================================================
-      var DPR          = punter.dpr;
-      var MARGIN       = 40  * DPR; // gap between paddle and screen edge
-      var PADDLE_W     = 14  * DPR;
-      var PADDLE_H     = 90  * DPR;
-      var BALL_SIZE    = 14  * DPR;
-      var PADDLE_SPEED = 7   * DPR;
-      var AI_SPEED     = 5   * DPR;
-      var BALL_SPEED   = 5   * DPR;
-      var BALL_MAX     = 14  * DPR;
+
+      var DPR = punter.dpr;
+
+      /**
+       * Converts a design-pixel value to real screen pixels.
+       * On a retina display (DPR=2), px(14) becomes 28 — keeping sizes
+       * physically consistent across all screens.
+       * @param {number} n - value in design pixels
+       * @returns {number}
+       */
+      function px(n) {
+        return n * DPR;
+      }
+
+      /**
+       * Keeps a number between a minimum and maximum value.
+       * e.g. clamp(110, 0, 100) returns 100.
+       * @param {number} value
+       * @param {number} min
+       * @param {number} max
+       * @returns {number}
+       */
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(value, max));
+      }
+
+      // =========================================================
+      // GAME SETTINGS
+      // =========================================================
+      var MARGIN         = px(40); // gap between paddle and screen edge
+      var PADDLE_W       = px(14);
+      var PADDLE_H       = px(90);
+      var BALL_SIZE      = px(14);
+      var PADDLE_SPEED   = px(7);
+      var AI_SPEED       = px(5);
+      var BALL_SPEED     = px(5);
+      var MAX_BALL_SPEED = px(14);
+
+      // Named serve directions — used when resetting the ball after a point
+      var SERVE_LEFT  = -1; // ball moves left  (toward the AI)
+      var SERVE_RIGHT =  1; // ball moves right (toward the player)
 
       // =========================================================
       // GAME STATE
@@ -91,14 +121,14 @@
             playerSprite.y = punter.mouse.y - PADDLE_H / 2;
           }
 
-          // Clamp player paddle inside the screen
-          playerSprite.y = Math.max(0, Math.min(playerSprite.y, h - PADDLE_H));
+          // Keep the player paddle inside the screen
+          playerSprite.y = clamp(playerSprite.y, 0, h - PADDLE_H);
 
           // --- AI: follow the ball ---
-          var aiMid = aiSprite.y + PADDLE_H / 2;
-          if (ballSprite.y < aiMid - 10) aiSprite.y -= AI_SPEED;
-          if (ballSprite.y > aiMid + 10) aiSprite.y += AI_SPEED;
-          aiSprite.y = Math.max(0, Math.min(aiSprite.y, h - PADDLE_H));
+          var aiCenterY = aiSprite.y + PADDLE_H / 2;
+          if (ballSprite.y < aiCenterY - 10) aiSprite.y -= AI_SPEED;
+          if (ballSprite.y > aiCenterY + 10) aiSprite.y += AI_SPEED;
+          aiSprite.y = clamp(aiSprite.y, 0, h - PADDLE_H);
 
           // --- Move the ball ---
           ballSprite.x += ballVel.x;
@@ -111,35 +141,37 @@
           // --- Collision: ball hits player paddle ---
           if (ballVel.x < 0 && ballSprite.isCollidingWith(playerSprite)) {
 
-            ballVel.x   = Math.abs(ballVel.x) * 1.05;
+            ballVel.x    = Math.abs(ballVel.x) * 1.05;
             ballSprite.x = playerSprite.x + PADDLE_W;
-            var hit = (ballSprite.y + BALL_SIZE / 2 - playerSprite.y) / PADDLE_H;
-            ballVel.y = (hit - 0.5) * BALL_SPEED * 2;
+            // Where on the paddle the ball hit: 0 = top edge, 1 = bottom edge, 0.5 = centre (flat return)
+            var playerHit = (ballSprite.y + BALL_SIZE / 2 - playerSprite.y) / PADDLE_H;
+            ballVel.y = (playerHit - 0.5) * BALL_SPEED * 2;
           }
 
           // --- Collision: ball hits AI paddle ---
           if (ballVel.x > 0 && ballSprite.isCollidingWith(aiSprite)) {
 
-            ballVel.x   = -Math.abs(ballVel.x) * 1.05;
+            ballVel.x    = -Math.abs(ballVel.x) * 1.05;
             ballSprite.x = aiSprite.x - BALL_SIZE;
-            var hit = (ballSprite.y + BALL_SIZE / 2 - aiSprite.y) / PADDLE_H;
-            ballVel.y = (hit - 0.5) * BALL_SPEED * 2;
+            // Where on the paddle the ball hit: 0 = top edge, 1 = bottom edge, 0.5 = centre (flat return)
+            var aiHit = (ballSprite.y + BALL_SIZE / 2 - aiSprite.y) / PADDLE_H;
+            ballVel.y = (aiHit - 0.5) * BALL_SPEED * 2;
           }
 
           // Cap ball speed so the game stays playable
-          if (ballVel.x >  BALL_MAX) ballVel.x =  BALL_MAX;
-          if (ballVel.x < -BALL_MAX) ballVel.x = -BALL_MAX;
+          if (ballVel.x >  MAX_BALL_SPEED) ballVel.x =  MAX_BALL_SPEED;
+          if (ballVel.x < -MAX_BALL_SPEED) ballVel.x = -MAX_BALL_SPEED;
 
           // --- Scoring ---
-          if (ballSprite.x + BALL_SIZE < 0) { score.ai++;     resetBall(1);  }
-          if (ballSprite.x > w)             { score.player++; resetBall(-1); }
+          if (ballSprite.x + BALL_SIZE < 0) { score.ai++;     resetBall(SERVE_RIGHT); }
+          if (ballSprite.x > w)             { score.player++; resetBall(SERVE_LEFT);  }
         });
 
         // -------------------------------------------------------
-        // DRAW — render each frame; 'this' is the canvas 2D context
+        // DRAW — render each frame
         // -------------------------------------------------------
         punter.on('draw', function () {
-          var ctx = this;
+          var ctx = this; // punter passes the canvas 2D context as 'this'
           var w   = punter.width;
           var h   = punter.height;
 
@@ -148,9 +180,9 @@
           ctx.fillRect(0, 0, w, h);
 
           // Dashed centre line
-          ctx.setLineDash([8 * DPR, 10 * DPR]);
+          ctx.setLineDash([px(8), px(10)]);
           ctx.strokeStyle = COLOR_NET;
-          ctx.lineWidth   = 2 * DPR;
+          ctx.lineWidth   = px(2);
           ctx.beginPath();
           ctx.moveTo(w / 2, 0);
           ctx.lineTo(w / 2, h);
@@ -164,24 +196,24 @@
 
           // Scores
           ctx.fillStyle    = COLOR_SCORE;
-          ctx.font         = 'bold ' + (48 * DPR) + 'px monospace';
+          ctx.font         = 'bold ' + px(48) + 'px monospace';
           ctx.textAlign    = 'center';
           ctx.textBaseline = 'top';
-          ctx.fillText(score.player, w / 2 - 70 * DPR, 20 * DPR);
-          ctx.fillText(score.ai,     w / 2 + 70 * DPR, 20 * DPR);
+          ctx.fillText(score.player, w / 2 - px(70), px(20));
+          ctx.fillText(score.ai,     w / 2 + px(70), px(20));
 
           // Controls hint
           ctx.fillStyle    = COLOR_NET;
-          ctx.font         = (14 * DPR) + 'px monospace';
+          ctx.font         = px(14) + 'px monospace';
           ctx.textBaseline = 'bottom';
-          ctx.fillText('Arrow keys or W / S  ·  tap to move', w / 2, h - 12 * DPR);
+          ctx.fillText('Arrow keys or W / S  ·  tap to move', w / 2, h - px(12));
         });
       });
 
-      // =========================================================
-      // resetPositions — centres the paddles and resets the ball.
-      // Called when the scene starts and on every window resize.
-      // =========================================================
+      /**
+       * Centres both paddles and resets the ball.
+       * Called when the scene starts and on every window resize.
+       */
       function resetPositions() {
         // Sprites aren't created until the ready event fires and the scene runs.
         // The engine's resize can fire before that, so bail out early if not ready.
@@ -196,17 +228,17 @@
         aiSprite.x = w - MARGIN - PADDLE_W;
         aiSprite.y = h / 2 - PADDLE_H / 2;
 
-        resetBall(-1);
+        resetBall(SERVE_LEFT);
       }
 
-      // =========================================================
-      // resetBall — puts the ball back in the centre.
-      // dir: -1 serves toward the AI, 1 serves toward the player.
-      // =========================================================
-      function resetBall(dir) {
+      /**
+       * Puts the ball back in the centre with a fresh serve.
+       * @param {number} direction - SERVE_LEFT (toward AI) or SERVE_RIGHT (toward player)
+       */
+      function resetBall(direction) {
         ballSprite.x = punter.width  / 2 - BALL_SIZE / 2;
         ballSprite.y = punter.height / 2 - BALL_SIZE / 2;
-        ballVel.x    = BALL_SPEED * dir;
+        ballVel.x    = BALL_SPEED * direction;
         ballVel.y    = (Math.random() - 0.5) * BALL_SPEED * 1.2;
       }
 
