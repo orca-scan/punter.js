@@ -1,15 +1,15 @@
 # punter.js
 
-A simple, dependency-free 2D game engine for the browser. Built by the [Orca Scan Team](https://orcascan.com/about-us) to power [OrcaCam](https://orcascan.com/game).
+A simple, dependency-free 2D game engine for the browser.
 
 **Why?** On the Amiga, AMOS let you build games in BASIC without touching assembly - sprites, sound, and input just worked, so you could get a character moving in minutes. `punter.js` brings that same philosophy to the browser: no build step, no ES6, no dependencies - just a small, readable API in a single file.
 
 **Features**
-* **Auto-scaling canvas** — fixed internal coordinates scale to any screen; sprites reposition automatically on resize
+* **Auto-scaling** — fixed internal coordinates scale and automatically reposition sprites on resize
 * **Retina support** — renders at up to 2× device pixel ratio automatically
-* **Pixel-accurate collision** — bounding boxes ignore transparent pixels, so irregular shapes collide correctly
-* **HTML state attributes** — `data-punter-*` attributes on `<html>` (scene, orientation, device, loading) let you drive CSS from game state
-* **CSS variables** — `--punter-vpw`/`--punter-vph` on `<html>`, updated on every resize
+* **Pixel-accurate collision** — bounding boxes ignore transparent pixels
+* **HTML state attributes** — `data-punter-*` attributes on `<html>` let you drive CSS from game state
+* **CSS variables** — `--punter-vpw`/`--punter-vph` on `<html>`, updated on resize
 
 ## Contents
 
@@ -711,4 +711,4 @@ NOTE: Don't manually resize the canvas - the engine owns that via `resize()`.
 
 ## License
 
-[MIT License](LICENSE) © Orca Scan - a [barcode app](https://orcascan.com) with simple [barcode tracking APIs](https://orcascan.com/guides?tag=for-developers).
+[MIT License](LICENSE). Built by the [Orca Scan Team](https://orcascan.com/about-us) to power [OrcaCam](https://orcascan.com/game).
