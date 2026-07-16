@@ -201,7 +201,7 @@ Property    | Description
 ### Sprite Methods
 
 #### `sprite.draw(ctx)`
-Draws the sprite manually. Only needed when using a custom `draw` handler — for example, to control layer order alongside backgrounds or text.
+Draws the sprite manually. Only needed when using a custom `draw` handler - for example, to control layer order alongside backgrounds or text.
 
 ```js
 punter.on('draw', function () {
