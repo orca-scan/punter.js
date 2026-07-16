@@ -106,7 +106,7 @@
     })();
 
     /**
-     * Initialises the engine with canvas, sprites, sounds, and buttons
+     * Initialises the engine with canvas, images, sounds, and buttons
      * @param {Object} config - configuration object
      * @returns {void}
      */
@@ -151,11 +151,11 @@
         _boundsCanvas = document.createElement('canvas');
         _boundsCtx = _boundsCanvas.getContext('2d', { willReadFrequently: true });
 
-        loadSprites(config.sprites || {}).then(function() {
+        loadImages(config.images || {}).then(function() {
 
             // precompute bounds for all sprite frames
-            if (config.sprites) {
-                for (var key in config.sprites) {
+            if (config.images) {
+                for (var key in config.images) {
                     var img = images[key];
                     if (img && img.complete && img.naturalWidth) {
                         // this warms up the boundingCache
@@ -182,13 +182,13 @@
     }
 
     /**
-     * Loads and decodes all sprite images
-     * @param {Object} sprites - Key-value map of sprite keys to image URLs
+     * Loads and decodes all images
+     * @param {Object} images - Key-value map of image keys to image URLs
      * @returns {Promise} - Resolves when all images are loaded and decoded
      */
-    function loadSprites(sprites) {
+    function loadImages(imageMap) {
 
-        var keys = Object.keys(sprites);
+        var keys = Object.keys(imageMap);
         var total = keys.length;
 
         if (!total) return Promise.resolve();
@@ -234,7 +234,7 @@
 
             for (var i = 0; i < total; i++) {
                 var key = keys[i];
-                var url = sprites[key];
+                var url = imageMap[key];
                 var img = new Image();
                 img.key = key; // for debugging
                 img.onload = handleLoad.bind(img, key);

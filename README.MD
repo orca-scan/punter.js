@@ -69,7 +69,7 @@ Every punter.js game follows the same three-step pattern:
 // 1. Load assets
 punter.setup({
   canvas: '#game',
-  sprites: { player: 'images/player.png' },
+  images: { player: 'images/player.png' },
   sounds:  { jump: 'sounds/jump.mp3' }
 });
 
@@ -104,7 +104,7 @@ Call this once at the start. The `ready` event fires once all assets have loaded
 punter.setup({
   canvas: '#game',   // CSS selector or HTMLCanvasElement
   debug: false,      // true = show FPS and bounding boxes
-  sprites: {
+  images: {
     player: 'images/player.png',
     coin:   'images/coin.png'
   },
@@ -117,7 +117,7 @@ punter.setup({
 Option    | Required | Description
 ----------|----------|------------------------------------------------
 `canvas`  | Yes      | CSS selector (`'#game'`) or `HTMLCanvasElement`
-`sprites` | No       | Key/path pairs of images to preload
+`images`  | No       | Key/path pairs of images to preload
 `sounds`  | No       | Key/path pairs of audio files to preload
 `debug`   | No       | Enables the debug overlay. Default: `false`
 
@@ -179,7 +179,7 @@ var player = punter.createSprite({
 Option           | Default    | Description
 -----------------|------------|----------------------------------------------------------------------------------------------------
 `id`             | -          | **Required.** Unique name for this sprite.
-`key`            | -          | **Required.** Image key from `config.sprites`. Pass an array (`['frame1','frame2']`) for animation.
+`key`            | -          | **Required.** Image key from `config.images`. Pass an array (`['frame1','frame2']`) for animation.
 `x`              | -          | **Required.** Horizontal position in pixels or `'50%'`.
 `y`              | -          | **Required.** Vertical position in pixels or `'50%'`.
 `w`              | auto       | Width in pixels or percent. Inferred from the image if omitted.
