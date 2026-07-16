@@ -135,8 +135,8 @@
           aiSprite.x = w - MARGIN - PADDLE_W;
 
           // --- Player: keyboard ---
-          if (punter.keys['ArrowUp']   || punter.keys['w']) playerSprite.y -= PADDLE_SPEED;
-          if (punter.keys['ArrowDown'] || punter.keys['s']) playerSprite.y += PADDLE_SPEED;
+          if (punter.keys['ArrowUp']   || punter.keys['w']) playerSprite.moveY(-PADDLE_SPEED);
+          if (punter.keys['ArrowDown'] || punter.keys['s']) playerSprite.moveY(PADDLE_SPEED);
 
           // --- Player: tap / click ---
           if (punter.mouse.clicked) {
@@ -148,13 +148,13 @@
 
           // --- AI: follow the ball ---
           var aiCenterY = aiSprite.y + PADDLE_H / 2;
-          if (ballSprite.y < aiCenterY - 10) aiSprite.y -= AI_SPEED;
-          if (ballSprite.y > aiCenterY + 10) aiSprite.y += AI_SPEED;
+          if (ballSprite.y < aiCenterY - 10) aiSprite.moveY(-AI_SPEED);
+          if (ballSprite.y > aiCenterY + 10) aiSprite.moveY(AI_SPEED);
           aiSprite.y = clamp(aiSprite.y, 0, h - PADDLE_H);
 
           // --- Move the ball ---
-          ballSprite.x += ballVel.x;
-          ballSprite.y += ballVel.y;
+          ballSprite.moveX(ballVel.x);
+          ballSprite.moveY(ballVel.y);
 
           // Bounce off top and bottom walls
           if (ballSprite.y <= 0)              { ballVel.y =  Math.abs(ballVel.y); ballSprite.y = 0; }

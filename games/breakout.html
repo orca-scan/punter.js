@@ -138,8 +138,8 @@
           paddleSprite.y = h - PADDLE_OFFSET;
 
           // Paddle: keyboard
-          if (punter.keys['ArrowLeft']  || punter.keys['a']) paddleSprite.x -= PADDLE_SPEED;
-          if (punter.keys['ArrowRight'] || punter.keys['d']) paddleSprite.x += PADDLE_SPEED;
+          if (punter.keys['ArrowLeft']  || punter.keys['a']) paddleSprite.moveX(-PADDLE_SPEED);
+          if (punter.keys['ArrowRight'] || punter.keys['d']) paddleSprite.moveX(PADDLE_SPEED);
 
           // Paddle: tap / click
           if (punter.mouse.clicked) {
@@ -149,8 +149,8 @@
           paddleSprite.x = clamp(paddleSprite.x, 0, w - PADDLE_W);
 
           // Move ball
-          ballSprite.x += ballVel.x;
-          ballSprite.y += ballVel.y;
+          ballSprite.moveX(ballVel.x);
+          ballSprite.moveY(ballVel.y);
 
           // Bounce off side walls and ceiling
           if (ballSprite.x <= 0)               { ballSprite.x = 0;               ballVel.x =  Math.abs(ballVel.x); }
