@@ -1,5 +1,9 @@
 # punter.js
 
+[![license](https://img.shields.io/github/license/orca-scan/punter.js)](https://github.com/orca-scan/punter.js/blob/master/LICENSE)
+[![Tests](https://github.com/orca-scan/punter.js/actions/workflows/ci.yml/badge.svg)](https://github.com/orca-scan/punter.js/actions/workflows/ci.yml)
+[![npm](https://img.shields.io/npm/v/punter.js)](https://www.npmjs.com/package/punter.js)
+
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
 A simple, dependency-free 2D game engine for the browser. No build step, no frameworks - just one script tag.
