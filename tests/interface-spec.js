@@ -19,7 +19,7 @@ describe('Interface', function () {
     it('exposes the expected methods', async function () {
         var result = await page.evaluate(function () {
             return {
-                init: typeof punter.init,
+                setup: typeof punter.setup,
                 scene: typeof punter.scene,
                 go: typeof punter.go,
                 on: typeof punter.on,

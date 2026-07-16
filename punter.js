@@ -110,7 +110,7 @@
      * @param {Object} config - configuration object
      * @returns {void}
      */
-    function init(config) {
+    function setup(config) {
 
         config = config || {};
 
@@ -1003,7 +1003,7 @@
      */
     function startLoop() {
 
-        if (!_initilised) throw new Error('punter.init must be called first');
+        if (!_initilised) throw new Error('punter.setup must be called first');
 
         _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true });
         _canvasCtx.imageSmoothingEnabled = false;
@@ -1067,7 +1067,7 @@
 
     function pauseLoop() {
 
-        if (!_initilised) throw new Error('punter.init must be called first');
+        if (!_initilised) throw new Error('punter.setup must be called first');
 
         if (_loopId !== null) {
             cancelAnimationFrame(_loopId);
@@ -1090,7 +1090,7 @@
      */
     function playSound(name, options) {
 
-        if (!_initilised) throw new Error('punter.init must be called first');
+        if (!_initilised) throw new Error('punter.setup must be called first');
 
         var buffer = sounds[name];
         if (!buffer) return;
@@ -1131,7 +1131,7 @@
 
     function stopSound(name) {
 
-        if (!_initilised) throw new Error('punter.init must be called first');
+        if (!_initilised) throw new Error('punter.setup must be called first');
 
         var arr = playingSounds[name];
         if (!arr || !arr.length) return;
@@ -1296,7 +1296,7 @@
     var api = {
 
         // initialization
-        init: init,
+        setup: setup,
 
         // scene lifecycle
         scene: function (name, handler) {
@@ -1304,7 +1304,7 @@
         },
         go: function (name) {
 
-            if (!_initilised) throw new Error('punter.init must be called first');
+            if (!_initilised) throw new Error('punter.setup must be called first');
             if (!_scenes[name]) throw new Error('punter.go: unknown scene "' + name + '"');
 
             // remove existing game loop handlers
@@ -1355,7 +1355,7 @@
 
         // sprite factory
         createSprite: function(opts) {
-            if (!_initilised) throw new Error('createSprite: punter.init must be called first');
+            if (!_initilised) throw new Error('createSprite: punter.setup must be called first');
             return new Sprite(opts);
         },
         getSprite: function(id) {

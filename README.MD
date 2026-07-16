@@ -14,7 +14,7 @@ A simple, dependency-free 2D game engine for the browser. No build step, no fram
 - [Install](#install)
 - [Run the Example](#run-the-example)
 - [How it Works](#how-it-works)
-- [punter.init()](#punter-init)
+- [Setup](#setup)
 - [Scenes](#scenes)
 - [Events](#events)
 - [Sprites](#sprites)
@@ -61,13 +61,13 @@ Then open **http://localhost:3000/games/pong.html** in your browser.
 
 Every punter.js game follows the same three-step pattern:
 
-1. **init** - specify which canvas to use and which images/sounds to preload
+1. **setup** - specify which canvas to use and which images/sounds to preload
 2. **scene** - define a named scene (level, menu, etc.) with update/draw logic
 3. **ready** - switch to a scene once everything has loaded
 
 ```js
 // 1. Load assets
-punter.init({
+punter.setup({
   canvas: '#game',
   sprites: { player: 'images/player.png' },
   sounds:  { jump: 'sounds/jump.mp3' }
@@ -96,12 +96,12 @@ punter.on('ready', function () {
 });
 ```
 
-## `punter.init()`
+## Setup
 
 Call this once at the start. The `ready` event fires once all assets have loaded.
 
 ```js
-punter.init({
+punter.setup({
   canvas: '#game',   // CSS selector or HTMLCanvasElement
   debug: false,      // true = show FPS and bounding boxes
   sprites: {
@@ -294,7 +294,7 @@ punter.on('update', function () {
 ## Sound
 
 ```js
-punter.init({
+punter.setup({
   sounds: { jump: 'sounds/jump.mp3', music: 'sounds/theme.mp3' }
 });
 
@@ -419,7 +419,7 @@ html:not([data-punter-loading]) #loader { display: none; }
 ## Debug Mode
 
 ```js
-punter.init({ canvas: '#game', debug: true }); // enable at startup
+punter.setup({ canvas: '#game', debug: true }); // enable at startup
 punter.debug = true;                            // or toggle at runtime
 ```
 
