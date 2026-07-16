@@ -2,62 +2,52 @@
 
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
-A simple, dependency-free 2D game engine for the browser.
-
-**Why?** Back in the Amiga days, AMOS let you build games in BASIC without touching assembly - sprites, sound, and input just worked, so you could get a character moving in minutes. `punter.js` brings that same philosophy to the browser: no build step, no ES6, no dependencies - just a small single file with a readable API.
+A simple, dependency-free 2D game engine for the browser. No build step, no frameworks - just one script tag.
 
 **Features**
-* **Auto-scaling** - fixed internal coordinates scale and automatically reposition sprites on resize
-* **Retina support** - renders at up to 2× device pixel ratio automatically
+* **Auto-scaling** - sprites automatically reposition on resize
+* **Retina support** - renders at up to 2× device pixel ratio
 * **Pixel-accurate collision** - bounding boxes ignore transparent pixels
-* **HTML state attributes** - `data-punter-*` attributes on `<html>` let you drive CSS from game state
-* **CSS variables** - `--punter-vpw`/`--punter-vph` on `<html>`, updated on resize
 
 ## Contents
 
-- [Installation](#installation)
-- [Running the Example](#running-the-example)
-- [Quick Start](#quick-start)
+- [Install](#install)
+- [Run the Example](#run-the-example)
+- [How it Works](#how-it-works)
 - [punter.init()](#punter-init)
 - [Scenes](#scenes)
 - [Events](#events)
 - [Sprites](#sprites)
-  - [Creating a Sprite](#creating-a-sprite)
-  - [Sprite Properties](#sprite-properties)
-  - [Sprite Methods](#sprite-methods)
-  - [Collision Detection](#collision-detection)
-  - [Animation](#animation)
-  - [Scrolling & Parallax](#scrolling--parallax)
 - [Sound](#sound)
 - [Input](#input)
-- [Game Loop Control](#game-loop-control)
 - [Engine Properties](#engine-properties)
+- [Game Loop Control](#game-loop-control)
 - [CSS & HTML Hooks](#css--html-hooks)
 - [Debug Mode](#debug-mode)
 - [Browser Support](#browser-support)
 
-## Installation
+## Install
 
-Download `punter.js` and include it with a script tag - before your game code:
+Download `punter.js` and include it with a script tag before your game code:
 
 ```html
 <!doctype html>
 <html>
   <head>
     <script src="punter.js"></script>
-    <script>
-      // your game code here
-    </script>
   </head>
   <body>
     <canvas id="game"></canvas>
+    <script>
+      // your game code here
+    </script>
   </body>
 </html>
 ```
 
-## Running the Example
+## Run the Example
 
-The repo includes a Pong game in `games/pong.html`. Because it loads local files, you need a simple web server rather than opening the file directly in a browser.
+The repo includes a Pong game in `games/pong.html`. Open it with a local web server - browsers block local file loading without one.
 
 ```bash
 npm start
@@ -65,33 +55,29 @@ npm start
 
 Then open **http://localhost:3000/games/pong.html** in your browser.
 
-> `npm start` uses `npx serve` — no install step needed beyond having Node.js.
+> `npm start` uses `npx serve` - no install step needed beyond having Node.js.
 
-## Quick Start
+## How it Works
+
+Every punter.js game follows the same three-step pattern:
+
+1. **init** - specify which canvas to use and which images/sounds to preload
+2. **scene** - define a named scene (level, menu, etc.) with update/draw logic
+3. **ready** - switch to a scene once everything has loaded
 
 ```js
+// 1. Load assets
 punter.init({
   canvas: '#game',
-  sprites: {
-    player: 'images/player.png'
-  },
-  sounds: {
-    jump: 'sounds/jump.mp3'
-  }
+  sprites: { player: 'images/player.png' },
+  sounds:  { jump: 'sounds/jump.mp3' }
 });
 
-// level 1 game loop
+// 2. Define a scene
 punter.scene('level1', function () {
 
-  // create a sprite
-  var player = punter.createSprite({
-    id: 'player',
-    key: 'player',
-    x: '50%',
-    y: '50%'
-  });
+  var player = punter.createSprite({ id: 'player', key: 'player', x: '50%', y: '50%' });
 
-  // move it on ever frame if required
   punter.on('update', function () {
     if (punter.keys['ArrowRight']) player.moveX(3);
     if (punter.keys['ArrowLeft'])  player.moveX(-3);
@@ -99,13 +85,12 @@ punter.scene('level1', function () {
     if (punter.keys['ArrowDown'])  player.moveY(3);
   });
 
-  // draw it to every frame
   punter.on('draw', function () {
-    player.draw(this);
+    player.draw(this); // 'this' is the canvas 2D context
   });
 });
 
-// when the game engine ready, go to level 1
+// 3. Start when ready
 punter.on('ready', function () {
   punter.go('level1');
 });
@@ -113,190 +98,114 @@ punter.on('ready', function () {
 
 ## `punter.init()`
 
-This is the engine's start-up call. You tell it which canvas to draw on, which images to preload, and which sounds to load. Nothing else will work until `init` has finished loading everything - that's what the `ready` event is for.
+Call this once at the start. The `ready` event fires once all assets have loaded.
 
 ```js
 punter.init({
-  canvas: '#game',       // the canvas to draw on
-  debug: false,          // set to true to show FPS, bounding boxes, and labels
+  canvas: '#game',   // CSS selector or HTMLCanvasElement
+  debug: false,      // true = show FPS and bounding boxes
   sprites: {
-    player:  'images/player.png',
-    enemy:   'images/enemy.png',
-    coin:    'images/coin.png'
+    player: 'images/player.png',
+    coin:   'images/coin.png'
   },
   sounds: {
-    jump:    'sounds/jump.mp3',
-    collect: 'sounds/collect.mp3'
+    jump: 'sounds/jump.mp3'
   }
-});
-
-punter.on('ready', function () {
-  // safe to create sprites and go to a scene here
-  punter.go('menu');
 });
 ```
 
-### Config Options
-
-Option    | Type                            | Required | Description
-----------|---------------------------------|----------|-------------------------------------------------------------------------
-`canvas`  | `string` or `HTMLCanvasElement` | Yes      | A CSS selector (`'#game'`) or a direct canvas element reference
-`debug`   | `boolean`                       | No       | Enables the debug overlay (FPS, sprite bounds, labels). Default: `false`
-`sprites` | `object`                        | No       | Key/URL pairs of images to preload: `{ key: 'path/to/image.png' }`
-`sounds`  | `object`                        | No       | Key/URL pairs of audio files to preload: `{ key: 'path/to/sound.mp3' }`
+Option    | Required | Description
+----------|----------|------------------------------------------------
+`canvas`  | Yes      | CSS selector (`'#game'`) or `HTMLCanvasElement`
+`sprites` | No       | Key/path pairs of images to preload
+`sounds`  | No       | Key/path pairs of audio files to preload
+`debug`   | No       | Enables the debug overlay. Default: `false`
 
 ## Scenes
 
-Scenes are the different "screens" in your game - the main menu, level 1, a game over screen, etc. You define each scene as a named function, then switch between them with `punter.go()`.
+Scenes are the different screens in your game - a menu, level 1, game over. Define each with `punter.scene()`, then switch between them with `punter.go()`. Switching scenes automatically clears the previous update/draw handlers.
 
 ```js
-// Define scenes anywhere before calling punter.go()
 punter.scene('menu', function () {
-
-  var title = punter.createSprite({ id: 'title', key: 'titleImage', x: '50%', y: '30%' });
-
-  punter.on('draw', function () {
-    title.draw(this);
-  });
-
   punter.on('update', function () {
-    // switch to level1 when the screen is tapped or clicked
-    if (punter.mouse.clicked) {
-      punter.go('level1');
-    }
+    if (punter.mouse.clicked) punter.go('level1');
   });
-
 });
 
 punter.scene('level1', function () {
   // level setup here
 });
-
-// Switching scenes clears the previous update/draw handlers automatically
-punter.go('menu');
 ```
-
-### Methods
-
-Method                   | Description
--------------------------|-------------------------------------------------------------------------------------------------------
-`punter.scene(name, fn)` | Registers a scene. `name` is a string key; `fn` is the setup function that runs when the scene starts.
-`punter.go(name)`        | Switches to the named scene. Starts the game loop if it isn't already running. Clears all input state.
 
 ## Events
 
-Events let your code react to things the engine does. The two you'll use most are `update` (run your game logic here) and `draw` (draw your sprites here). These are called automatically by the engine ~60 times per second.
+Register handlers with `punter.on()`. Each event can only have one handler at a time - calling `punter.on()` again for the same event replaces the previous one.
 
 ```js
 punter.on('ready', function () {
-  // fires once - all images and sounds are loaded, safe to start
+  // fires once - all assets loaded, safe to create sprites
   punter.go('level1');
 });
 
 punter.on('update', function () {
-  // fires ~60 times/sec - move things, check collisions, handle input
+  // fires ~60 times/sec - move things, check input, check collisions
 });
 
 punter.on('draw', function () {
-  // fires every frame - draw your sprites
-  // 'this' inside draw is the canvas 2D context
+  // fires every frame - 'this' is the canvas 2D context
   player.draw(this);
 });
 
 punter.on('resize', function () {
-  // fires when the browser window or device orientation changes
-});
-
-punter.on('go', function (sceneName) {
-  // fires every time punter.go() is called - receives the new scene name
+  // fires when the browser window resizes
 });
 ```
 
-### Event Reference
-
-Event    | Callback signature    | When it fires
----------|-----------------------|--------------------------------------------------------------
-`ready`  | `function()`          | Once, after all sprites and sounds have finished loading
-`update` | `function()`          | Every logic tick (~60/sec) - put movement and game logic here
-`draw`   | `function()`          | Every render frame - `this` is the canvas 2D context
-`resize` | `function()`          | When the browser window resizes or orientation changes
-`go`     | `function(sceneName)` | When `punter.go()` is called; receives the new scene name
-
-> Each event can only have one handler at a time. Calling `punter.on('update', fn)` again replaces the previous handler. Switching scenes via `punter.go()` automatically clears the `update` and `draw` handlers.
-
 ## Sprites
 
-A sprite is any image in your game - a character, an obstacle, a background, a coin. You create a sprite by giving it an ID, pointing it at a preloaded image, and setting its starting position. The engine handles scaling, cropping, and drawing it to the canvas.
-
-### Creating a Sprite
+A sprite is any image in your game - a character, enemy, coin, background tile. Create one with `punter.createSprite()`:
 
 ```js
 var player = punter.createSprite({
-  id:  'player',    // unique ID - no two sprites can share one
-  key: 'player',    // matches a key from config.sprites
-  x:   '50%',       // horizontal position - number (pixels) or percent string
-  y:   '80%'        // vertical position - number (pixels) or percent string
-});
-
-// Sprite with a fixed size
-var background = punter.createSprite({
-  id: 'bg',
-  key: 'background',
-  x: 0,
-  y: 0,
-  w: '100%',   // width as percent of canvas width
-  h: '100%'    // height as percent of canvas height
+  id:  'player',  // unique name - no two sprites can share one
+  key: 'player',  // matches a key from config.sprites
+  x:   '50%',    // position - number (pixels) or percent string
+  y:   '80%'
 });
 ```
 
 ### Creation Options
 
-Option           | Type                   | Default    | Description
------------------|------------------------|------------|-----------------------------------------------------------------------------------------------------------
-`id`             | `string`               | -          | **Required.** Unique identifier for this sprite.
-`key`            | `string` or `string[]` | -          | **Required.** Image key from `config.sprites`. Pass an array for animation frames: `['frame1', 'frame2']`.
-`x`              | `number` or `string`   | -          | **Required.** Horizontal position in pixels or as `'50%'`.
-`y`              | `number` or `string`   | -          | **Required.** Vertical position in pixels or as `'50%'`.
-`w`              | `number` or `string`   | auto       | Width in pixels or percent. Inferred from image if omitted.
-`h`              | `number` or `string`   | auto       | Height in pixels or percent. Inferred from image if omitted.
-`preserveAspect` | `boolean`              | `true`     | Keep the image's aspect ratio when only one dimension is set.
-`collidable`     | `boolean`              | `true`     | Compute a pixel-accurate bounding box for collision checks.
-`outline`        | `string`               | `null`     | Draw a coloured border around the sprite (e.g. `'red'`). Useful for debugging.
-`repeatX`        | `boolean`              | `false`    | Tile the image horizontally across the full canvas width (e.g. for a floor).
-`repeatY`        | `boolean`              | `false`    | Tile the image vertically across the full canvas height (e.g. for a wall).
-`clipHeight`     | `number`               | `null`     | Limit how many pixels tall the sprite is drawn - useful for fill/progress bars.
-`clipFrom`       | `string`               | `'bottom'` | Which end to clip from: `'top'` or `'bottom'`.
+Option           | Default    | Description
+-----------------|------------|----------------------------------------------------------------------------------------------------
+`id`             | -          | **Required.** Unique name for this sprite.
+`key`            | -          | **Required.** Image key from `config.sprites`. Pass an array (`['frame1','frame2']`) for animation.
+`x`              | -          | **Required.** Horizontal position in pixels or `'50%'`.
+`y`              | -          | **Required.** Vertical position in pixels or `'50%'`.
+`w`              | auto       | Width in pixels or percent. Inferred from the image if omitted.
+`h`              | auto       | Height in pixels or percent. Inferred from the image if omitted.
+`preserveAspect` | `true`     | Maintain aspect ratio when only one dimension is set.
+`collidable`     | `true`     | Compute a collision bounding box for this sprite.
+`repeatX`        | `false`    | Tile horizontally across the canvas (e.g. a floor).
+`repeatY`        | `false`    | Tile vertically across the canvas (e.g. a wall).
+`clipHeight`     | `null`     | Limit the drawn height in pixels - useful for health/fill bars.
+`clipFrom`       | `'bottom'` | Which end to clip from: `'top'` or `'bottom'`.
 
 ### Sprite Properties
 
-After creation, these properties are available on the sprite object:
-
-Property      | Type                 | Writable | Description
---------------|----------------------|----------|---------------------------------------------------------------------------------------------
-`x`           | `number`             | Yes      | Current horizontal position in pixels.
-`y`           | `number`             | Yes      | Current vertical position in pixels.
-`w`           | `number`             | Yes      | Current width in pixels.
-`h`           | `number`             | Yes      | Current height in pixels.
-`actualW`     | `number`             | No       | Rendered width (floored). Read-only.
-`actualH`     | `number`             | No       | Rendered height, respecting `clipHeight`. Read-only.
-`initialX`    | `number`             | Yes      | The x position the sprite started at (used by `bounce()`).
-`initialY`    | `number`             | Yes      | The y position the sprite started at (used by `bounce()`).
-`frame`       | `number\ | null`     | Yes      | Override the current animation frame index. Set to `null` to let `animate()` control it.
-`visible`     | `boolean`            | No       | `true` if any part of the sprite is within the canvas bounds. Read-only.
-`seen`        | `boolean`            | Yes      | Becomes `true` once the sprite has been visible on screen. Can be reset manually.
-`destroyed`   | `boolean`            | No       | `true` after `destroy()` has been called. Read-only.
-`bounds`      | `object`             | No       | Pixel-accurate bounding box: `{ x, y, w, h }`. Updated each frame after `draw()`. Read-only.
-`collidable`  | `boolean`            | Yes      | Whether to compute collision bounds.
-`clipHeight`  | `number\ | null`     | Yes      | Current clip height.
-`key`         | `string\ | string[]` | Yes      | The image key (or array of keys for animation).
-`id`          | `string`             | No       | The sprite's unique ID.
-`aspectRatio` | `number`             | No       | Width-to-height ratio of the original image. Read-only.
+Property    | Description
+------------|-----------------------------------------------------------------------------------------
+`x`, `y`    | Position in pixels. Set directly to move the sprite.
+`w`, `h`    | Size in pixels.
+`visible`   | `true` if any part of the sprite is within the canvas. Read-only.
+`bounds`    | Pixel-accurate bounding box `{ x, y, w, h }`. Updated each frame. Read-only.
+`frame`     | Override the current animation frame index. Set to `null` to let `animate()` control it.
+`destroyed` | `true` after `destroy()` has been called. Read-only.
 
 ### Sprite Methods
 
 #### `sprite.draw(ctx)`
-
-Draws the sprite to the canvas. Call this inside your `draw` event handler. `ctx` is the canvas 2D context passed as `this` in the `draw` callback.
+Draws the sprite. Call inside your `draw` handler - `ctx` is `this`.
 
 ```js
 punter.on('draw', function () {
@@ -306,356 +215,194 @@ punter.on('draw', function () {
 ```
 
 #### `sprite.moveX(dx)` / `sprite.moveY(dy)`
-
-Move the sprite by `dx` pixels horizontally or `dy` pixels vertically. Call these in your `update` handler.
+Move by `dx` / `dy` pixels. Call in `update`.
 
 ```js
 punter.on('update', function () {
   if (punter.keys['ArrowRight']) player.moveX(3);
   if (punter.keys['ArrowLeft'])  player.moveX(-3);
-  if (punter.keys['Space'])      player.moveY(-5); // jump
 });
 ```
 
 #### `sprite.center(offsetX?, offsetY?)`
-
-Centers the sprite on the canvas. Optional pixel offsets shift it from the centre.
-
-```js
-player.center();         // perfectly centred
-player.center(0, -50);   // centred, but 50px above the middle
-```
-
-Also available as `sprite.centerX(offsetX?)` and `sprite.centerY(offsetY?)` to centre on one axis only.
-
-#### `sprite.bounce(range?, speed?)`
-
-Makes the sprite float up and down in a smooth sine-wave motion. Call every frame in `update`.
+Centre the sprite on the canvas. Optional offsets shift it from the centre.
 
 ```js
-punter.on('update', function () {
-  coin.bounce(6, 12);  // range: 6px, speed: 12 (higher = slower)
-});
+player.center();        // perfectly centred
+player.center(0, -50);  // centred, 50px above the middle
 ```
 
-Parameter | Type     | Default | Description
-----------|----------|---------|--------------------------------------------------
-`range`   | `number` | `8`     | Max pixels to move up/down from `initialY`.
-`speed`   | `number` | `10`    | Controls how fast the bounce is. Higher = slower.
+Use `sprite.centerX()` or `sprite.centerY()` to centre on one axis only.
 
 #### `sprite.animate(delayMs)`
-
-Advances to the next animation frame. Call every frame in `update`. Requires `key` to be an array of image keys.
+Advance to the next animation frame. Requires `key` to be an array of image keys.
 
 ```js
 var run = punter.createSprite({
-  id: 'runner',
-  key: ['run1', 'run2', 'run3', 'run4'],
+  id:  'runner',
+  key: ['run1', 'run2', 'run3'],
   x: 100, y: 200
 });
 
 punter.on('update', function () {
-  run.animate(120); // switch frame every 120ms
+  run.animate(120); // new frame every 120ms
 });
 ```
 
-> Set `sprite.frame` to a specific index to manually control the frame instead of letting `animate()` cycle through.
+Set `sprite.frame = 2` to jump to a specific frame. Set it to `null` to let `animate()` take over again.
 
-#### `sprite.destroy()`
-
-Removes the sprite from the engine. Any subsequent `draw()` calls on it will be ignored. The `sprite.destroyed` property becomes `true`.
+#### `sprite.bounce(range?, speed?)`
+Float up and down in a smooth wave. Call every frame in `update`.
 
 ```js
-if (player.isCollidingWith(enemy)) {
-  enemy.destroy();
-  punter.playSound('explosion');
-}
+punter.on('update', function () {
+  coin.bounce(6, 12); // 6px range, speed 12 (higher = slower)
+});
 ```
 
-### Collision Detection
-
-Collision detection lets you know when two sprites are touching or overlapping. The engine uses each image's actual pixel content to build a tight bounding box - transparent areas around the image are ignored - so collisions feel accurate even for irregularly shaped sprites.
+#### `sprite.isCollidingWith(other)`
+Returns `true` if the bounding boxes of two sprites overlap. Both must have `collidable: true` (the default). Always call `sprite.draw()` before checking - bounds are updated during draw.
 
 ```js
 punter.on('update', function () {
   if (player.isCollidingWith(bullet)) {
-    punter.playSound('hit');
     bullet.destroy();
-    // handle player damage
+    punter.playSound('hit');
   }
 });
 ```
 
-#### `sprite.isCollidingWith(otherSprite)`
+#### `sprite.destroy()`
+Removes the sprite. All subsequent `draw()` calls are silently ignored.
 
-Returns `true` if the bounding boxes of the two sprites overlap, `false` otherwise. Both sprites must have `collidable: true` (which is the default).
+#### Scrolling
 
-```js
-var hit = player.isCollidingWith(enemy); // true or false
-```
-
-> Bounding boxes are automatically updated each frame when the sprite is drawn. Always call `sprite.draw()` before checking collisions.
-
-### Animation
-
-Sprites can cycle through multiple images to create animations. Pass an array of keys to `key` when creating the sprite, then call `animate()` each frame:
-
-```js
-punter.init({
-  sprites: {
-    idle1: 'images/idle1.png',
-    idle2: 'images/idle2.png',
-    idle3: 'images/idle3.png'
-  }
-});
-
-var character = punter.createSprite({
-  id: 'char',
-  key: ['idle1', 'idle2', 'idle3'],
-  x: 100, y: 100
-});
-
-punter.on('update', function () {
-  character.animate(150); // new frame every 150ms
-});
-
-punter.on('draw', function () {
-  character.draw(this);
-});
-```
-
-To manually jump to a specific frame, set `character.frame = 2`. To hand control back to `animate()`, set it to `null`.
-
-### Scrolling & Parallax
-
-Three methods are available for scrolling behaviour on sprites used as backgrounds or moving scenery:
-
-#### `sprite.parallaxScrollX(speed, respawnAfterMs, offset?)`
-
-Moves the sprite left or right continuously. When it goes fully off-screen, it waits `respawnAfterMs` milliseconds then reappears from the opposite edge. Great for clouds, birds, or background layers.
-
-```js
-var cloud = punter.createSprite({ id: 'cloud1', key: 'cloud', x: 0, y: 50, w: 120, h: 60 });
-
-punter.on('update', function () {
-  cloud.parallaxScrollX(-2, 1000); // move left at 2px/frame, respawn after 1 second
-});
-```
-
-Parameter        | Type     | Description
------------------|----------|----------------------------------------------------------------------
-`speed`          | `number` | Pixels per frame. Negative = left, positive = right.
-`respawnAfterMs` | `number` | Milliseconds to wait before reappearing from the opposite edge.
-`offset`         | `number` | Extra pixels beyond the screen edge before respawning. Default: `50`.
-
-#### `sprite.parallaxScrollY(speed, respawnAfterMs, offset?)`
-
-Same as `parallaxScrollX` but moves vertically.
+Method                                                   | Description
+---------------------------------------------------------|------------------------------------------------------------------------
+`sprite.parallaxScrollX(speed, respawnAfterMs, offset?)` | Scroll horizontally. Respawns from the opposite edge after a delay.
+`sprite.parallaxScrollY(speed, respawnAfterMs, offset?)` | Scroll vertically. Respawns from the opposite edge after a delay.
+`sprite.loopScrollX(speed)`                              | Scroll horizontally and wrap immediately. Good for looping backgrounds.
 
 ```js
 punter.on('update', function () {
-  rain.parallaxScrollY(4, 500); // fall down at 4px/frame, respawn after 0.5s
-});
-```
-
-#### `sprite.loopScrollX(speed)`
-
-Moves the sprite horizontally and immediately wraps it to the other side when it exits the canvas - no delay. Useful for seamlessly looping backgrounds.
-
-```js
-var ground = punter.createSprite({ id: 'ground', key: 'ground', x: 0, y: '90%', w: '100%', h: 64 });
-
-punter.on('update', function () {
-  ground.loopScrollX(-3); // scroll left and wrap
+  cloud.parallaxScrollX(-2, 1000); // move left, respawn after 1s
+  ground.loopScrollX(-3);          // loop left seamlessly
 });
 ```
 
 
 ## Sound
 
-punter.js preloads audio files and lets you play and stop them by name. Works on mobile too - sounds are decoded using the Web Audio API, so they play instantly without delay.
-
 ```js
 punter.init({
-  sounds: {
-    jump:  'sounds/jump.mp3',
-    music: 'sounds/theme.mp3'
-  }
+  sounds: { jump: 'sounds/jump.mp3', music: 'sounds/theme.mp3' }
 });
 
 punter.on('ready', function () {
-  // play background music, looping
-  punter.playSound('music', { loop: true, volume: 0.5 });
-
+  punter.playSound('music', { loop: true, volume: 0.5 }); // background music
   punter.go('level1');
 });
 
-// play a one-shot sound effect
-punter.playSound('jump');
-
-// stop a sound that's playing
-punter.stopSound('music');
+punter.playSound('jump');    // one-shot effect
+punter.stopSound('music');   // stop a playing sound
 ```
 
 ### `punter.playSound(name, options?)`
 
-Plays a preloaded sound. If the sound is already playing, it stops and restarts it.
-
-Option   | Type      | Default | Description
----------|-----------|---------|--------------------------------------------------------------------
-`volume` | `number`  | `1`     | Volume from `0` (silent) to `1` (full).
-`loop`   | `boolean` | `false` | If `true`, the sound repeats indefinitely.
-`once`   | `boolean` | `false` | If `true`, the sound is not tracked - `stopSound()` cannot stop it.
-`speed`  | `number`  | `1`     | Playback speed multiplier. `0.5` = half speed, `2` = double speed.
+Option   | Default | Description
+---------|---------|--------------------------------------------
+`volume` | `1`     | Volume from `0` (silent) to `1` (full).
+`loop`   | `false` | Repeat indefinitely.
+`speed`  | `1`     | Playback speed. `0.5` = half, `2` = double.
+`once`   | `false` | If `true`, `stopSound()` cannot stop it.
 
 ### `punter.stopSound(name)`
-
-Stops all currently playing instances of the named sound.
+Stops all playing instances of the named sound.
 
 
 ## Input
 
-The engine tracks keyboard keys and mouse/touch taps for you. You check the current state of these in your `update` handler each frame. Touch events on mobile are automatically translated into mouse events, so the same code works on phones and desktops.
+Check input state inside your `update` handler each frame. Touch events on mobile are automatically translated into mouse events.
 
 ### Keyboard
-
-`punter.keys` is a plain object where each key name maps to `true` when held down and `false` (or absent) when released.
 
 ```js
 punter.on('update', function () {
   if (punter.keys['ArrowLeft'])  player.moveX(-3);
   if (punter.keys['ArrowRight']) player.moveX(3);
-  if (punter.keys['ArrowUp'])    player.moveY(-3);
-  if (punter.keys['ArrowDown'])  player.moveY(3);
-  if (punter.keys[' '])          player.moveY(-8); // spacebar to jump
+  if (punter.keys[' '])          player.moveY(-8); // spacebar
   if (punter.keys['Escape'])     punter.go('menu');
 });
 ```
 
-Key names match the browser's [KeyboardEvent.key](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key) values: `'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `'Enter'`, `'Escape'`, `' '` (space), letter keys (`'a'`, `'A'`), etc.
+Key names follow the browser's [`KeyboardEvent.key`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key) values.
 
 ### Mouse & Touch
-
-`punter.mouse` tracks the current pointer position and whether a click or tap has occurred.
 
 ```js
 punter.on('update', function () {
   if (punter.mouse.clicked) {
-    // player tapped or clicked - punter.mouse.x / .y has the position
     fireAt(punter.mouse.x, punter.mouse.y);
   }
 });
 ```
 
-Property               | Type      | Description
------------------------|-----------|--------------------------------------------------------------
-`punter.mouse.x`       | `number`  | Horizontal position of the last click/tap in canvas pixels.
-`punter.mouse.y`       | `number`  | Vertical position of the last click/tap in canvas pixels.
-`punter.mouse.clicked` | `boolean` | `true` for one update tick after a click or tap, then auto-cleared.
-
-> Coordinates are in canvas pixel space — the same coordinate system as `punter.width` / `punter.height` and sprite `x`/`y` values.
+Property               | Description
+-----------------------|---------------------------------------------------
+`punter.mouse.x`       | X position of the last click/tap in canvas pixels.
+`punter.mouse.y`       | Y position of the last click/tap in canvas pixels.
+`punter.mouse.clicked` | `true` for one update tick after a click or tap.
 
 ### `punter.clearInput()`
-
-Resets all keyboard key states to `false` and clears `mouse.clicked`. Called automatically whenever `punter.go()` switches scenes.
-
-```js
-punter.on('update', function () {
-  if (punter.mouse.clicked) {
-    punter.go('level1');
-    // no need to clear - punter.go() does it automatically
-  }
-});
-```
-
-## Game Loop Control
-
-The game loop is what makes `update` and `draw` fire continuously. It starts automatically when you call `punter.go()`. These methods let you pause and resume it manually - for example, when showing a pause menu.
-
-```js
-// Pause the loop (stops update and draw from firing)
-punter.pause();
-
-// Resume from where it left off
-punter.resume();
-
-// Force a single redraw without running update logic
-// Useful after a resize when the loop isn't running
-punter.redraw();
-```
-
-Method            | Description
-------------------|-------------------------------------------------------
-`punter.pause()`  | Stops the game loop. The screen freezes.
-`punter.resume()` | Restarts the game loop.
-`punter.redraw()` | Redraws all sprites once without advancing game logic.
+Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()`.
 
 
 ## Engine Properties
 
-These are read-only properties available on the `punter` object at any time:
-
-Property             | Type                       | Description
----------------------|----------------------------|----------------------------------------------------------------------------
-`punter.width`       | `number`                   | Internal canvas width in pixels (adjusted for device pixel ratio).
-`punter.height`      | `number`                   | Internal canvas height in pixels (adjusted for device pixel ratio).
-`punter.dpr`         | `number`                   | Device pixel ratio used for rendering (capped at `2`).
-`punter.frame`       | `number`                   | Current frame counter, cycling 1–60.
-`punter.totalFrames` | `number`                   | Total number of frames rendered since the loop started.
-`punter.running`     | `boolean`                  | `true` if the game loop is currently running.
-`punter.paused`      | `boolean`                  | `true` if the loop has been paused.
-`punter.resized`     | `boolean`                  | `true` for one frame after a resize event.
-`punter.isMobile`    | `boolean`                  | `true` if the engine detected a mobile device.
-`punter.isDesktop`   | `boolean`                  | `true` if the engine detected a desktop device.
-`punter.orientation` | `string`                   | `'portrait'` or `'landscape'` based on current window dimensions.
-`punter.sceneName`   | `string`                   | The name of the currently active scene, or `''` if none.
-`punter.debug`       | `boolean`                  | Whether debug mode is active. Can be set at runtime: `punter.debug = true`.
-`punter.canvas`      | `HTMLCanvasElement`        | The raw canvas element.
-`punter.ctx`         | `CanvasRenderingContext2D` | The canvas 2D drawing context.
-`punter.sprites`     | `Sprite[]`                 | Array of all live (non-destroyed) sprites.
+Property             | Description
+---------------------|-----------------------------------------------------
+`punter.width`       | Canvas width in pixels (DPR-adjusted).
+`punter.height`      | Canvas height in pixels (DPR-adjusted).
+`punter.dpr`         | Device pixel ratio (capped at `2`).
+`punter.frame`       | Frame counter, cycling 1–60.
+`punter.running`     | `true` if the game loop is running.
+`punter.paused`      | `true` if the loop is paused.
+`punter.isMobile`    | `true` on mobile devices.
+`punter.orientation` | `'portrait'` or `'landscape'`.
+`punter.sceneName`   | Name of the current scene.
+`punter.debug`       | Toggle debug mode at runtime: `punter.debug = true`.
 
 ### `punter.getSprite(id)`
-
-Retrieves a sprite by its ID. Returns `null` if not found.
+Returns a sprite by ID, or `null` if not found.
 
 ```js
 var player = punter.getSprite('player');
-if (player) player.moveX(5);
+```
+
+
+## Game Loop Control
+
+The loop starts automatically when you call `punter.go()`. Pause and resume it manually - for example, when showing a pause menu.
+
+```js
+punter.pause();   // stop update + draw
+punter.resume();  // restart
+punter.redraw();  // single redraw without running update logic
 ```
 
 
 ## CSS & HTML Hooks
 
-As the engine runs, it automatically sets CSS variables and HTML attributes on the `<html>` element. You can use these in your CSS to style the page differently based on the current game state - for example, hiding the loader once assets are ready, or applying a different layout in landscape mode.
+The engine sets attributes on `<html>` as the game runs. Use them in CSS to react to game state.
 
-### HTML Attributes
+Attribute                 | When set
+--------------------------|-------------------------------------------------------------
+`data-punter-loading`     | Present while assets are loading; removed when `ready` fires
+`data-punter-scene`       | Updated on every `punter.go()` - value is the scene name
+`data-punter-orientation` | `"portrait"` or `"landscape"`, updated on resize
+`data-punter-device`      | `"mobile"` or `"desktop"`, set on init
 
-The engine adds these attributes to the `<html>` element:
-
-Attribute                 | Values                       | Description
---------------------------|------------------------------|--------------------------------------------------------------
-`data-punter-loading`     | `"true"` / removed           | Present while assets are loading; removed when `ready` fires.
-`data-punter-debug`       | `"true"` / removed           | Present when debug mode is on.
-`data-punter-device`      | `"mobile"` / `"desktop"`     | Set based on user agent detection.
-`data-punter-orientation` | `"portrait"` / `"landscape"` | Updated on every resize.
-`data-punter-scene`       | scene name string            | The name of the current scene; updated on `punter.go()`.
-
-**Example - show a loading screen:**
-
-```css
-/* show loader until engine is ready */
-#loader { display: block; }
-html[data-punter-loading] #loader { display: block; }
-html:not([data-punter-loading]) #loader { display: none; }
-
-/* different layout per orientation */
-html[data-punter-orientation="landscape"] .controls { flex-direction: row; }
-html[data-punter-orientation="portrait"]  .controls { flex-direction: column; }
-```
-
-### CSS Variables
-
-These are set on the `<html>` element and updated whenever the window resizes:
+It also exposes CSS variables on `:root`, updated on resize:
 
 Variable       | Description
 ---------------|------------------------------------------
@@ -663,68 +410,32 @@ Variable       | Description
 `--punter-vph` | Viewport height in pixels (e.g. `667px`).
 
 ```css
-.hud {
-  width: var(--punter-vpw);
-  height: var(--punter-vph);
-}
+/* hide loader once assets are ready */
+html[data-punter-loading] #loader { display: block; }
+html:not([data-punter-loading]) #loader { display: none; }
 ```
 
 
 ## Debug Mode
 
-Turning on debug mode overlays useful information directly onto the game canvas - handy when you're trying to understand why a sprite is in the wrong place or why a collision isn't triggering.
-
-Enable it in `punter.init()`:
-
 ```js
-punter.init({ canvas: '#game', debug: true, sprites: { ... } });
+punter.init({ canvas: '#game', debug: true }); // enable at startup
+punter.debug = true;                            // or toggle at runtime
 ```
 
-Or toggle it at any time:
-
-```js
-punter.debug = true;
-punter.debug = false;
-```
-
-When debug mode is active, the engine draws:
-
-- **FPS counter** and current canvas resolution in the bottom-right corner
-- **Red bounding boxes** around each collidable sprite's collision area
-- **Position and size labels** (`x=100 y=200 (32x32)`) near each sprite
-
-### Customising the Debug Overlay
-
-The overlay colours and font are pulled from CSS variables on `:root`. Add these to your stylesheet to customise them:
-
-```css
-:root {
-  --punter-debug-background: rgba(0, 0, 0, 0.6);
-  --punter-debug-text: #00ff00;
-  --punter-debug-font: 11px 'Courier New', monospace;
-}
-```
-
-Variable                    | Default                 | Description
-----------------------------|-------------------------|----------------------------------------
-`--punter-debug-background` | `rgba(255,255,255,0.7)` | Background colour of debug label boxes.
-`--punter-debug-text`       | `red`                   | Text colour of debug labels.
-`--punter-debug-font`       | `12px monospace`        | Font for debug labels.
+When active, the engine draws:
+- **FPS** and canvas resolution in the bottom-right corner
+- **Red bounding boxes** around each collidable sprite
+- **Position and size labels** near each sprite
 
 
 ## Browser Support
 
-Works with all major browsers _(Chrome, Firefox, Safari, Edge)_. For older browsers, polyfills for `fetch` and `Promise` are sufficient.
+Works in all modern browsers (Chrome, Firefox, Safari, Edge). For older browsers, polyfills for `fetch` and `Promise` are enough.
 
-punter.js requires:
+Requires: `fetch`, `Promise`, `requestAnimationFrame`, `AudioContext`, canvas `getImageData`.
 
-- `fetch` (for loading sounds)
-- `Promise`
-- `requestAnimationFrame`
-- `AudioContext` / `webkitAudioContext`
-- `canvas` 2D context with `getImageData`
-
-NOTE: Don't manually resize the canvas - the engine owns that via `resize()`.
+> Don't manually resize the canvas - the engine manages that internally.
 
 ## License
 
