@@ -188,10 +188,6 @@
           var w   = punter.width;
           var h   = punter.height;
 
-          // Background
-          ctx.fillStyle = COLOR_BG;
-          ctx.fillRect(0, 0, w, h);
-
           // Dashed centre line
           ctx.setLineDash([px(8), px(10)]);
           ctx.strokeStyle = COLOR_NET;
@@ -201,11 +197,6 @@
           ctx.lineTo(w / 2, h);
           ctx.stroke();
           ctx.setLineDash([]);
-
-          // Sprites — punter.js scales and draws the PNG images
-          playerSprite.draw(ctx);
-          aiSprite.draw(ctx);
-          ballSprite.draw(ctx);
 
           // Scores
           ctx.fillStyle    = COLOR_SCORE;
