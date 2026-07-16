@@ -1,0 +1,302 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Breakout</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        background: #1e2230;
+        overflow: hidden;
+      }
+
+      canvas {
+        display: block;
+        cursor: none;
+        background: #1b2125;
+      }
+    </style>
+    <script src="../punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      // =========================================================
+      // COLORS
+      // =========================================================
+      var COLOR_TEXT = '#f5c518';
+      var COLOR_DIM  = '#2c3033';
+
+      // One image key per brick row (matches the images/ folder)
+      var BRICK_KEYS = ['brickRed', 'brickOrange', 'brickYellow', 'brickGreen', 'brickBlue'];
+
+      // =========================================================
+      // HELPERS
+      // =========================================================
+      var DPR = punter.dpr;
+
+      function px(n) {
+        return n * DPR;
+      }
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(value, max));
+      }
+
+      // =========================================================
+      // GAME SETTINGS
+      // =========================================================
+      var PADDLE_W      = px(90);
+      var PADDLE_H      = px(14);
+      var BALL_SIZE     = px(16);
+      var BALL_SPEED    = px(6);
+      var PADDLE_SPEED  = px(8);
+      var BRICK_ROWS    = 5;
+      var BRICK_COLS    = 8;
+      var BRICK_H       = px(22);
+      var BRICK_PAD     = px(6);
+      var PADDLE_OFFSET = px(40); // distance from bottom
+
+      // =========================================================
+      // GAME STATE
+      // =========================================================
+      var paddleSprite, ballSprite, bricks, ballVel;
+      var score, lives, gameOver, won;
+
+      // =========================================================
+      // SETUP
+      // =========================================================
+      punter.setup({
+        canvas: '#game',
+        images: {
+          ball:        '../images/breakout/ball.png',
+          paddle:      '../images/breakout/paddle.png',
+          brickRed:    '../images/breakout/brick-red.png',
+          brickOrange: '../images/breakout/brick-orange.png',
+          brickYellow: '../images/breakout/brick-yellow.png',
+          brickGreen:  '../images/breakout/brick-green.png',
+          brickBlue:   '../images/breakout/brick-blue.png'
+        },
+        sounds: {
+          bounce: '../sounds/beep6.mp3',
+          brick:  '../sounds/click1.mp3',
+          die:    '../sounds/error2.mp3',
+          win:    '../sounds/fanfare1.mp3'
+        }
+      });
+
+      // =========================================================
+      // SCENE: play
+      // =========================================================
+      punter.scene('play', function () {
+
+        var w = punter.width;
+        var h = punter.height;
+
+        // Create the paddle and ball sprites
+        paddleSprite = punter.createSprite({ id: 'paddle', key: 'paddle', x: w / 2 - PADDLE_W / 2, y: h - PADDLE_OFFSET, w: PADDLE_W, h: PADDLE_H });
+        ballSprite   = punter.createSprite({ id: 'ball',   key: 'ball',   x: w / 2, y: h / 2, w: BALL_SIZE, h: BALL_SIZE });
+
+        // Set up game state for the first time
+        bricks   = [];
+        ballVel  = { x: 0, y: 0 };
+        score    = 0;
+        lives    = 3;
+        gameOver = false;
+        won      = false;
+
+        buildBricks();
+        resetBall();
+
+        // -------------------------------------------------------
+        // UPDATE — game logic, runs ~60 times per second
+        // -------------------------------------------------------
+        punter.on('update', function () {
+
+          // Restart on any input when the game has ended
+          if (gameOver || won) {
+            if (punter.keys[' '] || punter.mouse.clicked) {
+              punter.clearInput();
+              resetGame();
+            }
+            return;
+          }
+
+          var w = punter.width;
+          var h = punter.height;
+
+          // Keep paddle pinned to the correct Y on resize
+          paddleSprite.y = h - PADDLE_OFFSET;
+
+          // Paddle: keyboard
+          if (punter.keys['ArrowLeft']  || punter.keys['a']) paddleSprite.x -= PADDLE_SPEED;
+          if (punter.keys['ArrowRight'] || punter.keys['d']) paddleSprite.x += PADDLE_SPEED;
+
+          // Paddle: tap / click
+          if (punter.mouse.clicked) {
+            paddleSprite.x = punter.mouse.x - PADDLE_W / 2;
+          }
+
+          paddleSprite.x = clamp(paddleSprite.x, 0, w - PADDLE_W);
+
+          // Move ball
+          ballSprite.x += ballVel.x;
+          ballSprite.y += ballVel.y;
+
+          // Bounce off side walls and ceiling
+          if (ballSprite.x <= 0)               { ballSprite.x = 0;               ballVel.x =  Math.abs(ballVel.x); }
+          if (ballSprite.x + BALL_SIZE >= w)   { ballSprite.x = w - BALL_SIZE;   ballVel.x = -Math.abs(ballVel.x); }
+          if (ballSprite.y <= 0)               { ballSprite.y = 0;               ballVel.y =  Math.abs(ballVel.y); }
+
+          // Ball falls off the bottom — lose a life
+          if (ballSprite.y > h) {
+            lives--;
+            punter.playSound('die');
+            if (lives <= 0) { gameOver = true; punter.clearInput(); return; }
+            resetBall();
+            return;
+          }
+
+          // Ball vs paddle
+          if (ballVel.y > 0 && ballSprite.isCollidingWith(paddleSprite)) {
+            var hit   = (ballSprite.x + BALL_SIZE / 2 - paddleSprite.x) / PADDLE_W;
+            ballVel.x = (hit - 0.5) * BALL_SPEED * 2.5;
+            ballVel.y = -Math.abs(ballVel.y);
+            punter.playSound('bounce');
+          }
+
+          // Ball vs bricks
+          for (var i = 0; i < bricks.length; i++) {
+            if (ballSprite.isCollidingWith(bricks[i])) {
+              bricks[i].destroy();
+              bricks.splice(i, 1);
+              ballVel.y = -ballVel.y;
+              score += 10;
+              punter.playSound('brick');
+              break; // only hit one brick per frame
+            }
+          }
+
+          if (bricks.length === 0) {
+            won = true;
+            punter.playSound('win');
+            punter.clearInput();
+          }
+        });
+
+        // -------------------------------------------------------
+        // DRAW — runs after sprites are drawn; used for HUD and overlays
+        // -------------------------------------------------------
+        punter.on('draw', function () {
+          var ctx = this; // punter passes the canvas 2D context as 'this'
+          var w   = punter.width;
+          var h   = punter.height;
+
+          // HUD: score and lives
+          ctx.fillStyle    = COLOR_TEXT;
+          ctx.font         = 'bold ' + px(18) + 'px monospace';
+          ctx.textBaseline = 'top';
+          ctx.textAlign    = 'left';
+          ctx.fillText('Score: ' + score, px(12), px(12));
+          ctx.textAlign = 'right';
+          ctx.fillText('Lives: ' + lives, w - px(12), px(12));
+
+          // Controls hint
+          ctx.fillStyle    = COLOR_DIM;
+          ctx.font         = px(14) + 'px monospace';
+          ctx.textBaseline = 'bottom';
+          ctx.textAlign    = 'center';
+          ctx.fillText('Arrow keys or A / D  ·  tap to move', w / 2, h - px(12));
+
+          // Game over / win overlay
+          if (gameOver || won) {
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle    = COLOR_TEXT;
+            ctx.font         = 'bold ' + px(40) + 'px monospace';
+            ctx.textAlign    = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(won ? 'YOU WIN!' : 'GAME OVER', w / 2, h / 2 - px(24));
+            ctx.font = px(18) + 'px monospace';
+            ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + px(24));
+          }
+        });
+      });
+
+      /**
+       * Creates a fresh grid of brick sprites.
+       * Each brick is a sprite the engine draws automatically.
+       */
+      function buildBricks() {
+        var w      = punter.width;
+        var brickW = (w - BRICK_PAD * (BRICK_COLS + 1)) / BRICK_COLS;
+
+        for (var r = 0; r < BRICK_ROWS; r++) {
+          for (var c = 0; c < BRICK_COLS; c++) {
+            bricks.push(punter.createSprite({
+              id:  'brick-' + r + '-' + c,
+              key: BRICK_KEYS[r],
+              x:   BRICK_PAD + c * (brickW + BRICK_PAD),
+              y:   px(50)    + r * (BRICK_H + BRICK_PAD),
+              w:   brickW,
+              h:   BRICK_H
+            }));
+          }
+        }
+      }
+
+      /**
+       * Puts the ball back in the centre aimed upward.
+       */
+      function resetBall() {
+        ballSprite.x = punter.width  / 2 - BALL_SIZE / 2;
+        ballSprite.y = punter.height / 2;
+        ballVel.x    = (Math.random() < 0.5 ? -1 : 1) * BALL_SPEED * 0.6;
+        ballVel.y    = -BALL_SPEED;
+      }
+
+      /**
+       * Destroys any remaining bricks and resets everything for a new game.
+       */
+      function resetGame() {
+        for (var i = 0; i < bricks.length; i++) { bricks[i].destroy(); }
+        bricks = [];
+
+        score    = 0;
+        lives    = 3;
+        gameOver = false;
+        won      = false;
+
+        paddleSprite.x = punter.width  / 2 - PADDLE_W / 2;
+        paddleSprite.y = punter.height - PADDLE_OFFSET;
+
+        buildBricks();
+        resetBall();
+      }
+
+      // Reposition paddle on resize
+      punter.on('resize', function () {
+        if (!paddleSprite) return;
+        paddleSprite.x = clamp(paddleSprite.x, 0, punter.width - PADDLE_W);
+        paddleSprite.y = punter.height - PADDLE_OFFSET;
+      });
+
+      // =========================================================
+      // START — go to the play scene once everything is loaded
+      // =========================================================
+      punter.on('ready', function () {
+        punter.go('play');
+      });
+
+    </script>
+  </body>
+</html>
