@@ -3,8 +3,6 @@
 var http = require('http');
 var fs = require('fs');
 var path = require('path');
-var puppeteer = require('puppeteer');
-
 var ROOT = path.resolve(__dirname, '..');
 var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.wav': 'audio/wav', '.png': 'image/png' };
 
@@ -28,6 +26,7 @@ function ensureStarted() {
             _server.listen(0, '127.0.0.1', resolve);
         });
         _baseUrl = 'http://127.0.0.1:' + _server.address().port;
+        var puppeteer = (await import('puppeteer')).default;
         _browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required'] });
     })();
     return _started;
