@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "npx serve .",
+    "start:pong": "npx serve . -l 4000 & npx open-cli http://localhost:4000/games/pong.html",
     "test": ". \"$NVM_DIR/nvm.sh\" && nvm use && NODE_ENV=test TZ=UTC node_modules/.bin/jasmine --config=tests/jasmine/config.json"
   },
   "repository": {
