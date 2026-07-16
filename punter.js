@@ -29,6 +29,7 @@
     var _initilised = false;
     var _scenes = {};
     var _currentScene = null;
+    var _pendingGo = null;  // scene name queued before init completes
     var _running = false;
     var _paused = false;
     var _frame = 0;
@@ -175,6 +176,7 @@
             _initilised = true;
             htmlEl.removeAttribute('data-punter-loading');
             eventHandlers.ready();
+            if (_pendingGo) { engine.go(_pendingGo); _pendingGo = null; }
         })
         .catch(function() {
             _initilised = false;
@@ -1314,8 +1316,8 @@
         },
         go: function (name) {
 
-            if (!_initilised) throw new Error('punter.setup must be called first');
             if (!_scenes[name]) throw new Error('punter.go: unknown scene "' + name + '"');
+            if (!_initilised) { _pendingGo = name; return; }
 
             // remove existing game loop handlers
             eventHandlers.update = function () {};

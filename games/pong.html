@@ -113,6 +113,8 @@
       // =========================================================
       punter.scene('play', function () {
 
+        score = { player: 0, ai: 0 };
+
         // Create the three sprites punter.js will draw each frame.
         // w/h set the draw size; the image is scaled to fit automatically.
         playerSprite = punter.createSprite({ id: 'player', key: 'paddle', x: 0, y: 0, w: PADDLE_W, h: PADDLE_H });
@@ -271,13 +273,7 @@
         resetPositions();
       });
 
-      // =========================================================
-      // START — go to the play scene once everything is loaded
-      // =========================================================
-      punter.on('ready', function () {
-        score = { player: 0, ai: 0 };
-        punter.go('play');
-      });
+      punter.go('play');
 
     </script>
   </body>

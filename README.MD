@@ -63,7 +63,7 @@ Every punter.js game follows the same three-step pattern:
 
 1. **setup** - specify which canvas to use and which images/sounds to preload
 2. **scene** - define a named scene (level, menu, etc.) with update/draw logic
-3. **ready** - switch to a scene once everything has loaded
+3. **go** - call `punter.go()` to start. If assets are still loading, the engine waits and starts automatically once they're ready
 
 ```js
 // 1. Load assets
@@ -86,10 +86,8 @@ punter.scene('level1', function () {
   });
 });
 
-// 3. Start when ready
-punter.on('ready', function () {
-  punter.go('level1');
-});
+// 3. Go! (waits for assets to finish loading automatically)
+punter.go('level1');
 ```
 
 ## Setup
@@ -139,8 +137,8 @@ Register handlers with `punter.on()`. Each event can only have one handler at a 
 
 ```js
 punter.on('ready', function () {
-  // fires once - all assets loaded, safe to create sprites
-  punter.go('level1');
+  // optional - fires once when all assets have loaded
+  // not needed for starting a scene; use punter.go() directly instead
 });
 
 punter.on('update', function () {
