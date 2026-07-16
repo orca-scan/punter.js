@@ -47,11 +47,14 @@ Download `punter.js` and include it with a script tag before your game code:
 
 ## Run the Example
 
-The repo includes a few games in `games`. To try these examples using:
+**VS Code (recommended):**
+1. Open this folder in VS Code
+2. Run → Start Debugging
+3. Open http://localhost:4000/games/pong.html
 
-**VS Code (recommended):** Run the **Start dev server** launch configuration (Run → Start Debugging), then open **http://localhost:4000/games/pong.html** in your browser.
-
-**Terminal:** Run `npm start`, then open **http://localhost:3000/games/pong.html** in your browser.
+**Terminal:**
+1. Run `npm start`
+2. Open http://localhost:4000/games/pong.html
 
 ## How it Works
 
