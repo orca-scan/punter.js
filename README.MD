@@ -1,8 +1,8 @@
 # punter.js
 
-[![license](https://img.shields.io/github/license/orca-scan/punter.js)](https://github.com/orca-scan/punter.js/blob/master/LICENSE)
 [![Tests](https://github.com/orca-scan/punter.js/actions/workflows/ci.yml/badge.svg)](https://github.com/orca-scan/punter.js/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/punter.js)](https://www.npmjs.com/package/punter.js)
+[![license](https://img.shields.io/github/license/orca-scan/punter.js)](https://github.com/orca-scan/punter.js/blob/master/LICENSE)
 
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
