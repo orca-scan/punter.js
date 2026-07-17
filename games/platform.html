@@ -77,8 +77,8 @@
       }
 
       // game constants — tweak these to adjust feel and difficulty
-      var PLAYER_W = px(24);
-      var PLAYER_H = px(56);
+      var PLAYER_W = px(64);
+      var PLAYER_H = px(53);
       var PLAYER_SPEED = px(5);
       var PLAYER_AIR_SPEED = px(4);
       var JUMP_SPEED = px(13);
@@ -108,7 +108,7 @@
       punter.setup({
         canvas: '#game',
         images: {
-          player: '../images/platform/player.png',
+          player: '../images/platform/ghost2.png',
           platform: '../images/platform/platform-grass.png',
           platformAlt: '../images/platform/platform-dirt.png',
           goal: '../images/platform/goal.png',
@@ -143,6 +143,8 @@
           updateCoins();
           updateEnemies();
           updateGoal();
+
+          // playerSprite.bounce(3,3)
         });
 
         punter.on('draw', function () {
@@ -215,9 +217,9 @@
           image: 'player',
           x: playerStart.x,
           y: playerStart.y,
-          w: PLAYER_W,
+          // w: PLAYER_W,
           h: PLAYER_H,
-          preserveAspect: false
+          preserveAspect: true
         });
 
         goalSprite = punter.createSprite({
