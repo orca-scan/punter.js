@@ -47,3 +47,4 @@ When asked to create or modify a 2D game:
 - When unsure about an API, inspect the engine source or existing examples
 - After making changes, check for console errors and obvious gameplay issues
 - Create game sprites as png files in /images/gamename/
+- declare punter.js functions inline - example punter.on('update', function () {});
