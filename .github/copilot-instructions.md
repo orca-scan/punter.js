@@ -48,5 +48,4 @@ When asked to create or modify a 2D game:
 * Check asset paths before referencing images or sounds
 * Store game sprites as PNG files in /images/<game-name>/
 * Keep sprite filenames lowercase and descriptive
-* After making changes, test starting, playing, losing and restarting the game
 * Check for obvious collision, movement and scoring issues
