@@ -13,7 +13,7 @@
     var _debugBackgroundColor = '';
     var _debugTextColor = '';
     var _debugFont = '';
-    var log = (typeof SimpleLog === 'function') ? new SimpleLog('engine', '#6899E1', true) : console.log.bind(console, '[engine]');
+    var log = (typeof SimpleLog === 'function') ? new SimpleLog('punter.js', '#6899E1', true) : console.log.bind(console, '[punter.js]'); // eslint-disable-line no-console
 
     var images = {};
     var sounds = {};
@@ -87,7 +87,7 @@
     var boundingCache = (function () {
         var MAX = 1000;
         var store = Object.create(null);
-        var keys = [];
+        var cacheKeys = [];
         
         return {
             get: function (key) {
@@ -95,11 +95,11 @@
             },
             set: function (key, value) {
                 if (!store[key]) {
-                    if (keys.length >= MAX) {
-                        var oldest = keys.shift();
+                    if (cacheKeys.length >= MAX) {
+                        var oldest = cacheKeys.shift();
                         delete store[oldest];
                     }
-                    keys.push(key);
+                    cacheKeys.push(key);
                 }
                 store[key] = value;
             }
@@ -190,8 +190,8 @@
      */
     function loadImages(imageMap) {
 
-        var keys = Object.keys(imageMap);
-        var total = keys.length;
+        var imageKeys = Object.keys(imageMap);
+        var total = imageKeys.length;
 
         if (!total) return Promise.resolve();
 
@@ -235,7 +235,7 @@
             }
 
             for (var i = 0; i < total; i++) {
-                var key = keys[i];
+                var key = imageKeys[i];
                 var url = imageMap[key];
                 var img = new Image();
                 img.key = key; // for debugging
@@ -248,8 +248,8 @@
 
     function loadSounds(audioMap) {
 
-        var keys = Object.keys(audioMap);
-        var total = keys.length;
+        var soundKeys = Object.keys(audioMap);
+        var total = soundKeys.length;
         if (!total) return Promise.resolve();
 
         return new Promise(function (resolve, reject) {
@@ -285,7 +285,7 @@
                     }).catch(function () {
                         handleError(key, url);
                     });
-                })(keys[i], audioMap[keys[i]]);
+                })(soundKeys[i], audioMap[soundKeys[i]]);
             }
         });
     }
@@ -585,7 +585,7 @@
         var sh = img.naturalHeight;                     // source height
 
         // vertical clipping if clipHeight is set
-        if (this.clipHeight != null && this.clipHeight < dh) {
+        if (this.clipHeight !== null && this.clipHeight < dh) {
             var ratio = this.clipHeight / dh;           // visible ratio
             sh = sh * ratio;                            // shrink source height
             dh = this.clipHeight;                       // limit draw height
@@ -616,7 +616,7 @@
             dx = 0;
         }
         else if (dx + dw > canvasW) {
-            var overflow = (dx + dw) - canvasW;         // overflow right
+            overflow = (dx + dw) - canvasW;             // overflow right
             sw -= (overflow / dw) * sw;                 // reduce crop width
             dw -= overflow;                             // reduce draw width
         }
@@ -931,7 +931,7 @@
         },
         actualH: {
             get: function () {
-                return Math.floor(this.clipHeight != null ? this.clipHeight : this.h);
+                return Math.floor(this.clipHeight !== null ? this.clipHeight : this.h);
             }
         },
         visible: {
@@ -1115,12 +1115,12 @@
             source.buffer = buffer;
 
             var gainNode = audioCtx.createGain();
-            gainNode.gain.value = (options && options.volume != null) ? options.volume : 1;
+            gainNode.gain.value = (options && options.volume !== null && options.volume !== undefined) ? options.volume : 1;
 
             source.loop = !!(options && options.loop);
 
             // apply playback speed if provided
-            source.playbackRate.value = (options && options.speed != null) ? options.speed : 1;
+            source.playbackRate.value = (options && options.speed !== null && options.speed !== undefined) ? options.speed : 1;
 
             source.connect(gainNode);
             gainNode.connect(audioCtx.destination);
@@ -1138,7 +1138,9 @@
                     }
                 };
             }
-        } catch (e) { }
+        } catch (e) {
+            // audio errors are non-fatal; browser may restrict AudioContext
+        }
     }
 
     function stopSound(name) {
@@ -1148,7 +1150,7 @@
         var arr = playingSounds[name];
         if (!arr || !arr.length) return;
         for (var i = 0; i < arr.length; i++) {
-            try { arr[i].stop(0); } catch (e) { }
+            try { arr[i].stop(0); } catch (e) { /* already stopped */ }
         }
         playingSounds[name] = [];
     }

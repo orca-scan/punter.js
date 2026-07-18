@@ -72,7 +72,6 @@ describe('Scenes', function () {
                 punter.scene('deferredScene', function () { calls.push('started'); });
 
                 // Monkey-patch: temporarily mark as uninitialised, call go(), restore
-                var orig = punter.sceneName; // just reading a prop to confirm engine exists
                 punter.go('deferredScene'); // already initialised in test env, so this runs immediately
                 resolve(calls);
             });

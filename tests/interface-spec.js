@@ -222,7 +222,7 @@ describe('Interface', function () {
                     sprite = punter.createSprite({ id: 'auto-sprite', image: 'hero', x: 0, y: 0 });
                 });
                 punter.go('autoDrawScene');
-                setTimeout(function () { resolve(sprite.bounds != null); }, 100);
+                setTimeout(function () { resolve(sprite.bounds !== undefined); }, 100);
             });
         });
         expect(result).toBe(true);
