@@ -10,7 +10,7 @@
 * Do not use arrow functions
 * Do not use classes
 * Do not use async or await
-* Do not use map, filter or reduce
+* Do not use reduce
 * Avoid unnecessary abstractions
 * Avoid dependencies, frameworks and build tools
 * Keep examples in a single HTML file where practical
