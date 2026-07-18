@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Punter.js – 2D Game Engine</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+        background: #1e2230;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        color: #e0e0e0;
+      }
+
+      .container {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 60px 20px;
+        text-align: center;
+      }
+
+      .logo {
+        width: 290px;
+        max-width: 100%;
+        height: auto;
+        margin-bottom: 16px;
+      }
+
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #f5c518;
+        margin-bottom: 8px;
+      }
+
+      .tagline {
+        font-size: 16px;
+        color: #8a8f98;
+        margin-bottom: 48px;
+      }
+
+      .games {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .games a {
+        display: block;
+        padding: 16px 24px;
+        background: #1b2125;
+        border: 1px solid #2c3033;
+        border-radius: 8px;
+        color: #e0e0e0;
+        text-decoration: none;
+        font-size: 18px;
+        font-weight: 600;
+        transition: border-color 0.15s, color 0.15s;
+      }
+
+      .games a:hover {
+        border-color: #f5c518;
+        color: #f5c518;
+      }
+
+      .footer {
+        margin-top: 48px;
+        font-size: 14px;
+        color: #8a8f98;
+      }
+
+      .footer a {
+        color: #f5c518;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <img class="logo" src="images/punterjs.png" alt="Punter.js" width="290" height="174">
+      <h1>Punter.js</h1>
+      <p class="tagline">A simple, dependency-free 2D game engine for the browser</p>
+      <ul class="games">
+        <li><a href="games/pong.html">Pong</a></li>
+        <li><a href="games/breakout.html">Breakout</a></li>
+        <li><a href="games/asteroids.html">Asteroids</a></li>
+        <li><a href="games/platform.html">Platform</a></li>
+      </ul>
+      <p class="footer">
+        <a href="https://github.com/orca-scan/punter.js">View on GitHub</a>
+      </p>
+    </div>
+  </body>
+</html>
