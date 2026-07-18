@@ -32,13 +32,13 @@ A simple, dependency-free 2D game engine for the browser. No build step, no fram
 
 ## Install
 
-Download `punter.js` and include it with a script tag before your game code:
+Download `src/punter.js` and include it with a script tag before your game code:
 
 ```html
 <!doctype html>
 <html>
   <head>
-    <script src="punter.js"></script>
+    <script src="src/punter.js"></script>
   </head>
   <body>
     <canvas id="game"></canvas>
