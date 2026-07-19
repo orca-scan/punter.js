@@ -203,7 +203,7 @@ None of this is exotic - it's the stuff that's easy to get subtly wrong when you
 
 ## What it doesn't do
 
-- **No physics.** No gravity, velocity/acceleration model, or collision resolution - `isCollidingWith` tells you two sprites overlap; what happens next (bounce back, stop, lose a life) is up to you to code.
+- **No physics.** No gravity, velocity, acceleration model - `isCollidingWith` tells you two sprites overlap; what happens next (bounce back, stop, lose a life) is up to you.
 - **No tilemaps.** No Tiled import, no level-editor pipeline.
 - **No plugin system, no modules.** Single file, ~1700 lines, vanilla ES5-style JS, one global (`punter`).
 - **No WebGL.** Canvas 2D only.
