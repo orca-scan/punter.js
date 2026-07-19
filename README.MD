@@ -6,9 +6,7 @@
 
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
-A dependency-free 2D engine for mobile-first web games. No build step - one script tag, one canvas.
-
-Handles sprites, scenes, animation, sound, collision, and touch/mouse input, with a correct fixed-timestep game loop under the hood.
+A simple, dependency-free 2D engine for mobile-first web games. No build step, just one script tag and one `<canvas>`. Handles sprites, scenes, animation, sound, collision, and touch/mouse input, with a correct fixed-timestep game loop under the hood.
 
 **New to game programming?** A few terms used throughout this doc:
 - **Canvas** - an HTML element you can draw on with JavaScript, pixel by pixel. Every game punter.js runs lives inside one `<canvas>`.
