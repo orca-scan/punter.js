@@ -68,7 +68,7 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
 
 ## 1. `punter.setup(config)`
 
-Call this once, right at the start. It loads all your images and sounds ahead of time (so nothing is missing mid-game), sets up the canvas, and fires the `ready` event when everything's finished loading.
+Call this once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading.
 
 | Option   | Type           | Description                                              |
 |----------|----------------|----------------------------------------------------------|
