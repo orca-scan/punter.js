@@ -16,7 +16,7 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
 
 ## Requirements
 
-- A modern browser with `fetch` and `Promise` support (polyfill older browsers if needed)
+- A modern browser with `fetch` and `Promise` support _(all modern browsers)_
 - A `<canvas>` element on the page
 
 ## Quick Start
