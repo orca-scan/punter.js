@@ -9,10 +9,10 @@
 A simple, dependency-free 2D engine for mobile-first web games. No build step, just one script tag and one `<canvas>`. Handles sprites, scenes, animation, sound, collision, and touch/mouse input, with a correct fixed-timestep game loop under the hood.
 
 **New to game programming?** A few terms used throughout this doc:
-- **Canvas** - an HTML element you can draw on with JavaScript, pixel by pixel. Every game punter.js runs lives inside one `<canvas>`.
-- **Sprite** - a game object made from an image, like the player, an enemy, or a coin. It has a position and can move, animate, and collide with other sprites.
-- **Scene** - one "screen" of your game, like a menu, a level, or a game-over screen. You set up sprites and logic inside a scene.
-- **Game loop** - the code that runs over and over, many times per second, to update positions and redraw everything. This is what makes a game feel alive instead of a static picture.
+- **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`.
+- **Sprite** - an image-based game object (player, enemy, coin). It has a position and can move, animate, and collide.
+- **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene.
+- **Game loop** - code that runs 60 times per second to update positions, check collisions and redraw everything.
 
 ## Requirements
 
