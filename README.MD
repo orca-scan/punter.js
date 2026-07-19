@@ -271,7 +271,7 @@ punter.on('update', function () {
 ```
 
 #### `sprite.isCollidingWith(other)`
-Returns `true` if the bounding boxes of two sprites overlap. Both must have `collidable: true` (the default). Always call `sprite.draw()` before checking - bounds are updated during draw.
+Returns `true` if the bounding boxes of two sprites overlap. Both must have `collidable: true` (the default).
 
 ```js
 punter.on('update', function () {
