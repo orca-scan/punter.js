@@ -120,7 +120,9 @@ Option    | Required | Description
 
 ## Scenes
 
-Scenes are the different screens in your game - a menu, level 1, game over. Define each with `punter.scene()`, then switch between them with `punter.go()`. Switching scenes automatically clears the previous update/draw handlers and destroys all sprites from the previous scene.
+Scenes are the different screens in your game - a menu, level 1, game over. Define each with `punter.scene()`, then switch between them with `punter.go()`. Switching scenes automatically clears the previous update/draw handlers, destroys all sprites, and stops all sounds from the previous scene.
+
+`punter.go()` is safe to call before assets finish loading — it queues the scene and transitions automatically once `setup()` completes.
 
 ```js
 punter.scene('menu', function () {
@@ -202,6 +204,8 @@ Property    | Description
 ------------|-----------------------------------------------------------------------------------------
 `x`, `y`    | Position in pixels. Set directly to move the sprite
 `w`, `h`    | Size in pixels
+`actualW`   | Actual drawn width in pixels (same as `w`). Read-only
+`actualH`   | Actual drawn height in pixels; accounts for `clipHeight` if set. Read-only
 `visible`   | `true` if any part of the sprite is within the canvas. Read-only
 `seen`      | `true` once the sprite has been visible at least once. Read/write
 `bounds`    | Pixel-accurate bounding box `{ x, y, w, h }`. Updated each frame. Read-only
@@ -258,7 +262,7 @@ punter.on('update', function () {
 Set `sprite.frame = 2` to jump to a specific frame. Set it to `null` to let `animate()` take over again.
 
 #### `sprite.bounce(range?, speed?)`
-Float up and down in a smooth wave. Call every frame in `update`.
+Float up and down in a smooth wave. Call every frame in `update`. The oscillation is anchored to the sprite's position at creation time — repositioning the sprite after creation does not shift the bounce center.
 
 ```js
 punter.on('update', function () {
@@ -365,20 +369,24 @@ Resets all key states and clears `mouse.clicked`. Called automatically on `punte
 
 ## Engine Properties
 
-Property             | Description
----------------------|-----------------------------------------------------
-`punter.width`       | Canvas width in pixels (DPR-adjusted)
-`punter.height`      | Canvas height in pixels (DPR-adjusted)
-`punter.dpr`         | Device pixel ratio (capped at `2`)
-`punter.frame`       | Frame counter, cycling 0–59
-`punter.running`     | `true` if the game loop is running
-`punter.paused`      | `true` if the loop is paused
-`punter.isMobile`    | `true` on mobile devices
-`punter.orientation` | `'portrait'` or `'landscape'`
-`punter.sceneName`   | Name of the current scene
-`punter.debug`       | Toggle debug mode at runtime: `punter.debug = true`
-`punter.canvas`      | The raw `<canvas>` element
-`punter.ctx`         | The canvas 2D drawing context. Same as `this` inside a `draw` handler
+Property              | Description
+----------------------|-----------------------------------------------------
+`punter.width`        | Canvas buffer width in pixels, scaled by DPR. On a 2× display a 375px canvas returns `750`. Use this for all game coordinate math
+`punter.height`       | Canvas buffer height in pixels, scaled by DPR
+`punter.dpr`          | Device pixel ratio (capped at `2`)
+`punter.frame`        | Frame counter, cycling 0–59. Reset each scene
+`punter.totalFrames`  | Monotonically increasing frame counter. Never resets. Useful for timing across scenes
+`punter.running`      | `true` if the game loop is running
+`punter.paused`       | `true` if the loop is paused
+`punter.resized`      | `true` for exactly one frame after the canvas is resized. Useful for repositioning custom-drawn elements
+`punter.isMobile`     | `true` on mobile devices
+`punter.isDesktop`    | `true` on non-mobile devices (inverse of `isMobile`)
+`punter.orientation`  | `'portrait'` or `'landscape'`
+`punter.sceneName`    | Name of the current scene
+`punter.debug`        | Toggle debug mode at runtime: `punter.debug = true`
+`punter.canvas`       | The raw `<canvas>` element
+`punter.ctx`          | The canvas 2D drawing context. Same as `this` inside a `draw` handler
+`punter.sprites`      | Array of all currently active (non-destroyed) sprites
 
 ### `punter.getSprite(id)`
 Returns a sprite by ID, or `null` if not found.
