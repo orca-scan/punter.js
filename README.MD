@@ -25,6 +25,8 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
 <canvas id="game"></canvas>
 <script src="punter.js"></script>
 <script>
+
+  // load assets and bind to a canvas (must be called first)
   punter.setup({
     canvas: '#game',
     debug: false, // set true to see FPS, bounds boxes, sprite labels
@@ -37,32 +39,32 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
     }
   });
 
+  // define a scene - create sprites and register update/draw handlers inside
   punter.scene('level1', function () {
+
+    // create a sprite using the 'player' image loaded above
     var player = punter.createSprite({
-      id: 'player',
-      image: 'player',
-      x: 50,
-      y: 50
+      id: 'player',   // unique id - no two sprites can share one
+      image: 'player', // key from config.images
+      x: 50,           // pixels from left edge of canvas
+      y: 50            // pixels from top edge of canvas
     });
 
+    // runs ~60 times/sec - move things, read input, check collisions
     punter.on('update', function () {
       if (punter.keys['ArrowRight']) player.moveX(2);
     });
 
+    // runs once per frame after sprites draw - use for score text, HUD, overlays
     punter.on('draw', function () {
-      // sprites are drawn automatically each frame;
-      // use this handler for HUD/overlay drawing on top
+      // 'this' is the canvas 2D context
     });
   });
 
-  // go() can be called immediately - it's queued until setup() finishes loading
+  // go() a specific scene - can be called immediately
   punter.go('level1');
 </script>
 ```
-
-Walking through what this does: `setup()` loads your images and sounds and prepares the canvas. `scene()` defines what happens on a screen called `'level1'` - here, it creates one sprite (the player) and tells the engine what to do every frame (`update`) and after drawing (`draw`). `go()` switches to that scene and starts the game running.
-
-The library attaches itself to the page as a single global, `punter` - meaning after the `<script>` tag loads, you can just start typing `punter.` anywhere in your own code, no importing required.
 
 ## 1. `punter.setup(config)`
 
