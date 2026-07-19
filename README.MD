@@ -120,7 +120,9 @@ Option    | Required | Description
 
 ## Scenes
 
-Scenes are the different screens in your game - a menu, level 1, game over. Define each with `punter.scene()`, then switch between them with `punter.go()`. Switching scenes automatically clears the previous update/draw handlers and destroys all sprites from the previous scene.
+Scenes are the different screens in your game - a menu, level 1, game over. Define each with `punter.scene()`, then switch between them with `punter.go()`. Switching scenes automatically clears the previous update/draw handlers, destroys all sprites, and stops all sounds from the previous scene.
+
+`punter.go()` is safe to call before assets finish loading — it queues the scene and transitions automatically once `setup()` completes.
 
 ```js
 punter.scene('menu', function () {
@@ -158,6 +160,11 @@ punter.on('draw', function () {
 punter.on('resize', function () {
   // fires when the browser window resizes
 });
+
+punter.on('go', function (sceneName) {
+  // fires after every punter.go() call
+  // sceneName is the scene that just started
+});
 ```
 
 ## Sprites
@@ -177,29 +184,33 @@ var player = punter.createSprite({
 
 Option           | Default    | Description
 -----------------|------------|----------------------------------------------------------------------------------------------------
-`id`             | -          | **Required.** Unique name for this sprite.
-`image`          | -          | **Required.** Image name from `config.images`. Pass an array (`['frame1','frame2']`) for animation.
-`x`              | -          | **Required.** Horizontal position in pixels or `'50%'`.
-`y`              | -          | **Required.** Vertical position in pixels or `'50%'`.
-`w`              | auto       | Width in pixels or percent. Inferred from the image if omitted.
-`h`              | auto       | Height in pixels or percent. Inferred from the image if omitted.
-`preserveAspect` | `true`     | Maintain aspect ratio when only one dimension is set.
-`collidable`     | `true`     | Compute a collision bounding box for this sprite.
-`repeatX`        | `false`    | Tile horizontally across the canvas (e.g. a floor).
-`repeatY`        | `false`    | Tile vertically across the canvas (e.g. a wall).
-`clipHeight`     | `null`     | Limit the drawn height in pixels - useful for health/fill bars.
-`clipFrom`       | `'bottom'` | Which end to clip from: `'top'` or `'bottom'`.
+`id`             | -          | **Required.** Unique name for this sprite
+`image`          | -          | **Required.** Image name from `config.images`. Pass an array (`['frame1','frame2']`) for animation
+`x`              | -          | **Required.** Horizontal position in pixels or `'50%'`
+`y`              | -          | **Required.** Vertical position in pixels or `'50%'`
+`w`              | auto       | Width in pixels or percent. Inferred from the image if omitted
+`h`              | auto       | Height in pixels or percent. Inferred from the image if omitted
+`preserveAspect` | `true`     | Maintain aspect ratio when only one dimension is set
+`collidable`     | `true`     | Compute a collision bounding box for this sprite
+`repeatX`        | `false`    | Tile horizontally across the canvas (e.g. a floor)
+`repeatY`        | `false`    | Tile vertically across the canvas (e.g. a wall)
+`clipHeight`     | `null`     | Limit the drawn height in pixels - useful for health/fill bars
+`clipFrom`       | `'bottom'` | Which end to clip from: `'top'` or `'bottom'`
+`outline`        | `null`     | CSS colour string. Draws a box around the sprite's drawn area (e.g. `'red'`). Good for debugging layout
 
 ### Properties
 
 Property    | Description
 ------------|-----------------------------------------------------------------------------------------
-`x`, `y`    | Position in pixels. Set directly to move the sprite.
-`w`, `h`    | Size in pixels.
-`visible`   | `true` if any part of the sprite is within the canvas. Read-only.
-`bounds`    | Pixel-accurate bounding box `{ x, y, w, h }`. Updated each frame. Read-only.
-`frame`     | Override the current animation frame index. Set to `null` to let `animate()` control it.
-`destroyed` | `true` after `destroy()` has been called. Read-only.
+`x`, `y`    | Position in pixels. Set directly to move the sprite
+`w`, `h`    | Size in pixels
+`actualW`   | Actual drawn width in pixels (same as `w`). Read-only
+`actualH`   | Actual drawn height in pixels; accounts for `clipHeight` if set. Read-only
+`visible`   | `true` if any part of the sprite is within the canvas. Read-only
+`seen`      | `true` once the sprite has been visible at least once. Read/write
+`bounds`    | Pixel-accurate bounding box `{ x, y, w, h }`. Updated each frame. Read-only
+`frame`     | Override the current animation frame index. Set to `null` to let `animate()` control it
+`destroyed` | `true` after `destroy()` has been called. Read-only
 
 ### Methods
 
@@ -251,7 +262,7 @@ punter.on('update', function () {
 Set `sprite.frame = 2` to jump to a specific frame. Set it to `null` to let `animate()` take over again.
 
 #### `sprite.bounce(range?, speed?)`
-Float up and down in a smooth wave. Call every frame in `update`.
+Float up and down in a smooth wave. Call every frame in `update`. The oscillation is anchored to the sprite's position at creation time — repositioning the sprite after creation does not shift the bounce center.
 
 ```js
 punter.on('update', function () {
@@ -278,9 +289,9 @@ Removes the sprite. All subsequent `draw()` calls are silently ignored.
 
 Method                                                   | Description
 ---------------------------------------------------------|------------------------------------------------------------------------
-`sprite.parallaxScrollX(speed, respawnAfterMs, offset?)` | Scroll horizontally. Respawns from the opposite edge after a delay.
-`sprite.parallaxScrollY(speed, respawnAfterMs, offset?)` | Scroll vertically. Respawns from the opposite edge after a delay.
-`sprite.loopScrollX(speed)`                              | Scroll horizontally and wrap immediately. Good for looping backgrounds.
+`sprite.parallaxScrollX(speed, respawnAfterMs, offset?)` | Scroll horizontally. Respawns from the opposite edge after a delay
+`sprite.parallaxScrollY(speed, respawnAfterMs, offset?)` | Scroll vertically. Respawns from the opposite edge after a delay
+`sprite.loopScrollX(speed)`                              | Scroll horizontally and wrap immediately. Good for looping backgrounds
 
 ```js
 punter.on('update', function () {
@@ -310,10 +321,10 @@ punter.stopSound('music');   // stop a playing sound
 
 Option   | Default | Description
 ---------|---------|--------------------------------------------
-`volume` | `1`     | Volume from `0` (silent) to `1` (full).
-`loop`   | `false` | Repeat indefinitely.
-`speed`  | `1`     | Playback speed. `0.5` = half, `2` = double.
-`once`   | `false` | If `true`, `stopSound()` cannot stop it.
+`volume` | `1`     | Volume from `0` (silent) to `1` (full)
+`loop`   | `false` | Repeat indefinitely
+`speed`  | `1`     | Playback speed. `0.5` = half, `2` = double
+`once`   | `false` | If `true`, `stopSound()` cannot stop it
 
 ### `punter.stopSound(name)`
 Stops all playing instances of the named sound.
@@ -348,9 +359,9 @@ punter.on('update', function () {
 
 Property               | Description
 -----------------------|---------------------------------------------------
-`punter.mouse.x`       | X position of the last click/tap in canvas pixels.
-`punter.mouse.y`       | Y position of the last click/tap in canvas pixels.
-`punter.mouse.clicked` | `true` for one update tick after a click or tap.
+`punter.mouse.x`       | X position of the last click/tap in canvas pixels
+`punter.mouse.y`       | Y position of the last click/tap in canvas pixels
+`punter.mouse.clicked` | `true` for one update tick after a click or tap
 
 ### `punter.clearInput()`
 Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()`.
@@ -358,18 +369,24 @@ Resets all key states and clears `mouse.clicked`. Called automatically on `punte
 
 ## Engine Properties
 
-Property             | Description
----------------------|-----------------------------------------------------
-`punter.width`       | Canvas width in pixels (DPR-adjusted).
-`punter.height`      | Canvas height in pixels (DPR-adjusted).
-`punter.dpr`         | Device pixel ratio (capped at `2`).
-`punter.frame`       | Frame counter, cycling 1–60.
-`punter.running`     | `true` if the game loop is running.
-`punter.paused`      | `true` if the loop is paused.
-`punter.isMobile`    | `true` on mobile devices.
-`punter.orientation` | `'portrait'` or `'landscape'`.
-`punter.sceneName`   | Name of the current scene.
-`punter.debug`       | Toggle debug mode at runtime: `punter.debug = true`.
+Property              | Description
+----------------------|-----------------------------------------------------
+`punter.width`        | Canvas buffer width in pixels, scaled by DPR. On a 2× display a 375px canvas returns `750`. Use this for all game coordinate math
+`punter.height`       | Canvas buffer height in pixels, scaled by DPR
+`punter.dpr`          | Device pixel ratio (capped at `2`)
+`punter.frame`        | Frame counter, cycling 0–59. Reset each scene
+`punter.totalFrames`  | Monotonically increasing frame counter. Never resets. Useful for timing across scenes
+`punter.running`      | `true` if the game loop is running
+`punter.paused`       | `true` if the loop is paused
+`punter.resized`      | `true` for exactly one frame after the canvas is resized. Useful for repositioning custom-drawn elements
+`punter.isMobile`     | `true` on mobile devices
+`punter.isDesktop`    | `true` on non-mobile devices (inverse of `isMobile`)
+`punter.orientation`  | `'portrait'` or `'landscape'`
+`punter.sceneName`    | Name of the current scene
+`punter.debug`        | Toggle debug mode at runtime: `punter.debug = true`
+`punter.canvas`       | The raw `<canvas>` element
+`punter.ctx`          | The canvas 2D drawing context. Same as `this` inside a `draw` handler
+`punter.sprites`      | Array of all currently active (non-destroyed) sprites
 
 ### `punter.getSprite(id)`
 Returns a sprite by ID, or `null` if not found.
@@ -396,17 +413,19 @@ The engine sets attributes on `<html>` as the game runs. Use them in CSS to reac
 
 Attribute                 | When set
 --------------------------|-------------------------------------------------------------
-`data-punter-loading`     | Present while assets are loading; removed when `ready` fires
+`data-punter-loading`     | Present while assets are loading; removed when ready fires or on error
+`data-punter-error`       | Set if asset loading fails; value is the error message
 `data-punter-scene`       | Updated on every `punter.go()` - value is the scene name
 `data-punter-orientation` | `"portrait"` or `"landscape"`, updated on resize
 `data-punter-device`      | `"mobile"` or `"desktop"`, set on init
+`data-punter-debug`       | `"true"` when debug mode is on, removed otherwise
 
 It also exposes CSS variables on `:root`, updated on resize:
 
 Variable       | Description
 ---------------|------------------------------------------
-`--punter-vpw` | Viewport width in pixels (e.g. `375px`).
-`--punter-vph` | Viewport height in pixels (e.g. `667px`).
+`--punter-vpw` | Viewport width in pixels (e.g. `375px`)
+`--punter-vph` | Viewport height in pixels (e.g. `667px`)
 
 ```css
 /* hide loader once assets are ready */

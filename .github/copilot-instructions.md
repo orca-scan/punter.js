@@ -10,7 +10,7 @@
 * Do not use arrow functions
 * Do not use classes
 * Do not use async or await
-* Do not use map, filter or reduce
+* Do not use reduce
 * Avoid unnecessary abstractions
 * Avoid dependencies, frameworks and build tools
 * Keep examples in a single HTML file where practical
@@ -23,6 +23,14 @@
 * Do not rewrite or rename unrelated code
 * Before finishing, check that the code works directly in a browser
 * Check for console errors
+
+# ESLint
+
+* All JavaScript in `src/` and `tests/` must pass `npm run lint` with zero errors before being considered complete
+* Never introduce `no-redeclare`, `no-shadow`, `no-undef`, or `eqeqeq` violations
+* Do not use `console.*` in `src/` — the engine uses its own `log` wrapper
+* Do not leave empty catch blocks — always handle or explicitly comment why the error is swallowed
+* After making any change to a `.js` file in `src/` or `tests/`, mentally verify it would pass the rules in `.eslintrc.json`
 
 # 2D game instructions
 

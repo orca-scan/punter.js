@@ -1,6 +1,6 @@
 {
   "name": "punter.js",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A simple, dependency-free 2D game engine for the browser. No build step, no frameworks - just one script tag.",
   "main": "src/punter.js",
   "directories": {
@@ -9,6 +9,7 @@
   "scripts": {
     "start": "npx serve .",
     "start:pong": "npx serve . -l 4000 & npx open-cli http://localhost:4000/games/pong.html",
+    "lint": "eslint src/ tests/",
     "test": "NODE_ENV=test TZ=UTC jasmine --config=tests/jasmine/config.json"
   },
   "repository": {
@@ -26,6 +27,7 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
     "jasmine": "^5.13.0",
     "jasmine-console-reporter": "^3.1.0",
     "jasmine-xml-reporter": "^1.2.1",

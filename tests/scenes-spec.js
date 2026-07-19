@@ -72,7 +72,6 @@ describe('Scenes', function () {
                 punter.scene('deferredScene', function () { calls.push('started'); });
 
                 // Monkey-patch: temporarily mark as uninitialised, call go(), restore
-                var orig = punter.sceneName; // just reading a prop to confirm engine exists
                 punter.go('deferredScene'); // already initialised in test env, so this runs immediately
                 resolve(calls);
             });
@@ -138,5 +137,55 @@ describe('Scenes', function () {
         expect(result.srcExists).toBe(false);
         expect(result.dstExists).toBe(true);
         expect(result.count).toBe(1);
+    });
+
+    // --- pause / resume ---
+
+    it('resume() does not reset totalFrames', async function () {
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                punter.scene('pauseResumeScene', function () {});
+                punter.go('pauseResumeScene');
+                // wait for a few frames to accumulate
+                var check = setInterval(function () {
+                    if (punter.totalFrames > 5) {
+                        clearInterval(check);
+                        var before = punter.totalFrames;
+                        punter.pause();
+                        punter.resume();
+                        resolve({ before: before, after: punter.totalFrames });
+                    }
+                }, 16);
+            });
+        });
+        expect(result.after).toBeGreaterThanOrEqual(result.before);
+    });
+
+    // --- sounds ---
+
+    it('go() stops all playing sounds from the previous scene', async function () {
+        var result = await page.evaluate(function () {
+            // patch stop() to count calls
+            var stopCalls = 0;
+            var origStop = AudioBufferSourceNode.prototype.stop;
+            AudioBufferSourceNode.prototype.stop = function (when) {
+                stopCalls++;
+                return origStop.call(this, when);
+            };
+
+            punter.scene('soundScene', function () {
+                punter.playSound('beep', { loop: true });
+            });
+            punter.scene('silentScene', function () {});
+
+            punter.go('soundScene');
+            var before = stopCalls;
+            punter.go('silentScene');
+            var after = stopCalls;
+
+            AudioBufferSourceNode.prototype.stop = origStop;
+            return { before: before, after: after };
+        });
+        expect(result.after).toBeGreaterThan(result.before);
     });
 });

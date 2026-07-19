@@ -1,0 +1,40 @@
+{
+  "env": {
+    "browser": true,
+    "es2020": true
+  },
+  "globals": {
+    "SimpleLog": "readonly"
+  },
+  "rules": {
+    "no-redeclare": "error",
+    "no-shadow": "error",
+    "no-unused-vars": ["warn", { "vars": "all", "args": "none" }],
+    "no-console": "error",
+    "no-debugger": "error",
+    "semi": ["error", "always"],
+    "quotes": ["error", "single"],
+    "no-empty": ["error", { "allowEmptyCatch": false }],
+    "no-unreachable": "error",
+    "eqeqeq": ["error", "always"],
+    "no-undef": "error"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "node": true,
+        "jasmine": true
+      },
+      "parserOptions": {
+        "ecmaVersion": 2020
+      },
+      "globals": {
+        "punter": "readonly"
+      },
+      "rules": {
+        "no-console": "off"
+      }
+    }
+  ]
+}
