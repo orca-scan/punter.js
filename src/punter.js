@@ -18,7 +18,7 @@
     var images = {};
     var sounds = {};
     var playingSounds = {};
-    var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // parens required so 'new' applies to the resolved constructor
     var _isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
     var _canvas;
@@ -157,7 +157,7 @@
         _canvas.style.willChange = 'transform';
         _canvas.style.transform = 'translateZ(0)';
 
-        setTimeout(resize, 0);
+        setTimeout(resize, 0); // defer to let the browser apply canvas styles before measuring
         setupResponsiveResize();
 
         // create a background canvas to speed up getBounds
@@ -280,6 +280,7 @@
             }
 
             for (var i = 0; i < total; i++) {
+                // iife captures key and url per-iteration (var has no block scope)
                 (function (key, url) {
                     fetch(url).then(function (res) {
                         return res.arrayBuffer();
@@ -303,8 +304,7 @@
         if (typeof value === 'string' && value.indexOf('%') !== -1) {
             var pct = parseFloat(value);
             if (!isNaN(pct)) {
-                return Math.floor(base * (pct / 100));
-                // return Math.round(base * (pct / 100));
+                return Math.floor(base * (pct / 100)); // floor to avoid sub-pixel gaps
             }
         }
         else if (typeof value === 'number') {
@@ -504,7 +504,7 @@
         // w/h
         this.originalW = (typeof opts.w !== 'undefined') ? opts.w : null;
         this.originalH = (typeof opts.h !== 'undefined') ? opts.h : null;
-        this.originalCanvasW = engine.width;
+        this.originalCanvasW = engine.width;  // canvas size at creation; used to calc scale factors on resize
         this.originalCanvasH = engine.height;
         this.w = resolveSize(opts.w, engine.width);
         this.h = resolveSize(opts.h, engine.height);
@@ -516,9 +516,9 @@
         this.originalY = (typeof opts.y !== 'undefined') ? opts.y : 0;
         this.x = resolveSize(this.originalX, engine.width);
         this.y = resolveSize(this.originalY, engine.height);
-        if (this.x < 0) this.x = 0;
+        if (this.x < 0) this.x = 0; // resolveSize returns -1 for invalid values
         if (this.y < 0) this.y = 0;
-        this.initialX = this.x;
+        this.initialX = this.x; // anchor used by bounce() and centerX/Y()
         this.initialY = this.y;
 
         if (this.repeatX && this.repeatY) {
@@ -783,6 +783,7 @@
 
         var startX = Math.floor(x % w);
 
+        // start one tile before the viewport to fill the gap when scrolled left
         for (var px = startX - w; px < engine.width; px += w) {
             ctx.drawImage(img, 0, 0, sw, sh, Math.floor(px), y, w, h);
         }
@@ -810,6 +811,7 @@
 
         var startY = Math.floor(y % h);
 
+        // start one tile above the viewport to fill the gap when scrolled up
         for (var py = startY - h; py < engine.height; py += h) {
             ctx.drawImage(img, 0, 0, sw, sh, x, Math.floor(py), w, h);
         }
@@ -965,6 +967,7 @@
 
         this.moveX(speed);
 
+        // wrap by exactly one tile width so the sprite loops seamlessly
         if (speed < 0 && this.x + this.w < 0) {
             this.x += this.w;
         }
@@ -984,6 +987,7 @@
         var ab = this.bounds;
         var bb = target.bounds;
 
+        // aabb test: if separated on any single axis, the boxes cannot overlap
         return !(
             ab.x + ab.w <= bb.x ||
             ab.x >= bb.x + bb.w ||
@@ -1086,13 +1090,14 @@
         _loopLast = timestamp;
         _loopAccumulator += frameTime;
 
+        // fixed timestep: run update() once per logical tick until we've consumed all elapsed time
         while (_loopAccumulator >= _loopStep) {
             eventHandlers.update();
             mouse.clicked = false;
             _frame++;
             _totalFrames++;
             if (_frame >= 60) {
-                _frame = 0;
+                _frame = 0; // 0-59 counter; use (frame % n === 0) for interval-based logic
             }
             _loopAccumulator -= _loopStep;
         }
@@ -1140,8 +1145,8 @@
 
         if (!_initilised) throw new Error('punter.setup must be called first');
 
-        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true });
-        _canvasCtx.imageSmoothingEnabled = false;
+        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true }); // desynchronized reduces paint latency on supported browsers
+        _canvasCtx.imageSmoothingEnabled = false; // keeps pixel art crisp; prevents blurring on scaled draws
 
         _frame = 0;
         _loopLast = performance.now();
@@ -1218,7 +1223,7 @@
 
             source.connect(gainNode);
             gainNode.connect(audioCtx.destination);
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (audioCtx.state === 'suspended') audioCtx.resume(); // browsers suspend AudioContext until the first user gesture
             source.start(0);
 
             if (!options || !options.once) {
@@ -1360,6 +1365,7 @@
 
         var internalW, internalH;
 
+        // lock the shorter axis to the base size so the design always fits without clipping
         if (screenRatio > baseRatio) {
             internalH = baseH;
             internalW = Math.round(internalH * screenRatio);
@@ -1372,6 +1378,7 @@
         var dpr = Math.min(window.devicePixelRatio || 1, 2);
         _dpr = dpr;
 
+        // scale canvas pixel buffer by dpr for sharp rendering on high-density (retina) screens
         if (dpr > 1) {
             _canvas.width = internalW * dpr;
             _canvas.height = internalH * dpr;
@@ -1385,9 +1392,10 @@
         var scaleY = screenH / internalH;
         var scale = Math.min(scaleX, scaleY);
 
+        // css size stays at logical pixels; translate(-50%,-50%) centers the absolute-positioned canvas
         _canvas.style.width = internalW + 'px';
         _canvas.style.height = internalH + 'px';
-        _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+        _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';  // scale to fill the viewport
 
         setDevVars();
         _resized = true;
@@ -1449,7 +1457,7 @@
             if (!_scenes[name]) throw new Error('punter.go: unknown scene "' + name + '"');
             if (!_initilised) { _pendingGo = name; return; }
 
-            // remove existing game loop handlers
+            // update is reset to a no-op (not null) because loop() always calls it without a null check
             eventHandlers.update = function () {};
             eventHandlers.draw = null;
 
