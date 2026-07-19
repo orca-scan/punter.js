@@ -36,6 +36,12 @@
     var _totalFrames = 0;
     var _resized = false;
     var _loopId = null;
+    var _loopLast = 0;
+    var _loopAccumulator = 0;
+    var _loopStep = 1000 / 60;
+    var _loopFps = 0;
+    var _loopFpsCounter = 0;
+    var _loopFpsTimer = 0;
     var _sprites = {}; // key: id, value: sprite
     var eventHandlers = {
         ready: function() {},
@@ -153,24 +159,7 @@
         _boundsCtx = _boundsCanvas.getContext('2d', { willReadFrequently: true });
 
         loadImages(config.images || {}).then(function() {
-
-            // precompute bounds for all sprite frames
-            if (config.images) {
-                for (var key in config.images) {
-                    var img = images[key];
-                    if (img && img.complete && img.naturalWidth) {
-                        // this warms up the boundingCache
-                        var cache = boundingCache.get(key);
-                        if (!cache) {
-                            var bounds = getBounds(img, 1);
-                            boundingCache.set(key, bounds);
-                        }
-                    }
-                }
-            }
-        })
-        .then(function() {
-            return loadSounds(config.sounds || {});  
+            return loadSounds(config.sounds || {});
         })
         .then(function() {
             _initilised = true;
@@ -178,8 +167,11 @@
             eventHandlers.ready();
             if (_pendingGo) { engine.go(_pendingGo); _pendingGo = null; }
         })
-        .catch(function() {
+        .catch(function(err) {
             _initilised = false;
+            htmlEl.removeAttribute('data-punter-loading');
+            htmlEl.setAttribute('data-punter-error', (err && err.message) ? err.message : 'unknown error');
+            log(err);
         });
     }
 
@@ -1001,7 +993,64 @@
     }
 
     /**
-     * Starts the game loop
+     * The main game loop — called each animation frame
+     * @param {number} timestamp - current time in ms from requestAnimationFrame
+     * @returns {void}
+     */
+    function loop(timestamp) {
+        var frameTime = Math.min(timestamp - _loopLast, 100); // max 100ms delay
+        _loopLast = timestamp;
+        _loopAccumulator += frameTime;
+
+        while (_loopAccumulator >= _loopStep) {
+            eventHandlers.update();
+            mouse.clicked = false;
+            _frame++;
+            _totalFrames++;
+            if (_frame >= 60) {
+                _frame = 0;
+            }
+            _loopAccumulator -= _loopStep;
+        }
+
+        // clear screen
+        _canvasCtx.clearRect(0, 0, engine.width, engine.height);
+
+        // auto-draw all sprites
+        for (var _id in _sprites) {
+            if (Object.prototype.hasOwnProperty.call(_sprites, _id) && !_sprites[_id].destroyed) {
+                _sprites[_id].draw(_canvasCtx);
+            }
+        }
+
+        // draw handler runs after sprites — use for text, HUD, overlays
+        if (eventHandlers.draw) {
+            eventHandlers.draw.call(_canvasCtx);
+        }
+
+        // reset the flag after draw
+        _resized = false;
+
+        _loopFpsCounter++;
+
+        // update fps every 1000ms
+        if (timestamp - _loopFpsTimer >= 1000) {
+            _loopFps = _loopFpsCounter;
+            _loopFpsCounter = 0;
+            _loopFpsTimer = timestamp;
+        }
+
+        // debug overlay
+        if (_debuggingEnabled) {
+            drawDebugInfo(_canvasCtx, _frame, _loopFps, engine.width, engine.height);
+        }
+
+        _loopId = requestAnimationFrame(loop);
+    }
+
+    /**
+     * Starts the game loop from scratch, resetting all frame and timing state
+     * @returns {void}
      */
     function startLoop() {
 
@@ -1010,66 +1059,12 @@
         _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true });
         _canvasCtx.imageSmoothingEnabled = false;
 
-        _frame = 1;
-
-        var now, last = performance.now(), accumulator = 0, step = 1000 / 60;
-        var fps = 0;
-        var fpsCounter = 0;
-        var fpsTimer = performance.now();
-
-        function loop(timestamp) {
-            now = timestamp;
-            var frameTime = now - last;
-            frameTime = Math.min(frameTime, 100); // max 100ms delay
-            // if (frameTime > 1000) frameTime = step;
-            last = now;
-            accumulator += frameTime;
-
-            while (accumulator >= step) {
-                eventHandlers.update();
-                mouse.clicked = false;
-                _frame++;
-                _totalFrames++;
-                if (_frame > 60) {
-                    _frame = 0;
-                }
-                accumulator -= step;
-            }
-
-            // clear screen
-            _canvasCtx.clearRect(0, 0, engine.width, engine.height);
-
-            // auto-draw all sprites
-            for (var _id in _sprites) {
-                if (Object.prototype.hasOwnProperty.call(_sprites, _id) && !_sprites[_id].destroyed) {
-                    _sprites[_id].draw(_canvasCtx);
-                }
-            }
-
-            // draw handler runs after sprites — use for text, HUD, overlays
-            if (eventHandlers.draw) {
-                eventHandlers.draw.call(_canvasCtx);
-            }
-
-            // reset the flag after draw
-            _resized = false;
-            
-            fpsCounter++;
-
-            // update fps every 1000ms
-            if (now - fpsTimer >= 1000) {
-                fps = fpsCounter;
-                fpsCounter = 0;
-                fpsTimer = now;
-            }
-
-            // debug overlay
-            if (_debuggingEnabled) {
-                drawDebugInfo(_canvasCtx, _frame, fps, engine.width, engine.height);
-            }
-
-            _loopId = requestAnimationFrame(loop);
-        }
+        _frame = 0;
+        _loopLast = performance.now();
+        _loopAccumulator = 0;
+        _loopFps = 0;
+        _loopFpsCounter = 0;
+        _loopFpsTimer = performance.now();
 
         _paused = false;
         _loopId = requestAnimationFrame(loop);
@@ -1087,6 +1082,17 @@
 
         _paused = true;
         _running = false;
+    }
+
+    /**
+     * Resumes the game loop after a pause without resetting frame state
+     * @returns {void}
+     */
+    function resumeLoop() {
+        _loopLast = performance.now();
+        _paused = false;
+        _loopId = requestAnimationFrame(loop);
+        _running = true;
     }
 
     /**
@@ -1140,6 +1146,16 @@
             }
         } catch (e) {
             // audio errors are non-fatal; browser may restrict AudioContext
+        }
+    }
+
+    /**
+     * Stops all currently playing sounds
+     * @returns {void}
+     */
+    function stopAllSounds() {
+        for (var name in playingSounds) {
+            stopSound(name);
         }
     }
 
@@ -1334,6 +1350,7 @@
 
             // ensure we clear all input from last scene
             engine.clearInput();
+            stopAllSounds();
 
             // switch scenes
             _currentScene = name;
@@ -1356,7 +1373,7 @@
         pause: pauseLoop,
         resume: function () {
             if (_loopId === null && _canvas && _initilised) {
-                startLoop();
+                resumeLoop();
             }
         },
         redraw: function () {

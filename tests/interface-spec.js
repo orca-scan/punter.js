@@ -227,4 +227,48 @@ describe('Interface', function () {
         });
         expect(result).toBe(true);
     });
+
+    // --- frame counter ---
+
+    it('frame cycles through exactly 60 values (0-59)', async function () {
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                var seen = {};
+                punter.scene('frameScene', function () {
+                    punter.on('update', function () {
+                        seen[punter.frame] = true;
+                    });
+                });
+                punter.go('frameScene');
+                // wait long enough to complete at least two full cycles
+                setTimeout(function () {
+                    var values = Object.keys(seen).map(Number);
+                    resolve({
+                        count: values.length,
+                        min: Math.min.apply(null, values),
+                        max: Math.max.apply(null, values)
+                    });
+                }, 2500);
+            });
+        });
+        expect(result.count).toBe(60);
+        expect(result.min).toBe(0);
+        expect(result.max).toBe(59);
+    });
+
+    // --- bounds cache ---
+
+    it('sprite bounds are computed after draw() without redundant setup work', async function () {
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                var sprite;
+                punter.scene('boundsScene', function () {
+                    sprite = punter.createSprite({ id: 'bounds-sprite', image: 'hero', x: 0, y: 0 });
+                });
+                punter.go('boundsScene');
+                setTimeout(function () { resolve(sprite.bounds !== null && sprite.bounds !== undefined); }, 100);
+            });
+        });
+        expect(result).toBe(true);
+    });
 });

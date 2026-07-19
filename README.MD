@@ -363,7 +363,7 @@ Property             | Description
 `punter.width`       | Canvas width in pixels (DPR-adjusted).
 `punter.height`      | Canvas height in pixels (DPR-adjusted).
 `punter.dpr`         | Device pixel ratio (capped at `2`).
-`punter.frame`       | Frame counter, cycling 1–60.
+`punter.frame`       | Frame counter, cycling 0–59.
 `punter.running`     | `true` if the game loop is running.
 `punter.paused`      | `true` if the loop is paused.
 `punter.isMobile`    | `true` on mobile devices.
@@ -396,7 +396,8 @@ The engine sets attributes on `<html>` as the game runs. Use them in CSS to reac
 
 Attribute                 | When set
 --------------------------|-------------------------------------------------------------
-`data-punter-loading`     | Present while assets are loading; removed when `ready` fires
+`data-punter-loading`     | Present while assets are loading; removed when ready fires or on error
+`data-punter-error`       | Set if asset loading fails; value is the error message
 `data-punter-scene`       | Updated on every `punter.go()` - value is the scene name
 `data-punter-orientation` | `"portrait"` or `"landscape"`, updated on resize
 `data-punter-device`      | `"mobile"` or `"desktop"`, set on init

@@ -40,9 +40,16 @@ async function newPage() {
     return page;
 }
 
+async function newPageAt(fixturePath) {
+    await ensureStarted();
+    var page = await _browser.newPage();
+    await page.goto(_baseUrl + fixturePath, { waitUntil: 'domcontentloaded' });
+    return page;
+}
+
 async function stop() {
     if (_browser) await _browser.close();
     if (_server) await new Promise(function (r) { _server.close(r); });
 }
 
-module.exports = { newPage: newPage, stop: stop };
+module.exports = { newPage: newPage, newPageAt: newPageAt, stop: stop };
