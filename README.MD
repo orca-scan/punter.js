@@ -150,7 +150,7 @@ punter.stopSound('jump');
 
 `playSound` takes the short name you gave a sound in `setup()`'s `sounds` option, plus optional settings - `volume` (0 to 1), `loop` (repeat forever or not), and `speed` (1 is normal, 2 is double speed, etc.).
 
-Playback uses the Web Audio API (decoded `AudioBuffer`s), not `<audio>` elements - `playSound` on an already-playing sound restarts it rather than layering. In practice: calling `playSound('jump')` twice quickly won't give you two overlapping jump sounds, it'll just restart the one sound.
+`playSound` on an already-playing sound restarts it rather than layering. In practice: calling `playSound('jump')` twice quickly won't give you two overlapping jump sounds, it'll just restart the one sound.
 
 ## 6. Events (`punter.on(event, fn)`)
 
