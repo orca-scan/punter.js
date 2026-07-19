@@ -184,12 +184,11 @@ Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprit
 
 ## Gotchas for Beginners
 
-- **Sprite IDs must be unique** - reusing one throws an error.
-- **Images must finish loading before creating a sprite manually outside the `images` config** - the engine throws if the image isn't ready. In practice: always create sprites using images you listed in `setup()`'s `images` option, and you won't hit this.
-- **`repeatX` and `repeatY` are mutually exclusive** on a single sprite.
-- Percentage strings (`'50%'`) for `x`/`y`/`w`/`h` are resolved relative to canvas size and re-resolve automatically on resize.
-- Don't manually resize the canvas - the engine owns that via its own `resize()` handling.
-- `punter.setup()` must be called before `createSprite`, `playSound`, `pause`, or `resume` - each throws otherwise. This is just saying: always call `setup()` first, before anything else.
+- **Sprite IDs must be unique** - reusing one throws an error
+- **`repeatX` and `repeatY` are mutually exclusive** on a single sprite
+- Percentage strings (`'50%'`) for `x`/`y`/`w`/`h` are resolved relative to canvas size
+- Don't manually resize the canvas - the engine owns that via its own `resize()` handling
+- `punter.setup()` must be called before `createSprite`, `playSound`, `pause` etc
 
 ---
 
