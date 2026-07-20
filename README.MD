@@ -256,7 +256,7 @@ Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprit
 - **Touch and mouse are unified correctly.** One `keys`/`mouse` input model, with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor) and devicePixelRatio, plus explicit suppression of the synthetic mousedown that follows a touchstart so clicks don't double-fire.
 - **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens without you managing that yourself.
 
-None of this is exotic - it's the stuff that's easy to get subtly wrong when you write it yourself, done once, correctly, so you don't have to.
+None of this is exotic, it's just the stuff that's easy to get wrong when you write it yourself.
 
 ## What it doesn't do
 
