@@ -190,7 +190,7 @@ punter.stopSound('jump');
 
 Event name | When it fires
 :----------|:-----------------------------------------------------------------------------------------------------------------------------------------------------
-`ready`    | Once, after all assets are loaded - only needed if you have logic that must run once loading completes
+`ready`    | Once, after all assets are loaded. Not needed just to call `go()`
 `update`   | ~60 times/sec (fixed timestep) - put game logic here
 `draw`     | Once per animation frame, after sprites auto-draw - use for HUD/overlays
 `resize`   | Whenever the canvas resizes
