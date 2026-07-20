@@ -70,12 +70,12 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
 
 `punter.setup(config)` call this once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading. Config options are:
 
-| Option   | Type           | Description                                              |
-|----------|----------------|----------------------------------------------------------|
-| `canvas` | string/element | CSS selector or a `<canvas>` element                     |
-| `debug`  | boolean        | Shows FPS counter, sprite bounds, and position labels    |
-| `images` | object         | `{ key: imageUrl }` map - preloaded before `ready` fires |
-| `sounds` | object         | `{ key: soundUrl }` map - decoded before `ready` fires   |
+Option   | Type           | Description
+:--------|:---------------|:--------------------------------------------------------
+`canvas` | string/element | CSS selector or a `<canvas>` element
+`debug`  | boolean        | Shows FPS counter, sprite bounds, and position labels
+`images` | object         | `{ key: imageUrl }` map - preloaded before `ready` fires
+`sounds` | object         | `{ key: soundUrl }` map - decoded before `ready` fires
 
 The `images` and `sounds` options are just name-to-file lookups - you pick a short name (like `player`) and point it at the actual file (like `images/player.png`), then refer to it by that short name everywhere else in your code.
 
@@ -114,27 +114,27 @@ var enemy = punter.createSprite({
 
 ### sprite methods
 
-| Method                                     | Description                                                          |
-|--------------------------------------------|----------------------------------------------------------------------|
-| `sprite.moveX(dx)`                         | Move right (`+dx`) or left (`-dx`) by pixels                         |
-| `sprite.moveY(dy)`                         | Move down (`+dy`) or up (`-dy`) by pixels                            |
-| `sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis         |
-| `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array             |
-| `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position               |
-| `sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay |
-| `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay   |
-| `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops) |
-| `sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`               |
-| `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored      |
+Method                                     | Description
+:------------------------------------------|:--------------------------------------------------------------------
+`sprite.moveX(dx)`                         | Move right (`+dx`) or left (`-dx`) by pixels
+`sprite.moveY(dy)`                         | Move down (`+dy`) or up (`-dy`) by pixels
+`sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis
+`sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array
+`sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position
+`sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay
+`sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
+`sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
+`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`
+`sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored
 
 ### sprite properties
 
-| Property         | Description                                                       |
-|------------------|-------------------------------------------------------------------|
-| `sprite.visible` | `true` if any part of the sprite is within canvas bounds          |
-| `sprite.seen`    | `true` once the sprite has been visible at least once. Read/write |
-| `sprite.actualW` | Drawn width in pixels, same as `w`                                |
-| `sprite.actualH` | Drawn height in pixels, accounting for `clipHeight` if set        |
+Property         | Description
+:----------------|:-----------------------------------------------------------------
+`sprite.visible` | `true` if any part of the sprite is within canvas bounds
+`sprite.seen`    | `true` once the sprite has been visible at least once. Read/write
+`sprite.actualW` | Drawn width in pixels, same as `w`
+`sprite.actualH` | Drawn height in pixels, accounting for `clipHeight` if set
 
 ## 4. Input
 
@@ -165,13 +165,13 @@ punter.scene('level1', function () {
 });
 ```
 
-| Property | Description |
-|----------|-------------|
-| `punter.keys['Key']` | `true` while that key is held down |
-| `punter.mouse.x` | X position of the last click/tap in canvas pixels |
-| `punter.mouse.y` | Y position of the last click/tap in canvas pixels |
-| `punter.mouse.clicked` | `true` for one `update` tick after a click or tap |
-| `punter.clearInput()` | Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()` |
+| Property               | Description                                                                             |
+|------------------------|-----------------------------------------------------------------------------------------|
+| `punter.keys['Key']`   | `true` while that key is held down                                                      |
+| `punter.mouse.x`       | X position of the last click/tap in canvas pixels                                       |
+| `punter.mouse.y`       | Y position of the last click/tap in canvas pixels                                       |
+| `punter.mouse.clicked` | `true` for one `update` tick after a click or tap                                       |
+| `punter.clearInput()`  | Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()` |
 
 ## 5. Sound
 
@@ -188,13 +188,13 @@ punter.stopSound('jump');
 
 `punter.on(eventName, fn)` Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment.
 
-| Event name | When it fires                                                                                                                                         |
-|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ready`    | Once, after all assets are loaded - only needed if you have logic that must run once loading completes; `go()` itself doesn't require waiting on this |
-| `update`   | ~60 times/sec (fixed timestep) - put game logic here                                                                                                  |
-| `draw`     | Once per animation frame, after sprites auto-draw - use for HUD/overlays                                                                              |
-| `resize`   | Whenever the canvas resizes                                                                                                                           |
-| `go`       | Whenever `punter.go()` switches scenes                                                                                                                |
+Event name | When it fires
+:----------|:-----------------------------------------------------------------------------------------------------------------------------------------------------
+`ready`    | Once, after all assets are loaded - only needed if you have logic that must run once loading completes; `go()` itself doesn't require waiting on this
+`update`   | ~60 times/sec (fixed timestep) - put game logic here
+`draw`     | Once per animation frame, after sprites auto-draw - use for HUD/overlays
+`resize`   | Whenever the canvas resizes
+`go`       | Whenever `punter.go()` switches scenes
 
 ```js
 punter.on('ready', function () {
@@ -291,17 +291,17 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 
 `punter` exposes a handful of read-only state properties beyond what's covered above:
 
-| Property                        | Description                                             |
-|---------------------------------|---------------------------------------------------------|
-| `punter.sceneName`              | name of the currently active scene                      |
-| `punter.sprites`                | array of all currently registered sprites               |
-| `punter.getSprite(id)`          | look up a sprite by id, or `null`                       |
-| `punter.width` / `height`       | current canvas pixel dimensions                         |
-| `punter.running` / `paused`     | loop state                                              |
-| `punter.resized`                | `true` for the frame in which a resize occurred         |
-| `punter.isMobile` / `isDesktop` | based on a `navigator.userAgent` check                  |
-| `punter.orientation`            | `'portrait'` or `'landscape'`, from viewport dimensions |
-| `punter.dpr`                    | the devicePixelRatio in use (capped at 2)               |
+Property                        | Description
+:-------------------------------|:-------------------------------------------------------
+`punter.sceneName`              | name of the currently active scene
+`punter.sprites`                | array of all currently registered sprites
+`punter.getSprite(id)`          | look up a sprite by id, or `null`
+`punter.width` / `height`       | current canvas pixel dimensions
+`punter.running` / `paused`     | loop state
+`punter.resized`                | `true` for the frame in which a resize occurred
+`punter.isMobile` / `isDesktop` | based on a `navigator.userAgent` check
+`punter.orientation`            | `'portrait'` or `'landscape'`, from viewport dimensions
+`punter.dpr`                    | the devicePixelRatio in use (capped at 2)
 
 ## License
 
