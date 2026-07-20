@@ -291,17 +291,20 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 
 `punter` exposes a handful of read-only state properties beyond what's covered above:
 
-Property                        | Description
-:-------------------------------|:-------------------------------------------------------
-`punter.sceneName`              | name of the currently active scene
-`punter.sprites`                | array of all currently registered sprites
-`punter.getSprite(id)`          | look up a sprite by id, or `null`
-`punter.width` / `height`       | current canvas pixel dimensions
-`punter.running` / `paused`     | loop state
-`punter.resized`                | `true` for the frame in which a resize occurred
-`punter.isMobile` / `isDesktop` | based on a `navigator.userAgent` check
-`punter.orientation`            | `'portrait'` or `'landscape'`, from viewport dimensions
-`punter.dpr`                    | the devicePixelRatio in use (capped at 2)
+Property                  | Description
+:-------------------------|:-------------------------------------------------------
+`punter.sceneName`        | name of the currently active scene
+`punter.sprites`          | array of all currently registered sprites
+`punter.getSprite(id)`    | get a sprite by id, `null` if not found
+`punter.width`            | canvas buffer width in pixels (DPR-scaled)
+`punter.height`           | canvas buffer height in pixels (DPR-scaled)
+`punter.running`          | `true` if the game loop is running
+`punter.paused`           | `true` if the loop is paused
+`punter.resized`          | `true` for the frame in which a resize occurred
+`punter.isMobile`         | `true` on mobile devices
+`punter.isDesktop`        | `true` on non-mobile devices
+`punter.orientation`      | `'portrait'` or `'landscape'`
+`punter.dpr`              | devicePixelRatio in use (capped at 2)
 
 ## License
 
