@@ -138,15 +138,40 @@ var enemy = punter.createSprite({
 
 ## 4. Input
 
-This is how you find out what the player is doing - which keys are held down, and where they've clicked or tapped.
+Check `punter.keys` and `punter.mouse` inside your `update` handler each frame. Touch taps are automatically mapped to mouse events.
+
+Key names match the browser's [`KeyboardEvent.key`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) values. Common ones: `'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `' '` (spacebar), `'Enter'`, `'Escape'`, `'a'` to `'z'`.
 
 ```js
-punter.keys['ArrowUp']   // true while held down
-punter.mouse.x, punter.mouse.y, punter.mouse.clicked  // works for touch too
-punter.clearInput()      // resets all key states and the clicked flag
+punter.scene('level1', function () {
+
+  var player = punter.createSprite({ id: 'player', image: 'player', x: 100, y: 100 });
+
+  punter.on('update', function () {
+
+    // arrow keys or WASD
+    if (punter.keys['ArrowLeft']  || punter.keys['a']) player.moveX(-3);
+    if (punter.keys['ArrowRight'] || punter.keys['d']) player.moveX(3);
+    if (punter.keys['ArrowUp']    || punter.keys['w']) player.moveY(-3);
+    if (punter.keys['ArrowDown']  || punter.keys['s']) player.moveY(3);
+    if (punter.keys[' '])                              punter.playSound('jump'); // spacebar
+
+    // mouse / touch - clicked is true for one frame after a tap or click
+    if (punter.mouse.clicked) {
+      player.x = punter.mouse.x;
+      player.y = punter.mouse.y;
+    }
+  });
+});
 ```
 
-`punter.keys` is just an object where the key name (like `'ArrowUp'` or `'a'`) maps to `true` or `false`. Check it inside your `update` handler to react to held-down keys. `punter.mouse` works the same way for clicks and taps - `mouse.clicked` is `true` for one frame after a click/tap happens, and `mouse.x`/`mouse.y` tell you where.
+| Property | Description |
+|----------|-------------|
+| `punter.keys['Key']` | `true` while that key is held down |
+| `punter.mouse.x` | X position of the last click/tap in canvas pixels |
+| `punter.mouse.y` | Y position of the last click/tap in canvas pixels |
+| `punter.mouse.clicked` | `true` for one `update` tick after a click or tap |
+| `punter.clearInput()` | Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()` |
 
 ## 5. Sound
 
