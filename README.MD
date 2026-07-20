@@ -66,9 +66,9 @@ A simple, dependency-free 2D engine for mobile-first web games. No build step, j
 </script>
 ```
 
-## 1. `punter.setup(config)`
+## 1. Setup
 
-Call this once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading.
+`punter.setup(config)` call this once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading. Config options are:
 
 | Option   | Type           | Description                                              |
 |----------|----------------|----------------------------------------------------------|
@@ -95,7 +95,7 @@ punter.go('menu'); // destroys sprites from the previous scene, then switches an
 
 `punter.go()` can be called before `setup()` has finished loading - it queues the scene name and runs it automatically once assets are ready, so you don't need to wait on the `ready` event just to call `go()`. It always tears down every sprite from the current scene and clears input state before running the new scene's handler - scenes don't need to clean up after themselves, the engine does it for you.
 
-## 3. Sprites (`punter.createSprite(opts)`)
+## 3. Sprites
 
 A sprite is any image-based object in your game - the player, an enemy, a coin, a wall. You create one by giving it a unique `id`, telling it which loaded `image` to use, and where to place it (`x`, `y`).
 
@@ -152,21 +152,46 @@ punter.stopSound('jump');
 
 `playSound` on an already-playing sound restarts it rather than layering. In practice: calling `playSound('jump')` twice quickly won't give you two overlapping jump sounds, it'll just restart the one sound.
 
-## 6. Events (`punter.on(event, fn)`)
+## 6. Events
 
-Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment.
+`punter.on(eventName, fn)` Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment.
 
-| Event    | When it fires                                                                                                                                         |
-|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `ready`  | Once, after all assets are loaded - only needed if you have logic that must run once loading completes; `go()` itself doesn't require waiting on this |
-| `update` | ~60 times/sec (fixed timestep) - put game logic here                                                                                                  |
-| `draw`   | Once per animation frame, after sprites auto-draw - use for HUD/overlays                                                                              |
-| `resize` | Whenever the canvas resizes                                                                                                                           |
-| `go`     | Whenever `punter.go()` switches scenes                                                                                                                |
+| Event name | When it fires                                                                                                                                         |
+|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `ready`    | Once, after all assets are loaded - only needed if you have logic that must run once loading completes; `go()` itself doesn't require waiting on this |
+| `update`   | ~60 times/sec (fixed timestep) - put game logic here                                                                                                  |
+| `draw`     | Once per animation frame, after sprites auto-draw - use for HUD/overlays                                                                              |
+| `resize`   | Whenever the canvas resizes                                                                                                                           |
+| `go`       | Whenever `punter.go()` switches scenes                                                                                                                |
 
-`update` is where almost all your game logic lives - moving things, checking collisions, reading input, checking win/lose conditions. It's called roughly 60 times every second, so anything you put there runs continuously while the game is active.
+```js
+punter.on('ready', function () {
+  // all images and sounds are loaded - safe to start
+  punter.go('level1');
+});
 
-Sprites draw themselves automatically each frame - you don't need to call `sprite.draw()` yourself. The `draw` event is for extra stuff on top, like a score counter or "Game Over" text, since it's not tied to any one sprite.
+punter.on('update', function () {
+  // runs ~60 times/sec - move things, read input, check collisions
+  if (punter.keys['ArrowRight']) player.moveX(3);
+  if (player.isCollidingWith(enemy)) punter.go('gameOver');
+});
+
+punter.on('draw', function () {
+  // runs after sprites draw - 'this' is the canvas 2D context
+  // use for score text, HUD, overlays; sprites draw themselves automatically
+  this.fillStyle = 'white';
+  this.fillText('Score: ' + score, 10, 20);
+});
+
+punter.on('resize', function () {
+  // canvas resized - reposition any manually-placed elements
+  player.center();
+});
+
+punter.on('go', function (sceneName) {
+  // fires after every scene switch - useful for analytics or shared teardown
+});
+```
 
 ## How the Game Loop Works
 
