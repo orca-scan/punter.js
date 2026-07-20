@@ -16,9 +16,21 @@
     "type": "git",
     "url": "git+https://github.com/orca-scan/punter.js.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "game-engine",
+    "2d-game-engine",
+    "canvas",
+    "html5-canvas",
+    "javascript-game-engine",
+    "browser-game",
+    "sprite",
+    "game-loop",
+    "no-dependencies",
+    "lightweight",
+    "vanilla-javascript"
+  ],
+  "author": "Orca Scan <support@orcascan.com> (https://orcascan.com)",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/orca-scan/punter.js/issues"
   },
