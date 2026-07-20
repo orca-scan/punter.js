@@ -112,7 +112,7 @@ var enemy = punter.createSprite({
 
 `x` and `y` are the sprite's position in pixels, measured from the top-left corner of the canvas - so `x: 0, y: 0` is the top-left, and increasing `x` moves right, increasing `y` moves down. Once created, `enemy` is a normal JavaScript object you keep a reference to and call methods on, like `enemy.moveX(5)`.
 
-Useful sprite methods:
+### sprite methods
 
 | Method                                     | Description                                                          |
 |--------------------------------------------|----------------------------------------------------------------------|
@@ -127,7 +127,7 @@ Useful sprite methods:
 | `sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`               |
 | `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored      |
 
-Useful sprite properties:
+### sprite properties
 
 | Property         | Description                                                       |
 |------------------|-------------------------------------------------------------------|
