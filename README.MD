@@ -114,20 +114,27 @@ var enemy = punter.createSprite({
 
 Useful sprite methods:
 
-- `sprite.moveX(dx)` / `sprite.moveY(dy)` - move by a delta (a number of pixels to shift by, positive or negative)
-- `sprite.center()` / `centerX()` / `centerY()` - center on canvas
-- `sprite.animate(delayMs)` - cycle through frames if `image` is an array (for walk cycles, etc.)
-- `sprite.bounce(range, speed)` - sinusoidal floating/bobbing effect (a smooth up-and-down wobble, handy for coins or menu items)
-- `sprite.parallaxScrollX(speed, respawnMs)` / `parallaxScrollY(...)` - scroll and respawn offscreen after a delay (backgrounds/obstacles)
-- `sprite.loopScrollX(speed)` - scroll and instantly wrap around
-- `sprite.isCollidingWith(otherSprite)` - trimmed bounding-box overlap check; call this in your `update` handler to detect, e.g., the player touching an enemy
-- `sprite.destroy()` - remove it from the engine, e.g. when an enemy is defeated
+| Method                                     | Description                                                          |
+|--------------------------------------------|----------------------------------------------------------------------|
+| `sprite.moveX(dx)`                         | Move right (`+dx`) or left (`-dx`) by pixels                         |
+| `sprite.moveY(dy)`                         | Move down (`+dy`) or up (`-dy`) by pixels                            |
+| `sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis         |
+| `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array             |
+| `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position               |
+| `sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay |
+| `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay   |
+| `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops) |
+| `sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`               |
+| `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored      |
 
-Useful sprite properties (read-only getters - values you can read but not set directly):
+Useful sprite properties:
 
-- `sprite.visible` - whether any part of the sprite is within canvas bounds
-- `sprite.seen` - becomes `true` the first time the sprite is drawn while visible
-- `sprite.actualW` / `actualH` - resolved pixel size, accounting for `clipHeight`
+| Property         | Description                                                       |
+|------------------|-------------------------------------------------------------------|
+| `sprite.visible` | `true` if any part of the sprite is within canvas bounds          |
+| `sprite.seen`    | `true` once the sprite has been visible at least once. Read/write |
+| `sprite.actualW` | Drawn width in pixels, same as `w`                                |
+| `sprite.actualH` | Drawn height in pixels, accounting for `clipHeight` if set        |
 
 ## 4. Input
 
