@@ -16,12 +16,9 @@ Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/g
 - **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene
 - **Game loop** - code that runs 60 times per second to update positions, check collisions and redraw everything
 
-## Requirements
+## Try the examples
 
-- A modern browser with `fetch` and `Promise` support _(all modern browsers)_
-- A `<canvas>` element on the page
-
-## Try the examples locally
+This project includes a few examples games to help you get started. You can download and run the examples locally using:
 
 ```bash
 git clone https://github.com/orca-scan/punter.js.git
