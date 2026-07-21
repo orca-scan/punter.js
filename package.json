@@ -7,8 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "start": "npx serve .",
-    "start:pong": "npx serve . -l 4000 & npx open-cli http://localhost:4000/games/pong.html",
+    "start": "http-server . -p 4000 -o",
     "lint": "eslint src/ tests/",
     "test": "NODE_ENV=test TZ=UTC jasmine --config=tests/jasmine/config.json"
   },
@@ -39,6 +38,7 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
     "eslint": "^8.57.0",
     "jasmine": "^5.13.0",
     "jasmine-console-reporter": "^3.1.0",
