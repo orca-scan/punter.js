@@ -6,7 +6,9 @@
 
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
-A simple, dependency-free 2D engine for mobile-first web games. No build step, just one script tag and one `<canvas>`. Handles sprites, scenes, animation, sound, collision, and touch/mouse input, with a correct fixed-timestep game loop under the hood.
+A simple, dependency-free 2D game engine for browser games.
+
+Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/game) and was designed to help students and new developers learn JavaScript through game development. Its deliberately simple design prioritises learning over complexity, keeping the important parts visible instead of hiding them behind frameworks and abstractions.
 
 **New to game programming?** A few terms used throughout this doc:
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
