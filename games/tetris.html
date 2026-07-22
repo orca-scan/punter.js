@@ -1,0 +1,677 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Tetris</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #0f0f1a; overflow: hidden; }
+      canvas { display: block; background: #0f0f1a; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      // ─── game settings ───────────────────────────────────────────────────────────
+      var COLS       = 10;   // grid width in cells
+      var ROWS       = 20;   // grid height in cells
+      var DROP_SPEED = 30;   // frames between automatic drops (lower = faster)
+      var FAST_DROP  = 3;    // frames between drops when holding down
+      var LOCK_DELAY = 30;   // frames to wait before locking a piece in place
+
+      // ─── colors for each piece type ──────────────────────────────────────────────
+      var COLORS = {
+        I: '#00f5ff',  // cyan
+        O: '#ffe066',  // yellow
+        T: '#b366ff',  // purple
+        S: '#66ff66',  // green
+        Z: '#ff6666',  // red
+        L: '#ffaa33',  // orange
+        J: '#6699ff'   // blue
+      };
+
+      // ─── tetromino shapes ────────────────────────────────────────────────────────
+      // each piece is a list of rotation states
+      // each rotation state is a 2D array (1 = filled, 0 = empty)
+      var PIECES = {
+        I: [
+          [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]],
+          [[0,0,1,0],[0,0,1,0],[0,0,1,0],[0,0,1,0]],
+          [[0,0,0,0],[0,0,0,0],[1,1,1,1],[0,0,0,0]],
+          [[0,1,0,0],[0,1,0,0],[0,1,0,0],[0,1,0,0]]
+        ],
+        O: [
+          [[1,1],[1,1]]
+        ],
+        T: [
+          [[0,1,0],[1,1,1],[0,0,0]],
+          [[0,1,0],[0,1,1],[0,1,0]],
+          [[0,0,0],[1,1,1],[0,1,0]],
+          [[0,1,0],[1,1,0],[0,1,0]]
+        ],
+        S: [
+          [[0,1,1],[1,1,0],[0,0,0]],
+          [[0,1,0],[0,1,1],[0,0,1]],
+          [[0,0,0],[0,1,1],[1,1,0]],
+          [[1,0,0],[1,1,0],[0,1,0]]
+        ],
+        Z: [
+          [[1,1,0],[0,1,1],[0,0,0]],
+          [[0,0,1],[0,1,1],[0,1,0]],
+          [[0,0,0],[1,1,0],[0,1,1]],
+          [[0,1,0],[1,1,0],[1,0,0]]
+        ],
+        L: [
+          [[0,0,1],[1,1,1],[0,0,0]],
+          [[0,1,0],[0,1,0],[0,1,1]],
+          [[0,0,0],[1,1,1],[1,0,0]],
+          [[1,1,0],[0,1,0],[0,1,0]]
+        ],
+        J: [
+          [[1,0,0],[1,1,1],[0,0,0]],
+          [[0,1,1],[0,1,0],[0,1,0]],
+          [[0,0,0],[1,1,1],[0,0,1]],
+          [[0,1,0],[0,1,0],[1,1,0]]
+        ]
+      };
+
+      // ─── game state ──────────────────────────────────────────────────────────────
+      var grid       = [];    // 2D array of placed blocks (null = empty, string = color)
+      var current    = null;  // the falling piece { type, rotation, x, y }
+      var next       = null;  // the next piece to spawn
+      var score      = 0;     // player score
+      var lines      = 0;     // total lines cleared
+      var level      = 1;     // current level (increases speed)
+      var dropTimer  = 0;     // counts frames until the next automatic drop
+      var lockTimer  = 0;     // counts frames after piece lands before locking
+      var gameOver   = false; // true when the board fills up
+
+      // ─── computed layout (set in scene init) ─────────────────────────────────────
+      var cellSize, boardX, boardY, boardW, boardH;
+
+      // ─── input tracking (for key-repeat prevention) ──────────────────────────────
+      var lastLeft  = false;
+      var lastRight = false;
+      var lastUp    = false;
+      var lastSpace = false;
+      var moveTimer = 0;       // frames since last horizontal move repeat
+      var MOVE_DELAY = 6;      // frames between repeated moves when holding
+
+      // ─── engine setup (no sprites needed — we draw everything on the canvas) ─────
+      punter.setup({
+        canvas: '#game',
+        images: {},
+        sounds: {}
+      });
+
+      // ─── play scene ──────────────────────────────────────────────────────────────
+      punter.scene('play', function () {
+
+        // calculate cell size and board position to center the grid
+        calculateLayout();
+        resetGame();
+
+        // game logic — runs ~60 times per second
+        punter.on('update', function () {
+
+          // restart if game over and player presses a key
+          if (gameOver) {
+            if (punter.keys['Enter'] || punter.keys[' '] || punter.mouse.clicked) {
+              punter.go('play');
+            }
+            return;
+          }
+
+          handleInput();
+          handleGravity();
+        });
+
+        // draw the game every frame
+        punter.on('draw', function () {
+          var ctx = this; // canvas 2D context
+
+          drawBackground(ctx);
+          drawGrid(ctx);
+          drawCurrentPiece(ctx);
+          drawNextPiece(ctx);
+          drawHUD(ctx);
+
+          if (gameOver) {
+            drawGameOver(ctx);
+          }
+        });
+
+        // recalculate layout on window resize
+        punter.on('resize', function () {
+          calculateLayout();
+        });
+      });
+
+      // ─── layout calculation ──────────────────────────────────────────────────────
+
+      /**
+       * Calculates cell size and board position based on canvas dimensions
+       */
+      function calculateLayout() {
+        // fit the board with some padding (0.82 leaves room for controls text below)
+        var maxCellW = Math.floor((punter.width * 0.6) / COLS);
+        var maxCellH = Math.floor((punter.height * 0.82) / ROWS);
+        cellSize = Math.min(maxCellW, maxCellH);
+
+        boardW = cellSize * COLS;
+        boardH = cellSize * ROWS;
+        boardX = Math.floor((punter.width - boardW) / 2);
+        boardY = Math.floor((punter.height - boardH) / 2);
+      }
+
+      // ─── game reset ──────────────────────────────────────────────────────────────
+
+      /**
+       * Resets all game state for a fresh start
+       */
+      function resetGame() {
+        // create empty grid (null means empty cell)
+        grid = [];
+        for (var r = 0; r < ROWS; r++) {
+          grid[r] = [];
+          for (var c = 0; c < COLS; c++) {
+            grid[r][c] = null;
+          }
+        }
+
+        score = 0;
+        lines = 0;
+        level = 1;
+        dropTimer = 0;
+        lockTimer = 0;
+        gameOver = false;
+        next = randomPiece();
+        spawnPiece();
+      }
+
+      // ─── piece spawning ──────────────────────────────────────────────────────────
+
+      /**
+       * Creates a new piece object with a random type
+       * @returns {object} piece with type, rotation, x, y
+       */
+      function randomPiece() {
+        var types = Object.keys(PIECES);
+        var type = types[Math.floor(Math.random() * types.length)];
+        return { type: type, rotation: 0, x: 0, y: 0 };
+      }
+
+      /**
+       * Moves the next piece into play and generates a new next piece
+       */
+      function spawnPiece() {
+        current = next;
+        next = randomPiece();
+
+        // center the piece horizontally at the top
+        var shape = getShape(current);
+        current.x = Math.floor((COLS - shape[0].length) / 2);
+        current.y = 0;
+
+        // if the new piece overlaps existing blocks, it's game over
+        if (!isValidPosition(current, current.x, current.y, current.rotation)) {
+          gameOver = true;
+        }
+      }
+
+      // ─── piece helpers ───────────────────────────────────────────────────────────
+
+      /**
+       * Gets the 2D shape array for a piece at its current rotation
+       * @param {object} piece - piece object
+       * @returns {array} 2D array of 1s and 0s
+       */
+      function getShape(piece) {
+        var rotations = PIECES[piece.type];
+        return rotations[piece.rotation % rotations.length];
+      }
+
+      /**
+       * Checks if a piece can exist at a given position without overlapping walls or blocks
+       * @param {object} piece - piece object
+       * @param {number} x - grid x position
+       * @param {number} y - grid y position
+       * @param {number} rotation - rotation index
+       * @returns {boolean} true if position is valid
+       */
+      function isValidPosition(piece, x, y, rotation) {
+        var rotations = PIECES[piece.type];
+        var shape = rotations[rotation % rotations.length];
+
+        for (var row = 0; row < shape.length; row++) {
+          for (var col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              var gridX = x + col;
+              var gridY = y + row;
+
+              // check bounds
+              if (gridX < 0 || gridX >= COLS || gridY >= ROWS) return false;
+
+              // check collision with placed blocks (skip rows above the top)
+              if (gridY >= 0 && grid[gridY][gridX]) return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      // ─── input handling ──────────────────────────────────────────────────────────
+
+      /**
+       * Reads keyboard input and moves/rotates the current piece
+       */
+      function handleInput() {
+        var leftNow  = !!punter.keys['ArrowLeft'];
+        var rightNow = !!punter.keys['ArrowRight'];
+        var upNow    = !!punter.keys['ArrowUp'];
+        var spaceNow = !!punter.keys[' '];
+
+        // rotate on fresh press (not held)
+        if (upNow && !lastUp) {
+          tryRotate();
+        }
+
+        // hard drop on space (instant drop to bottom)
+        if (spaceNow && !lastSpace) {
+          hardDrop();
+        }
+
+        // move left/right with key-repeat
+        if (leftNow) {
+          if (!lastLeft || moveTimer >= MOVE_DELAY) {
+            tryMove(-1, 0);
+            moveTimer = 0;
+          }
+          moveTimer++;
+        } else if (rightNow) {
+          if (!lastRight || moveTimer >= MOVE_DELAY) {
+            tryMove(1, 0);
+            moveTimer = 0;
+          }
+          moveTimer++;
+        } else {
+          moveTimer = 0;
+        }
+
+        // save input state for next frame
+        lastLeft  = leftNow;
+        lastRight = rightNow;
+        lastUp    = upNow;
+        lastSpace = spaceNow;
+      }
+
+      /**
+       * Attempts to move the piece by dx/dy; does nothing if blocked
+       * @param {number} dx - horizontal offset
+       * @param {number} dy - vertical offset
+       * @returns {boolean} true if the move succeeded
+       */
+      function tryMove(dx, dy) {
+        var newX = current.x + dx;
+        var newY = current.y + dy;
+        if (isValidPosition(current, newX, newY, current.rotation)) {
+          current.x = newX;
+          current.y = newY;
+          return true;
+        }
+        return false;
+      }
+
+      /**
+       * Attempts to rotate the piece; tries wall kicks if direct rotation fails
+       */
+      function tryRotate() {
+        var rotations = PIECES[current.type];
+        var newRotation = (current.rotation + 1) % rotations.length;
+
+        // try direct rotation
+        if (isValidPosition(current, current.x, current.y, newRotation)) {
+          current.rotation = newRotation;
+          return;
+        }
+
+        // try wall kicks (shift left or right by 1 or 2)
+        var kicks = [-1, 1, -2, 2];
+        for (var i = 0; i < kicks.length; i++) {
+          if (isValidPosition(current, current.x + kicks[i], current.y, newRotation)) {
+            current.x += kicks[i];
+            current.rotation = newRotation;
+            return;
+          }
+        }
+      }
+
+      /**
+       * Instantly drops the piece to the lowest valid position
+       */
+      function hardDrop() {
+        while (tryMove(0, 1)) {
+          score += 2; // bonus points for hard drop
+        }
+        lockPiece();
+      }
+
+      // ─── gravity and locking ─────────────────────────────────────────────────────
+
+      /**
+       * Handles automatic downward movement and piece locking
+       */
+      function handleGravity() {
+        // speed increases with level
+        var speed = punter.keys['ArrowDown'] ? FAST_DROP : Math.max(DROP_SPEED - (level - 1) * 3, 4);
+
+        dropTimer++;
+
+        if (dropTimer >= speed) {
+          dropTimer = 0;
+
+          // try to move down
+          if (tryMove(0, 1)) {
+            lockTimer = 0; // still falling — reset lock timer
+            if (punter.keys['ArrowDown']) {
+              score += 1; // soft drop bonus
+            }
+          }
+        }
+
+        // check every frame if piece is grounded (can't move down)
+        if (!isValidPosition(current, current.x, current.y + 1, current.rotation)) {
+          lockTimer++;
+          if (lockTimer >= LOCK_DELAY) {
+            lockPiece();
+          }
+        } else {
+          lockTimer = 0;
+        }
+      }
+
+      /**
+       * Locks the current piece into the grid, clears lines, and spawns next piece
+       */
+      function lockPiece() {
+        var shape = getShape(current);
+
+        // write piece cells into the grid
+        for (var row = 0; row < shape.length; row++) {
+          for (var col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              var gridY = current.y + row;
+              var gridX = current.x + col;
+              if (gridY >= 0 && gridY < ROWS && gridX >= 0 && gridX < COLS) {
+                grid[gridY][gridX] = COLORS[current.type];
+              }
+            }
+          }
+        }
+
+        clearLines();
+        lockTimer = 0;
+        dropTimer = 0;
+        spawnPiece();
+      }
+
+      // ─── line clearing ───────────────────────────────────────────────────────────
+
+      /**
+       * Checks for and removes completed rows, updates score and level
+       */
+      function clearLines() {
+        var cleared = 0;
+
+        for (var r = ROWS - 1; r >= 0; r--) {
+          var full = true;
+          for (var c = 0; c < COLS; c++) {
+            if (!grid[r][c]) { full = false; break; }
+          }
+
+          if (full) {
+            // remove the full row and add an empty one at the top
+            grid.splice(r, 1);
+            var emptyRow = [];
+            for (var i = 0; i < COLS; i++) { emptyRow.push(null); }
+            grid.unshift(emptyRow);
+            cleared++;
+            r++; // re-check this row index (a new row slid down into it)
+          }
+        }
+
+        if (cleared > 0) {
+          // scoring: more lines at once = more points
+          var points = [0, 100, 300, 500, 800];
+          score += (points[cleared] || 800) * level;
+          lines += cleared;
+          level = Math.floor(lines / 10) + 1;
+        }
+      }
+
+      // ─── ghost piece (shows where piece will land) ───────────────────────────────
+
+      /**
+       * Returns the y position where the current piece would land
+       * @returns {number} lowest valid y
+       */
+      function getGhostY() {
+        var ghostY = current.y;
+        while (isValidPosition(current, current.x, ghostY + 1, current.rotation)) {
+          ghostY++;
+        }
+        return ghostY;
+      }
+
+      // ─── drawing functions ───────────────────────────────────────────────────────
+
+      /**
+       * Draws the dark board background and grid lines
+       */
+      function drawBackground(ctx) {
+        // board background
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(boardX, boardY, boardW, boardH);
+
+        // subtle grid lines
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+        ctx.lineWidth = 1;
+        for (var r = 0; r <= ROWS; r++) {
+          ctx.beginPath();
+          ctx.moveTo(boardX, boardY + r * cellSize);
+          ctx.lineTo(boardX + boardW, boardY + r * cellSize);
+          ctx.stroke();
+        }
+        for (var c = 0; c <= COLS; c++) {
+          ctx.beginPath();
+          ctx.moveTo(boardX + c * cellSize, boardY);
+          ctx.lineTo(boardX + c * cellSize, boardY + boardH);
+          ctx.stroke();
+        }
+
+        // board border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boardX, boardY, boardW, boardH);
+      }
+
+      /**
+       * Draws all placed blocks in the grid
+       */
+      function drawGrid(ctx) {
+        for (var r = 0; r < ROWS; r++) {
+          for (var c = 0; c < COLS; c++) {
+            if (grid[r][c]) {
+              drawCell(ctx, boardX + c * cellSize, boardY + r * cellSize, grid[r][c]);
+            }
+          }
+        }
+      }
+
+      /**
+       * Draws the falling piece and its ghost (landing preview)
+       */
+      function drawCurrentPiece(ctx) {
+        if (!current) return;
+
+        var shape = getShape(current);
+        var ghostY = getGhostY();
+
+        // draw ghost (translucent preview of where piece will land)
+        for (var row = 0; row < shape.length; row++) {
+          for (var col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              var gx = boardX + (current.x + col) * cellSize;
+              var gy = boardY + (ghostY + row) * cellSize;
+              ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+              ctx.fillRect(gx + 1, gy + 1, cellSize - 2, cellSize - 2);
+              ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+              ctx.lineWidth = 1;
+              ctx.strokeRect(gx + 1, gy + 1, cellSize - 2, cellSize - 2);
+            }
+          }
+        }
+
+        // draw the actual piece
+        for (var r = 0; r < shape.length; r++) {
+          for (var c = 0; c < shape[r].length; c++) {
+            if (shape[r][c]) {
+              var px = boardX + (current.x + c) * cellSize;
+              var py = boardY + (current.y + r) * cellSize;
+              if (current.y + r >= 0) { // don't draw cells above the board
+                drawCell(ctx, px, py, COLORS[current.type]);
+              }
+            }
+          }
+        }
+      }
+
+      /**
+       * Draws a single colored cell with a modern beveled look
+       * @param {CanvasRenderingContext2D} ctx - canvas context
+       * @param {number} x - pixel x
+       * @param {number} y - pixel y
+       * @param {string} color - fill color
+       */
+      function drawCell(ctx, x, y, color) {
+        var pad = 1;
+
+        // main fill
+        ctx.fillStyle = color;
+        ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2);
+
+        // light highlight on top-left edges
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        ctx.fillRect(x + pad, y + pad, cellSize - pad * 2, 2);
+        ctx.fillRect(x + pad, y + pad, 2, cellSize - pad * 2);
+
+        // dark shadow on bottom-right edges
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+        ctx.fillRect(x + pad, y + cellSize - pad - 2, cellSize - pad * 2, 2);
+        ctx.fillRect(x + cellSize - pad - 2, y + pad, 2, cellSize - pad * 2);
+      }
+
+      /**
+       * Draws the next piece preview on the right side
+       */
+      function drawNextPiece(ctx) {
+        if (!next) return;
+
+        var previewX = boardX + boardW + cellSize;
+        var previewY = boardY;
+
+        // label
+        ctx.fillStyle = '#888';
+        ctx.font = 'bold ' + Math.floor(cellSize * 0.6) + 'px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillText('NEXT', previewX, previewY);
+
+        // draw the next piece shape
+        var shape = PIECES[next.type][0]; // always show first rotation
+        var offsetY = previewY + cellSize;
+
+        for (var row = 0; row < shape.length; row++) {
+          for (var col = 0; col < shape[row].length; col++) {
+            if (shape[row][col]) {
+              var nx = previewX + col * cellSize * 0.7;
+              var ny = offsetY + row * cellSize * 0.7;
+              ctx.fillStyle = COLORS[next.type];
+              ctx.fillRect(nx, ny, cellSize * 0.7 - 2, cellSize * 0.7 - 2);
+            }
+          }
+        }
+      }
+
+      /**
+       * Draws score, level, and lines on the left side
+       */
+      function drawHUD(ctx) {
+        var hudX = boardX - cellSize * 5;
+        if (hudX < 10) hudX = 10;
+
+        var fontSize = Math.floor(cellSize * 0.6);
+        ctx.font = 'bold ' + fontSize + 'px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+
+        // score
+        ctx.fillStyle = '#888';
+        ctx.fillText('SCORE', hudX, boardY);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(String(score), hudX, boardY + fontSize + 4);
+
+        // level
+        ctx.fillStyle = '#888';
+        ctx.fillText('LEVEL', hudX, boardY + fontSize * 3 + 16);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(String(level), hudX, boardY + fontSize * 4 + 20);
+
+        // lines
+        ctx.fillStyle = '#888';
+        ctx.fillText('LINES', hudX, boardY + fontSize * 6 + 32);
+        ctx.fillStyle = '#fff';
+        ctx.fillText(String(lines), hudX, boardY + fontSize * 7 + 36);
+
+        // controls hint at bottom
+        ctx.fillStyle = '#555';
+        ctx.font = Math.floor(fontSize * 0.7) + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('\u2190 \u2192 Move  \u2191 Rotate  \u2193 Soft drop  Space Hard drop', punter.width / 2, boardY + boardH + cellSize);
+      }
+
+      /**
+       * Draws the game over overlay
+       */
+      function drawGameOver(ctx) {
+        // dim the board
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(boardX, boardY, boardW, boardH);
+
+        // game over text
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold ' + Math.floor(cellSize * 1.4) + 'px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('GAME OVER', boardX + boardW / 2, boardY + boardH / 2 - cellSize);
+
+        // final score
+        ctx.fillStyle = '#ffe066';
+        ctx.font = Math.floor(cellSize * 0.8) + 'px monospace';
+        ctx.fillText('Score: ' + score, boardX + boardW / 2, boardY + boardH / 2 + cellSize * 0.5);
+
+        // restart prompt
+        ctx.fillStyle = '#888';
+        ctx.font = Math.floor(cellSize * 0.6) + 'px monospace';
+        ctx.fillText('Press Enter or Space to restart', boardX + boardW / 2, boardY + boardH / 2 + cellSize * 2);
+      }
+
+      // ─── start the game ──────────────────────────────────────────────────────────
+      punter.go('play');
+
+    </script>
+  </body>
+</html>
