@@ -256,4 +256,45 @@ describe('Sprites', function () {
         expect(result.initial).toBe(false);
         expect(result.afterSet).toBe(true);
     });
+
+    // --- svg loading ---
+
+    it('errors when an SVG is missing viewBox, width or height', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-invalid.html');
+        await svgPage.waitForFunction(
+            'document.documentElement.hasAttribute("data-punter-error") || window.__ready === true',
+            { timeout: 5000 }
+        );
+        var result = await svgPage.evaluate(function () {
+            return {
+                ready: window.__ready,
+                error: document.documentElement.getAttribute('data-punter-error')
+            };
+        });
+        expect(result.ready).toBe(false);
+        expect(result.error).toContain('must have viewBox, width and height');
+        await svgPage.close();
+    });
+
+    it('loads an SVG successfully when viewBox, width and height are present', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-valid.html');
+        await svgPage.waitForFunction('window.__ready === true', { timeout: 5000 });
+        var result = await svgPage.evaluate(function () {
+            return window.__ready;
+        });
+        expect(result).toBe(true);
+        await svgPage.close();
+    });
+
+    it('sprite dimensions match the SVG width and height', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-valid.html');
+        await svgPage.waitForFunction('window.__ready === true', { timeout: 5000 });
+        var result = await svgPage.evaluate(function () {
+            var s = punter.createSprite({ id: 'svgSprite', image: 'icon', x: 0, y: 0 });
+            return { w: s.w, h: s.h };
+        });
+        expect(result.w).toBe(73);
+        expect(result.h).toBe(47);
+        await svgPage.close();
+    });
 });

@@ -4,7 +4,7 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var ROOT = path.resolve(__dirname, '..');
-var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.wav': 'audio/wav', '.png': 'image/png' };
+var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.wav': 'audio/wav', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
 var _server, _browser, _baseUrl;
 var _started = null; // promise to ensure single init
