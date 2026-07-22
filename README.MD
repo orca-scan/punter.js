@@ -307,7 +307,7 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 
 ## Other engine properties
 
-`punter` exposes a handful of read-only state properties beyond what's covered above:
+`punter` exposes a handful of read-only properties and helpers beyond what's covered above:
 
 Property                  | Description
 :-------------------------|:-------------------------------------------------------
