@@ -111,13 +111,18 @@ A sprite is any image-based object in your game - the player, an enemy, a coin, 
 
 ```js
 var enemy = punter.createSprite({
-  id: 'enemy1',        // must be unique
-  image: 'enemy',       // matches a key from config.images (or an array of keys for animation)
-  x: 100, y: 200,       // position (number or '%' string, e.g. '50%')
-  w: 32, h: 32,         // optional size (auto-detected from image if omitted)
-  collidable: true,     // computes bounding box for collisions (default: true)
-  boundsMode: 'pixel',  // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
-  outline: 'red'        // optional debug outline color
+  id: 'enemy1',           // must be unique
+  image: 'enemy',          // matches a key from config.images (or an array of keys for animation)
+  x: 100, y: 200,          // position (number or '%' string, e.g. '50%')
+  w: 32, h: 32,            // optional size (auto-detected from image if omitted)
+  preserveAspect: true,    // maintain image aspect ratio (default: true)
+  collidable: true,        // computes bounding box for collisions (default: true)
+  boundsMode: 'pixel',     // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
+  repeatX: false,          // tile horizontally across the canvas (default: false)
+  repeatY: false,          // tile vertically across the canvas (default: false)
+  clipHeight: null,        // clip sprite to this height in pixels (null = no clip)
+  clipFrom: 'bottom',      // clip from 'top' or 'bottom' (default: 'bottom')
+  outline: 'red'           // optional debug outline color
 });
 ```
 
@@ -250,6 +255,8 @@ This is the engine that keeps everything moving. `punter.go(sceneName)` auto-sta
 
 Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprite state - handy for a pause menu.
 
+`punter.redraw()` clears the canvas and redraws all sprites without advancing game logic - useful for refreshing a static frame while paused.
+
 ## Gotchas for Beginners
 
 - **Sprite IDs must be unique** - reusing one throws an error
@@ -273,7 +280,7 @@ None of this is exotic, it's just the stuff that's easy to get wrong when you wr
 
 - **No physics.** No gravity, velocity, acceleration model - `isCollidingWith` tells you two sprites overlap; what happens next (bounce back, stop, lose a life) is up to you.
 - **No tilemaps.** No Tiled import, no level-editor pipeline.
-- **No plugin system, no modules.** Single file, ~1700 lines, vanilla ES5-style JS, one global (`punter`).
+- **No plugin system, no modules.** Single file, ~1800 lines, vanilla ES5-style JS, one global (`punter`).
 - **No WebGL.** Canvas 2D only.
 
 If you need physics or tilemaps, look at Phaser or Kaboom/Kaplay instead.
@@ -309,6 +316,10 @@ Property                  | Description
 `punter.getSprite(id)`    | get a sprite by id, `null` if not found
 `punter.width`            | canvas buffer width in pixels (DPR-scaled)
 `punter.height`           | canvas buffer height in pixels (DPR-scaled)
+`punter.frame`            | current frame counter (0–59, resets each second)
+`punter.totalFrames`      | total frames since the loop started (never resets)
+`punter.canvas`           | the `<canvas>` element
+`punter.ctx`              | the canvas 2D rendering context
 `punter.running`          | `true` if the game loop is running
 `punter.paused`           | `true` if the loop is paused
 `punter.resized`          | `true` for the frame in which a resize occurred
