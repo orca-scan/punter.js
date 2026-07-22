@@ -197,6 +197,11 @@
             var loaded = 0;
             var failed = false;
 
+            /**
+             * Handles successful image load, caches bounds, and resolves when all images are ready
+             * @param {string} key - image key from the config map
+             * @returns {void}
+             */
             function handleLoad(key) {
                 var self = this;
 
@@ -204,6 +209,7 @@
                 self.onerror = null;
 
                 function finalize() {
+                    
                     images[key] = self;
 
                     // precompute and cache bounding box for this sprite key
@@ -224,6 +230,12 @@
                 }
             }
 
+            /**
+             * Handles image load failure and rejects the loading promise
+             * @param {string} key - image key that failed to load
+             * @param {string} url - URL that was attempted
+             * @returns {void}
+             */
             function handleError(key, url) {
                 this.onload = null;
                 this.onerror = null;
@@ -232,14 +244,53 @@
                 reject(new Error('Failed to load sprite "' + key + '" from ' + url));
             }
 
+            /**
+             * Fetches an SVG, validates it has viewBox/width/height, then loads it as an image
+             * @param {string} key - image key
+             * @param {string} url - SVG file URL
+             */
+            function loadSvg(key, url) {
+                fetch(url).then(function (res) {
+                    return res.text();
+                }).then(function (text) {
+                    var doc = new DOMParser().parseFromString(text, 'image/svg+xml');
+                    var svg = doc.querySelector('svg');
+
+                    if (!svg || !svg.hasAttribute('viewBox') || !svg.hasAttribute('width') || !svg.hasAttribute('height')) {
+                        if (failed) return;
+                        failed = true;
+                        reject(new Error('SVG "' + key + '" must have viewBox, width and height attributes'));
+                        return;
+                    }
+
+                    var blob = new Blob([text], { type: 'image/svg+xml' });
+                    var img = new Image();
+                    img.key = key;
+                    img.onload = handleLoad.bind(img, key);
+                    img.onerror = handleError.bind(img, key, url);
+                    img.src = URL.createObjectURL(blob);
+                })
+                .catch(function () {
+                    if (failed) return;
+                    failed = true;
+                    reject(new Error('Failed to load sprite "' + key + '" from ' + url));
+                });
+            }
+
             for (var i = 0; i < total; i++) {
                 var key = imageKeys[i];
                 var url = imageMap[key];
-                var img = new Image();
-                img.key = key; // for debugging
-                img.onload = handleLoad.bind(img, key);
-                img.onerror = handleError.bind(img, key, url);
-                img.src = url;
+
+                if (url.toLowerCase().indexOf('.svg') !== -1) {
+                    loadSvg(key, url);
+                }
+                else {
+                    var img = new Image();
+                    img.key = key;
+                    img.onload = handleLoad.bind(img, key);
+                    img.onerror = handleError.bind(img, key, url);
+                    img.src = url;
+                }
             }
         });
     }
@@ -531,7 +582,9 @@
         var initialDrawKey = Array.isArray(this.image) ? this.image[0] : this.image;
         var img = images[initialDrawKey];
 
-        if (!img || !img.complete || !img.naturalWidth) throw new Error('Sprite: image not loaded ' + initialDrawKey);
+        if (!img || !img.complete || !img.naturalWidth) {
+            throw new Error('Sprite: image not loaded ' + initialDrawKey);
+        }
 
         // infer size immediately if needed
         this.aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 1;
