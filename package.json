@@ -1,6 +1,6 @@
 {
   "name": "punter.js",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "description": "A simple 2D game engine for the web",
   "main": "src/punter.js",
   "directories": {
