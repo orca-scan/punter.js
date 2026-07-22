@@ -42,7 +42,7 @@ This starts a local server on port 4000 and opens the games index in your browse
     debug: false, // set true to see FPS, bounds boxes, sprite labels
     images: {
       player: 'images/player.png',
-      enemy: 'images/enemy.png'
+      enemy: 'images/enemy.svg'
     },
     sounds: {
       jump: 'sounds/jump.mp3'
