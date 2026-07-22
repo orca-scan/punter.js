@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Snake</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #1e2230; overflow: hidden; }
+      canvas { display: block; background: #1b2125; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      // game settings
+      var CELL  = 20 * punter.dpr; // size of each grid cell (scaled for retina screens)
+      var SPEED = 8;               // move every N frames (lower = faster)
+
+      // game state — these variables track everything happening in the game
+      var body    = [];             // snake segments as {x, y} grid positions
+      var dir     = { x: 1, y: 0 }; // current movement direction (starts going right)
+      var nextDir = { x: 1, y: 0 }; // direction queued by player input (applied on next move)
+      var score   = 0;
+      var cols, rows, headSprite, foodSprite;
+
+      // step 1: load images and sounds before the game starts
+      punter.setup({
+        canvas: '#game',
+        images: {
+          head: '../images/snake/head.svg', // the snake's head sprite
+          food: '../images/snake/food.svg'  // the food to collect
+        },
+        sounds: {
+          eat: '../sounds/beep6.mp3',
+          die: '../sounds/error2.mp3'
+        }
+      });
+
+      // step 2: define the "play" scene — this is where the game happens
+      punter.scene('play', function () {
+
+        // work out how many grid cells fit on screen
+        cols = Math.floor(punter.width / CELL);
+        rows = Math.floor(punter.height / CELL);
+
+        // create the two sprites (punter draws these automatically each frame)
+        headSprite = punter.createSprite({ id: 'head', image: 'head', x: 0, y: 0, w: CELL, h: CELL });
+        foodSprite = punter.createSprite({ id: 'food', image: 'food', x: 0, y: 0, w: CELL, h: CELL });
+
+        resetGame();
+
+        // game logic - runs ~60 times per second
+        punter.on('update', function () {
+
+          // read arrow keys (prevent reversing into yourself)
+          if (punter.keys['ArrowUp']    && dir.y === 0) nextDir = { x: 0, y: -1 };
+          if (punter.keys['ArrowDown']  && dir.y === 0) nextDir = { x: 0, y: 1 };
+          if (punter.keys['ArrowLeft']  && dir.x === 0) nextDir = { x: -1, y: 0 };
+          if (punter.keys['ArrowRight'] && dir.x === 0) nextDir = { x: 1, y: 0 };
+
+          // only move every SPEED frames (this controls how fast the snake moves)
+          if (punter.totalFrames % SPEED !== 0) return;
+
+          // apply the queued direction and calculate the next head position
+          dir = nextDir;
+          var newHead = { x: body[0].x + dir.x, y: body[0].y + dir.y };
+
+          // die if hitting a wall or yourself
+          if (newHead.x < 0 || newHead.x >= cols || newHead.y < 0 || newHead.y >= rows) { die(); return; }
+          for (var i = 0; i < body.length; i++) {
+            if (body[i].x === newHead.x && body[i].y === newHead.y) { die(); return; }
+          }
+
+          // move the snake forward (add new head to front of body array)
+          body.unshift(newHead);
+          headSprite.x = newHead.x * CELL;
+          headSprite.y = newHead.y * CELL;
+
+          // check if head overlaps food using punter's collision detection
+          if (headSprite.isCollidingWith(foodSprite)) {
+            score++;                  // grow — don't remove tail
+            punter.playSound('eat');
+            placeFood();
+          } else {
+            body.pop();               // not eating — remove tail to keep same length
+          }
+        });
+
+        // draw is called once per frame after punter draws all sprites
+        // use it for custom drawing (body segments, score text, etc.)
+        punter.on('draw', function () {
+          var ctx = this; // the canvas 2D drawing context
+
+          // draw body segments
+          ctx.fillStyle = '#66bb6a';
+          for (var i = 1; i < body.length; i++) {
+            ctx.fillRect(body[i].x * CELL + 1, body[i].y * CELL + 1, CELL - 2, CELL - 2);
+          }
+
+          // score
+          ctx.fillStyle = '#f5c518';
+          ctx.font = 'bold 20px monospace';
+          ctx.fillText('Score: ' + score, 12, 28);
+        });
+      });
+
+      // step 3: define the "gameover" scene — shown when the snake dies
+      // switching scenes with punter.go() destroys old sprites and starts fresh
+      punter.scene('gameover', function () {
+
+        // wait for player to press a key, then go back to the play scene
+        punter.on('update', function () {
+          if (punter.keys['Enter'] || punter.keys[' '] || punter.mouse.clicked) {
+            punter.go('play'); // this re-runs the play scene from scratch
+          }
+        });
+
+        punter.on('draw', function () {
+          var ctx = this;
+          var w = punter.width;
+          var h = punter.height;
+
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 32px monospace';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('GAME OVER', w / 2, h / 2 - 24);
+
+          ctx.fillStyle = '#f5c518';
+          ctx.font = '20px monospace';
+          ctx.fillText('Score: ' + score, w / 2, h / 2 + 12);
+
+          ctx.fillStyle = '#888';
+          ctx.font = '14px monospace';
+          ctx.fillText('Press Enter or tap to restart', w / 2, h / 2 + 44);
+        });
+      });
+
+      function resetGame() {
+        var startX = Math.floor(cols / 2);
+        var startY = Math.floor(rows / 2);
+        body = [{ x: startX, y: startY }, { x: startX - 1, y: startY }, { x: startX - 2, y: startY }];
+        dir = { x: 1, y: 0 };
+        nextDir = { x: 1, y: 0 };
+        score = 0;
+        headSprite.x = startX * CELL;
+        headSprite.y = startY * CELL;
+        placeFood();
+      }
+
+      function placeFood() {
+        foodSprite.x = Math.floor(Math.random() * cols) * CELL;
+        foodSprite.y = Math.floor(Math.random() * rows) * CELL;
+      }
+
+      function die() {
+        punter.playSound('die');
+        punter.go('gameover'); // switch to the gameover scene
+      }
+
+      // step 4: start the game by activating the play scene
+      punter.go('play');
+
+    </script>
+  </body>
+</html>
