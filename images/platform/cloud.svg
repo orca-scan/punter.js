@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 50" width="100" height="50">
+  <defs>
+    <radialGradient id="cloudGrad" cx="50%" cy="60%" r="50%">
+      <stop offset="0%" stop-color="#fff"/>
+      <stop offset="80%" stop-color="#eceff1"/>
+      <stop offset="100%" stop-color="#cfd8dc"/>
+    </radialGradient>
+    <filter id="cloudSoft" x="-5%" y="-5%" width="110%" height="110%">
+      <feGaussianBlur stdDeviation="0.5"/>
+    </filter>
+  </defs>
+  <!-- cloud shadow layer -->
+  <ellipse cx="52" cy="38" rx="38" ry="10" fill="#b0bec5" opacity="0.15"/>
+  <!-- main cloud body -->
+  <ellipse cx="50" cy="32" rx="40" ry="14" fill="url(#cloudGrad)" filter="url(#cloudSoft)"/>
+  <ellipse cx="32" cy="26" rx="22" ry="16" fill="#fff" opacity="0.95"/>
+  <ellipse cx="62" cy="24" rx="24" ry="18" fill="#fff" opacity="0.95"/>
+  <ellipse cx="50" cy="20" rx="18" ry="14" fill="#fff"/>
+  <!-- highlight puffs -->
+  <ellipse cx="40" cy="16" rx="10" ry="8" fill="#fff"/>
+  <ellipse cx="58" cy="18" rx="8" ry="6" fill="#fff"/>
+  <!-- subtle shading on underside -->
+  <ellipse cx="50" cy="36" rx="30" ry="6" fill="#cfd8dc" opacity="0.3"/>
+  <!-- top highlights -->
+  <ellipse cx="38" cy="14" rx="6" ry="4" fill="#fff" opacity="0.8"/>
+  <ellipse cx="55" cy="12" rx="5" ry="3" fill="#fff" opacity="0.7"/>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <radialGradient id="slimeGrad" cx="45%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#ef9a9a"/>
+      <stop offset="50%" stop-color="#e53935"/>
+      <stop offset="100%" stop-color="#b71c1c"/>
+    </radialGradient>
+    <filter id="slimeShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="1.5" stdDeviation="1" flood-color="#4a0000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <!-- drip tendrils -->
+  <ellipse cx="8" cy="30" rx="2.5" ry="4" fill="#c62828" opacity="0.7"/>
+  <ellipse cx="24" cy="31" rx="2" ry="3.5" fill="#c62828" opacity="0.6"/>
+  <!-- main body -->
+  <ellipse cx="16" cy="22" rx="16" ry="12" fill="url(#slimeGrad)" filter="url(#slimeShadow)"/>
+  <!-- top highlight blob -->
+  <ellipse cx="14" cy="16" rx="8" ry="5" fill="#ef9a9a" opacity="0.6"/>
+  <!-- shiny spot -->
+  <ellipse cx="10" cy="14" rx="3.5" ry="2.5" fill="#ffcdd2" opacity="0.7"/>
+  <!-- eyes with angry brows -->
+  <ellipse cx="11" cy="19" rx="3.5" ry="4" fill="#fff"/>
+  <ellipse cx="21" cy="19" rx="3.5" ry="4" fill="#fff"/>
+  <circle cx="12" cy="20" r="2" fill="#1a237e"/>
+  <circle cx="22" cy="20" r="2" fill="#1a237e"/>
+  <!-- eye shine -->
+  <circle cx="11" cy="18" r="1" fill="#fff" opacity="0.9"/>
+  <circle cx="21" cy="18" r="1" fill="#fff" opacity="0.9"/>
+  <!-- angry eyebrows -->
+  <path d="M7 14 L14 16" stroke="#4a0000" stroke-width="2" stroke-linecap="round"/>
+  <path d="M25 14 L18 16" stroke="#4a0000" stroke-width="2" stroke-linecap="round"/>
+  <!-- evil grin -->
+  <path d="M12 25 Q16 29 20 25" stroke="#4a0000" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- teeth -->
+  <path d="M14 25.5 L14.5 27 L15 25.5" fill="#fff"/>
+  <path d="M17 26 L17.5 27.5 L18 26" fill="#fff"/>
+</svg>

@@ -1,9 +1,9 @@
 <!doctype html>
 <html>
   <head>
-    <title>Platformer</title>
+    <title>Platform</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <style>
       * {
         margin: 0;
@@ -15,16 +15,22 @@
         width: 100%;
         height: 100%;
         overflow: hidden;
-        background:
-          radial-gradient(circle at top, rgba(255,255,255,0.18), transparent 35%),
-          linear-gradient(180deg, #87d2f5 0%, #bde8ff 48%, #f4efe1 100%);
+        background: linear-gradient(180deg, #1a237e 0%, #4fc3f7 30%, #81d4fa 50%, #e8f5e9 85%, #66bb6a 100%);
+        touch-action: none;
+        -webkit-touch-callout: none;
+        user-select: none;
       }
 
       canvas {
         display: block;
-        background:
-          linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0)),
-          linear-gradient(180deg, #7fc7ef 0%, #b8e6ff 55%, #f0d6a2 100%);
+        background: linear-gradient(180deg,
+          #4fc3f7 0%,
+          #81d4fa 20%,
+          #b3e5fc 45%,
+          #e0f7fa 65%,
+          #e8f5e9 85%,
+          #a5d6a7 100%
+        );
       }
     </style>
     <script src="../src/punter.js"></script>
@@ -33,16 +39,13 @@
     <canvas id="game"></canvas>
     <script>
 
-      var COLOR_TEXT = '#18344a';
-      var COLOR_DIM = '#446375';
-      var COLOR_OVERLAY = 'rgba(14, 33, 48, 0.28)';
-      var COLOR_SHADOW = 'rgba(24, 52, 74, 0.14)';
+      // ─── HELPERS ───────────────────────────────────────────────────────
 
       var DPR = punter.dpr;
 
       /**
-       * Converts logical pixels to device pixels
-       * @param {number} n - logical pixel size
+       * Converts logical pixels to device-scaled pixels
+       * @param {number} n - logical pixel value
        * @returns {number}
        */
       function px(n) {
@@ -50,87 +53,79 @@
       }
 
       /**
-       * Clamps a value between min and max
-       * @param {number} value
-       * @param {number} min
-       * @param {number} max
+       * Clamps value between min and max
+       * @param {number} v
+       * @param {number} lo
+       * @param {number} hi
        * @returns {number}
        */
-      function clamp(value, min, max) {
-        return Math.max(min, Math.min(value, max));
+      function clamp(v, lo, hi) {
+        return Math.max(lo, Math.min(v, hi));
       }
 
-      /**
-       * Updates a sprite's collision bounds to match its current x/y.
-       * Must be called after moving a sprite manually during the update loop,
-       * because isCollidingWith() reads bounds — not x/y directly.
-       * @param {Object} sprite - punter sprite
-       * @returns {void}
-       */
-      function syncBounds(sprite) {
-        sprite.bounds = {
-          x: sprite.x,
-          y: sprite.y,
-          w: sprite.w,
-          h: sprite.h
-        };
-      }
+      // ─── TUNING CONSTANTS ─────────────────────────────────────────────
+      // adjust these to change how the game feels
 
-      // game constants — tweak these to adjust feel and difficulty
-      var PLAYER_W = px(64);
-      var PLAYER_H = px(53);
-      var PLAYER_SPEED = px(5);
-      var PLAYER_AIR_SPEED = px(4);
-      var JUMP_SPEED = px(13);
-      var GRAVITY = px(0.7);
-      var MAX_FALL_SPEED = px(12);
-      var ENEMY_SPEED = px(2.2);
-      var COIN_SIZE = px(18);
-      var PLATFORM_H = px(18);
-      var GOAL_W = px(42);
-      var GOAL_H = px(20);
-      var GROUND_MARGIN = px(26);
+      var PLAYER_H       = px(48);
+      var PLAYER_SPEED   = px(5);    // ground movement speed
+      var AIR_SPEED      = px(4);    // reduced control in the air
+      var JUMP_FORCE     = px(13);   // initial upward velocity on jump
+      var GRAVITY        = px(0.7);  // downward acceleration per frame
+      var MAX_FALL       = px(12);   // terminal velocity
+      var ENEMY_SPEED    = px(2);    // patrol speed
+      var GEM_SIZE       = px(22);   // collectible size
+      var GROUND_H       = px(20);   // thickness of ground tile
+      var LEDGE_H        = px(16);   // thickness of floating ledges
+      var FLAG_W         = px(30);   // goal flag dimensions
+      var FLAG_H         = px(50);
+      var GROUND_MARGIN  = px(24);   // gap below ground to canvas bottom
 
-      // game state — reset in buildLevel() each time the scene starts
-      var playerSprite;
-      var goalSprite;
-      var platformSprites;
-      var coinSprites;
-      var enemySprites;
-      var playerVel;
-      var playerStart;
+      // ─── GAME STATE ────────────────────────────────────────────────────
+      // all state is reset in buildLevel() on each restart
+
+      var player;
+      var flag;
+      var platforms;
+      var gems;
+      var enemies;
+      var clouds;
+      var vel;
       var score;
-      var totalCoins;
-      var onGround;
+      var totalGems;
+      var grounded;
       var won;
-      var gameOver;
+      var dead;
+
+      // ─── ENGINE SETUP ──────────────────────────────────────────────────
 
       punter.setup({
         canvas: '#game',
         images: {
-          player: '../images/platform/ghost2.png',
-          platform: '../images/platform/platform-grass.png',
-          platformAlt: '../images/platform/platform-dirt.png',
-          goal: '../images/platform/goal.png',
-          coin: '../images/platform/coin.png',
-          enemy: '../images/platform/enemy.png',
-          tree: '../images/platform/tree.png',
-          rock: '../images/platform/rock.png',
-          hill: '../images/platform/hill.png'
+          player:  '../images/platform/player.svg',
+          ground:  '../images/platform/ground.svg',
+          ledge:   '../images/platform/ledge.svg',
+          gem:     '../images/platform/gem.svg',
+          slime:   '../images/platform/slime.svg',
+          flag:    '../images/platform/flag.svg',
+          bush:    '../images/platform/bush.svg',
+          cloud:   '../images/platform/cloud.svg'
         },
         sounds: {
-          jump: '../sounds/beep6.mp3',
-          coin: '../sounds/click1.mp3',
-          hit: '../sounds/error2.mp3',
-          win: '../sounds/fanfare1.mp3'
+          jump: '../sounds/whoosh2.mp3',
+          gem:  '../sounds/bling3.mp3',
+          hit:  '../sounds/error2.mp3',
+          win:  '../sounds/fanfare1.mp3'
         }
       });
+
+      // ─── MAIN SCENE ────────────────────────────────────────────────────
 
       punter.scene('play', function () {
         buildLevel();
 
         punter.on('update', function () {
-          if (gameOver || won) {
+          // if game ended, wait for restart input
+          if (dead || won) {
             if (punter.keys[' '] || punter.mouse.clicked) {
               punter.clearInput();
               punter.go('play');
@@ -138,13 +133,12 @@
             return;
           }
 
-          updatePlayerInput();
-          updatePlayerPhysics();
-          updateCoins();
-          updateEnemies();
-          updateGoal();
-
-          // playerSprite.bounce(3,3)
+          handleInput();
+          applyPhysics();
+          checkGems();
+          moveEnemies();
+          moveClouds();
+          checkGoal();
         });
 
         punter.on('draw', function () {
@@ -152,350 +146,354 @@
           var w = punter.width;
           var h = punter.height;
 
-          ctx.fillStyle = COLOR_TEXT;
-          ctx.font = 'bold ' + px(18) + 'px monospace';
+          // hud: gem counter top-left with shadow
+          ctx.save();
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+          ctx.shadowBlur = px(3);
+          ctx.shadowOffsetY = px(1);
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold ' + px(16) + 'px sans-serif';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'top';
-          ctx.fillText('Coins: ' + score + ' / ' + totalCoins, px(14), px(14));
+          ctx.fillText('Gems: ' + score + ' / ' + totalGems, px(12), px(12));
+          ctx.restore();
 
+          // hint text at bottom
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
-          ctx.font = px(14) + 'px monospace';
-          ctx.fillStyle = COLOR_DIM;
-          ctx.fillText('Arrow keys or A / D to move, SPACE to jump, tap left / right to steer', w / 2, h - px(14));
+          ctx.font = px(12) + 'px sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          ctx.fillText('Arrows / WASD to move \u2022 SPACE to jump \u2022 Tap to play on mobile', w / 2, h - px(8));
 
-          if (!won && !gameOver) {
-            ctx.textBaseline = 'top';
-            ctx.fillText('Collect every coin, then touch the golden platform', w / 2, px(42));
-          }
-
-          if (won || gameOver) {
-            ctx.fillStyle = COLOR_OVERLAY;
+          // win/lose overlay
+          if (won || dead) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
             ctx.fillRect(0, 0, w, h);
-            ctx.fillStyle = '#ffffff';
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            ctx.shadowBlur = px(6);
+            ctx.fillStyle = '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = 'bold ' + px(38) + 'px monospace';
-            ctx.fillText(won ? 'YOU ESCAPED!' : 'TRY AGAIN', w / 2, h / 2 - px(24));
-            ctx.font = px(18) + 'px monospace';
-            ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + px(24));
+            ctx.font = 'bold ' + px(32) + 'px sans-serif';
+            ctx.fillText(won ? 'LEVEL COMPLETE!' : 'OOPS!', w / 2, h / 2 - px(20));
+            ctx.font = px(16) + 'px sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+            ctx.fillText('Tap or press SPACE to retry', w / 2, h / 2 + px(20));
+            ctx.restore();
           }
         });
       });
 
+      // ─── LEVEL BUILDER ─────────────────────────────────────────────────
+
       /**
-       * Resets all state and builds the level: platforms, player, coins, enemies and goal
-       * @returns {void}
+       * Resets state and places all platforms, gems, enemies, and the goal flag
        */
       function buildLevel() {
         var w = punter.width;
         var h = punter.height;
-        var groundY = h - GROUND_MARGIN - PLATFORM_H;
-        var platformW = Math.floor(w * 0.18);
+        var groundY = h - GROUND_MARGIN - GROUND_H;
+        var ledgeW = Math.floor(w * 0.2);
 
-        platformSprites = [];
-        coinSprites = [];
-        enemySprites = [];
+        // reset arrays and state
+        platforms = [];
+        gems = [];
+        enemies = [];
         score = 0;
-        totalCoins = 4;
-        onGround = false;
+        totalGems = 5;
+        grounded = false;
         won = false;
-        gameOver = false;
-        playerVel = { x: 0, y: 0 };
-        playerStart = { x: px(36), y: groundY - PLAYER_H };
+        dead = false;
+        vel = { x: 0, y: 0 };
 
-        createPlatform('ground-left', 'platform', 0, groundY, Math.floor(w * 0.36), PLATFORM_H);
-        createPlatform('ground-mid', 'platformAlt', Math.floor(w * 0.41), groundY, Math.floor(w * 0.24), PLATFORM_H);
-        createPlatform('ground-right', 'platform', Math.floor(w * 0.70), groundY, Math.floor(w * 0.30), PLATFORM_H);
-        createPlatform('ledge-low', 'platformAlt', Math.floor(w * 0.18), h - px(122), platformW, PLATFORM_H);
-        createPlatform('ledge-mid', 'platform', Math.floor(w * 0.46), h - px(205), platformW, PLATFORM_H);
-        createPlatform('ledge-high', 'platformAlt', Math.floor(w * 0.68), h - px(292), platformW, PLATFORM_H);
-        createPlatform('ledge-top', 'platform', Math.floor(w * 0.43), h - px(364), platformW, PLATFORM_H);
+        // ground: three segments with a gap for danger
+        addPlatform('ground-l', 'ground', 0, groundY, Math.floor(w * 0.38), GROUND_H);
+        addPlatform('ground-m', 'ground', Math.floor(w * 0.43), groundY, Math.floor(w * 0.22), GROUND_H);
+        addPlatform('ground-r', 'ground', Math.floor(w * 0.70), groundY, Math.floor(w * 0.30), GROUND_H);
 
-        playerSprite = punter.createSprite({
+        // floating ledges — one-way platforms you can jump through from below
+        // staggered so each is reachable with a single jump from the previous
+        var ledge1Y = h - px(120);
+        var ledge2Y = h - px(195);
+        var ledge3Y = h - px(270);
+        var ledge4Y = h - px(345);
+        addPlatform('ledge-1', 'ledge', Math.floor(w * 0.12), ledge1Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge-2', 'ledge', Math.floor(w * 0.40), ledge2Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge-3', 'ledge', Math.floor(w * 0.62), ledge3Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge-4', 'ledge', Math.floor(w * 0.32), ledge4Y, ledgeW, LEDGE_H, true);
+
+        // player starts on the left ground
+        player = punter.createSprite({
           id: 'player',
           image: 'player',
-          x: playerStart.x,
-          y: playerStart.y,
-          // w: PLAYER_W,
+          x: px(40),
+          y: groundY - PLAYER_H,
           h: PLAYER_H,
-          preserveAspect: true
+          preserveAspect: true,
+          boundsMode: 'rect'
         });
 
-        goalSprite = punter.createSprite({
-          id: 'goal',
-          image: 'goal',
-          x: w - GOAL_W - px(28),
-          y: h - px(332),
-          w: GOAL_W,
-          h: GOAL_H,
-          preserveAspect: false
+        // goal flag on the top ledge
+        flag = punter.createSprite({
+          id: 'flag',
+          image: 'flag',
+          x: Math.floor(w * 0.42),
+          y: ledge4Y - FLAG_H,
+          w: FLAG_W,
+          h: FLAG_H,
+          preserveAspect: true,
+          boundsMode: 'rect'
         });
 
-        createCoin('coin-1', Math.floor(w * 0.25), h - px(154));
-        createCoin('coin-2', Math.floor(w * 0.53), h - px(238));
-        createCoin('coin-3', Math.floor(w * 0.75), h - px(325));
-        createCoin('coin-4', Math.floor(w * 0.49), h - px(396));
+        // gems placed above each ledge
+        addGem('gem-1', Math.floor(w * 0.19), ledge1Y - px(28));
+        addGem('gem-2', Math.floor(w * 0.47), ledge2Y - px(28));
+        addGem('gem-3', Math.floor(w * 0.69), ledge3Y - px(28));
+        addGem('gem-4', Math.floor(w * 0.39), ledge4Y - px(28));
+        addGem('gem-5', Math.floor(w * 0.55), groundY - px(30));
 
-        createEnemy('enemy-1', Math.floor(w * 0.47), h - px(227), Math.floor(w * 0.46), Math.floor(w * 0.61));
-        createEnemy('enemy-2', Math.floor(w * 0.71), h - px(314), Math.floor(w * 0.67), Math.floor(w * 0.84));
+        // patrolling slime enemies on ledge surfaces
+        addEnemy('slime-1', Math.floor(w * 0.43), ledge2Y - px(24), Math.floor(w * 0.40), Math.floor(w * 0.56));
+        addEnemy('slime-2', Math.floor(w * 0.65), ledge3Y - px(24), Math.floor(w * 0.62), Math.floor(w * 0.78));
 
-        // background scenery (non-collidable decorations)
-        createScenery('hill-1', 'hill', Math.floor(w * 0.05), groundY - px(36), px(100), px(38));
-        createScenery('hill-2', 'hill', Math.floor(w * 0.55), groundY - px(30), px(80), px(32));
-        createScenery('tree-1', 'tree', Math.floor(w * 0.12), groundY - px(46), px(28), px(46));
-        createScenery('tree-2', 'tree', Math.floor(w * 0.34), groundY - px(46), px(28), px(46));
-        createScenery('tree-3', 'tree', Math.floor(w * 0.78), groundY - px(46), px(28), px(46));
-        createScenery('rock-1', 'rock', Math.floor(w * 0.28), groundY - px(14), px(20), px(14));
-        createScenery('rock-2', 'rock', Math.floor(w * 0.62), groundY - px(14), px(18), px(12));
-
-        syncBounds(playerSprite);
-        syncBounds(goalSprite);
+        // drifting clouds (no collision)
+        clouds = [];
+        clouds.push(addCloud('cloud-1', Math.floor(w * 0.1), px(30), px(80), px(40)));
+        clouds.push(addCloud('cloud-2', Math.floor(w * 0.6), px(50), px(70), px(35)));
+        clouds.push(addCloud('cloud-3', Math.floor(w * 0.35), px(15), px(60), px(30)));
+        addDecor('bush-1', 'bush', Math.floor(w * 0.08), groundY - px(24), px(48), px(24));
+        addDecor('bush-2', 'bush', Math.floor(w * 0.72), groundY - px(24), px(48), px(24));
       }
 
+      // ─── SPRITE FACTORIES ──────────────────────────────────────────────
+
       /**
-       * Creates a non-collidable scenery decoration sprite
-       * @param {string} id - unique sprite id
-       * @param {string} image - image key
-       * @param {number} x
-       * @param {number} y
-       * @param {number} w
-       * @param {number} h
-       * @returns {void}
+       * Creates a platform sprite with full-rect collision bounds
+       * @param {boolean} [oneWay] - if true, player can jump through from below
        */
-      function createScenery(id, image, x, y, w, h) {
-        punter.createSprite({
-          id: id,
-          image: image,
-          x: x,
-          y: y,
-          w: w,
-          h: h,
+      function addPlatform(id, image, x, y, w, h, oneWay) {
+        var s = punter.createSprite({
+          id: id, image: image,
+          x: x, y: y, w: w, h: h,
           preserveAspect: false,
+          boundsMode: 'rect'
+        });
+        s.oneWay = (oneWay === true);
+        platforms.push(s);
+        return s;
+      }
+
+      /**
+       * Creates a bouncing gem collectible
+       */
+      function addGem(id, x, y) {
+        var s = punter.createSprite({
+          id: id, image: 'gem',
+          x: x, y: y,
+          w: GEM_SIZE, h: GEM_SIZE,
+          boundsMode: 'rect'
+        });
+        gems.push(s);
+      }
+
+      /**
+       * Creates a patrolling enemy between minX and maxX
+       */
+      function addEnemy(id, x, y, minX, maxX) {
+        var s = punter.createSprite({
+          id: id, image: 'slime',
+          x: x, y: y,
+          w: px(24), h: px(24),
+          boundsMode: 'rect'
+        });
+        s.minX = minX;
+        s.maxX = maxX;
+        s.dir = 1; // 1 = right, -1 = left
+        enemies.push(s);
+      }
+
+      /**
+       * Creates a non-collidable decoration sprite
+       */
+      function addDecor(id, image, x, y, w, h) {
+        punter.createSprite({
+          id: id, image: image,
+          x: x, y: y, w: w, h: h,
+          preserveAspect: true,
           collidable: false
         });
       }
 
       /**
-       * Creates a static platform sprite and registers it for collision
-       * @param {string} id - unique sprite id
-       * @param {string} image - image key from punter.setup
-       * @param {number} x
-       * @param {number} y
-       * @param {number} w
-       * @param {number} h
-       * @returns {Object} the created sprite
+       * Creates a cloud sprite that drifts using parallaxScrollX
        */
-      function createPlatform(id, image, x, y, w, h) {
-        var sprite = punter.createSprite({
-          id: id,
-          image: image,
-          x: x,
-          y: y,
-          w: w,
-          h: h,
-          preserveAspect: false
-        });
-
-        syncBounds(sprite);
-        platformSprites.push(sprite);
-        return sprite;
-      }
-
-      /**
-       * Creates a bouncing collectible coin at the given position
-       * @param {string} id - unique sprite id
-       * @param {number} x
-       * @param {number} y
-       * @returns {void}
-       */
-      function createCoin(id, x, y) {
-        var sprite = punter.createSprite({
-          id: id,
-          image: 'coin',
-          x: x,
-          y: y,
-          w: COIN_SIZE,
-          h: COIN_SIZE,
+      function addCloud(id, x, y, w, h) {
+        return punter.createSprite({
+          id: id, image: 'cloud',
+          x: x, y: y, w: w, h: h,
+          preserveAspect: true,
           collidable: false
         });
-
-        syncBounds(sprite);
-        coinSprites.push(sprite);
       }
 
       /**
-       * Creates an enemy that patrols left and right between minX and maxX
-       * @param {string} id - unique sprite id
-       * @param {number} x - starting x
-       * @param {number} y
-       * @param {number} minX - left patrol boundary
-       * @param {number} maxX - right patrol boundary
-       * @returns {void}
+       * Drifts each cloud across the screen at slightly different speeds
        */
-      function createEnemy(id, x, y, minX, maxX) {
-        var sprite = punter.createSprite({
-          id: id,
-          image: 'enemy',
-          x: x,
-          y: y,
-          w: px(20),
-          h: px(20)
-        });
-
-        sprite.minX = minX;
-        sprite.maxX = maxX;
-        sprite.direction = 1;
-        syncBounds(sprite);
-        enemySprites.push(sprite);
-      }
-
-      function updatePlayerInput() {
-        var movingLeft = punter.keys['ArrowLeft'] || punter.keys['a'];
-        var movingRight = punter.keys['ArrowRight'] || punter.keys['d'];
-        var speed = onGround ? PLAYER_SPEED : PLAYER_AIR_SPEED; // less control in the air
-
-        if (movingLeft && !movingRight) {
-          playerVel.x = -speed;
+      function moveClouds() {
+        for (var i = 0; i < clouds.length; i++) {
+          var speed = px(0.3) + (i * px(0.15));
+          clouds[i].parallaxScrollX(-speed, 2000);
         }
-        else if (movingRight && !movingLeft) {
-          playerVel.x = speed;
+      }
+
+      // ─── INPUT HANDLING ────────────────────────────────────────────────
+
+      /**
+       * Reads keyboard and touch input to set player velocity
+       */
+      function handleInput() {
+        var left = punter.keys['ArrowLeft'] || punter.keys['a'];
+        var right = punter.keys['ArrowRight'] || punter.keys['d'];
+        var speed = grounded ? PLAYER_SPEED : AIR_SPEED;
+
+        // keyboard movement
+        if (left && !right) {
+          vel.x = -speed;
+        }
+        else if (right && !left) {
+          vel.x = speed;
         }
         else {
-          playerVel.x = 0;
+          vel.x = 0;
         }
 
+        // mobile touch: tap left/right half to steer, top area to jump
         if (punter.mouse.clicked) {
-          // tap left/right side of screen to steer; centre is a dead zone
-          if (punter.mouse.x < punter.width * 0.45) {
-            playerVel.x = -speed;
+          if (punter.mouse.x < punter.width * 0.4) {
+            vel.x = -speed;
           }
-          else if (punter.mouse.x > punter.width * 0.55) {
-            playerVel.x = speed;
+          else if (punter.mouse.x > punter.width * 0.6) {
+            vel.x = speed;
           }
 
-          // tap the upper portion of the screen to jump
-          if (onGround && punter.mouse.y < punter.height * 0.78) {
-            jump();
+          // tapping upper portion triggers jump
+          if (grounded && punter.mouse.y < punter.height * 0.75) {
+            doJump();
           }
         }
 
-        if (onGround && (punter.keys[' '] || punter.keys['ArrowUp'] || punter.keys['w'])) {
-          jump();
+        // keyboard jump
+        if (grounded && (punter.keys[' '] || punter.keys['ArrowUp'] || punter.keys['w'])) {
+          doJump();
         }
       }
 
       /**
        * Launches the player upward
-       * @returns {void}
        */
-      function jump() {
-        playerVel.y = -JUMP_SPEED;
-        onGround = false;
+      function doJump() {
+        vel.y = -JUMP_FORCE;
+        grounded = false;
         punter.playSound('jump');
       }
 
-      function updatePlayerPhysics() {
-        // capture y before moving so we can detect which side of a platform was hit
-        var prevY = playerSprite.y;
+      // ─── PHYSICS ───────────────────────────────────────────────────────
+
+      /**
+       * Moves the player and resolves collisions with platforms
+       */
+      function applyPhysics() {
+        var prevY = player.y;
         var i;
 
-        playerVel.y = Math.min(playerVel.y + GRAVITY, MAX_FALL_SPEED);
+        // gravity pulls the player down each frame
+        vel.y = Math.min(vel.y + GRAVITY, MAX_FALL);
 
-        // --- horizontal pass: move, clamp to canvas, resolve wall collisions ---
-        playerSprite.moveX(playerVel.x);
-        playerSprite.x = clamp(playerSprite.x, 0, punter.width - playerSprite.w);
-        syncBounds(playerSprite);
+        // -- horizontal pass (skip one-way platforms — they only block from above) --
+        player.moveX(vel.x);
+        player.x = clamp(player.x, 0, punter.width - player.w);
 
-        for (i = 0; i < platformSprites.length; i++) {
-          if (playerSprite.isCollidingWith(platformSprites[i])) {
-            // push the player out sideways based on movement direction
-            if (playerVel.x > 0) {
-              playerSprite.x = platformSprites[i].x - playerSprite.w;
-            }
-            else if (playerVel.x < 0) {
-              playerSprite.x = platformSprites[i].x + platformSprites[i].w;
-            }
-            syncBounds(playerSprite);
+        for (i = 0; i < platforms.length; i++) {
+          if (platforms[i].oneWay) continue; // one-way ledges don't block sideways
+          if (player.isCollidingWith(platforms[i])) {
+            if (vel.x > 0) player.x = platforms[i].x - player.w;
+            else if (vel.x < 0) player.x = platforms[i].x + platforms[i].w;
           }
         }
 
-        // --- vertical pass: move, then resolve floor/ceiling collisions ---
-        playerSprite.moveY(playerVel.y);
-        onGround = false;
-        syncBounds(playerSprite);
+        // -- vertical pass --
+        player.moveY(vel.y);
+        grounded = false;
 
-        for (i = 0; i < platformSprites.length; i++) {
-          if (!playerSprite.isCollidingWith(platformSprites[i])) {
-            continue;
-          }
+        for (i = 0; i < platforms.length; i++) {
+          if (!player.isCollidingWith(platforms[i])) continue;
 
-          if (prevY + playerSprite.h <= platformSprites[i].y && playerVel.y >= 0) {
-            // landed on top of a platform
-            playerSprite.y = platformSprites[i].y - playerSprite.h;
-            playerVel.y = 0;
-            onGround = true;
+          if (prevY + player.h <= platforms[i].y && vel.y >= 0) {
+            // landed on top (works for both solid and one-way platforms)
+            player.y = platforms[i].y - player.h;
+            vel.y = 0;
+            grounded = true;
           }
-          else if (prevY >= platformSprites[i].y + platformSprites[i].h && playerVel.y < 0) {
-            // hit the underside of a platform
-            playerSprite.y = platformSprites[i].y + platformSprites[i].h;
-            playerVel.y = 0;
+          else if (!platforms[i].oneWay && prevY >= platforms[i].y + platforms[i].h && vel.y < 0) {
+            // hit underside of a solid platform (one-way ledges are passable from below)
+            player.y = platforms[i].y + platforms[i].h;
+            vel.y = 0;
           }
-
-          syncBounds(playerSprite);
         }
 
-        // fell below the screen
-        if (playerSprite.y > punter.height + px(20)) {
-          failRun();
+        // fell off the world
+        if (player.y > punter.height + px(20)) {
+          die();
         }
       }
 
-      function updateCoins() {
-        var i;
+      // ─── COLLECTIBLES ──────────────────────────────────────────────────
 
-        // iterate backwards so splice doesn't shift indices we haven't visited yet
-        for (i = coinSprites.length - 1; i >= 0; i--) {
-          coinSprites[i].bounce(px(4), 10);
-          syncBounds(coinSprites[i]); // coins use collidable:false so bounds aren't auto-updated on draw
+      /**
+       * Checks if player touches a gem; removes it and increments score
+       */
+      function checkGems() {
+        for (var i = gems.length - 1; i >= 0; i--) {
+          gems[i].bounce(px(4), 12); // gentle float animation
 
-          if (playerSprite.isCollidingWith(coinSprites[i])) {
-            coinSprites[i].destroy();
-            coinSprites.splice(i, 1);
+          if (player.isCollidingWith(gems[i])) {
+            gems[i].destroy();
+            gems.splice(i, 1);
             score++;
-            punter.playSound('coin');
+            punter.playSound('gem');
           }
         }
       }
 
-      function updateEnemies() {
-        var i;
+      // ─── ENEMIES ───────────────────────────────────────────────────────
 
-        for (i = 0; i < enemySprites.length; i++) {
-          enemySprites[i].moveX(ENEMY_SPEED * enemySprites[i].direction);
+      /**
+       * Moves enemies back and forth; kills player on contact
+       */
+      function moveEnemies() {
+        for (var i = 0; i < enemies.length; i++) {
+          var e = enemies[i];
+          e.moveX(ENEMY_SPEED * e.dir);
 
-          // reverse direction at each patrol boundary
-          if (enemySprites[i].x <= enemySprites[i].minX) {
-            enemySprites[i].x = enemySprites[i].minX;
-            enemySprites[i].direction = 1;
-          }
+          // reverse at patrol edges
+          if (e.x <= e.minX) { e.x = e.minX; e.dir = 1; }
+          if (e.x + e.w >= e.maxX) { e.x = e.maxX - e.w; e.dir = -1; }
 
-          if (enemySprites[i].x + enemySprites[i].w >= enemySprites[i].maxX) {
-            enemySprites[i].x = enemySprites[i].maxX - enemySprites[i].w;
-            enemySprites[i].direction = -1;
-          }
-
-          syncBounds(enemySprites[i]);
-
-          if (playerSprite.isCollidingWith(enemySprites[i])) {
-            failRun();
+          if (player.isCollidingWith(e)) {
+            die();
             return;
           }
         }
       }
 
-      function updateGoal() {
-        if (score === totalCoins && playerSprite.isCollidingWith(goalSprite)) {
+      // ─── GOAL ──────────────────────────────────────────────────────────
+
+      /**
+       * Checks win condition: all gems collected and player touches the flag
+       */
+      function checkGoal() {
+        if (score === totalGems && player.isCollidingWith(flag)) {
           won = true;
           punter.playSound('win');
           punter.clearInput();
@@ -503,14 +501,16 @@
       }
 
       /**
-       * Ends the round in a game-over state
-       * @returns {void}
+       * Handles player death
        */
-      function failRun() {
-        gameOver = true;
+      function die() {
+        dead = true;
         punter.playSound('hit');
         punter.clearInput();
       }
+
+      // ─── RESIZE HANDLER ────────────────────────────────────────────────
+      // rebuild the level on resize so everything stays proportional
 
       punter.on('resize', function () {
         if (punter.sceneName === 'play') {
@@ -518,6 +518,7 @@
         }
       });
 
+      // start the game
       punter.go('play');
 
     </script>

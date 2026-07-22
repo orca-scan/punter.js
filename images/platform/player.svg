@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <radialGradient id="bodyGrad" cx="40%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#b3e5fc"/>
+      <stop offset="60%" stop-color="#4fc3f7"/>
+      <stop offset="100%" stop-color="#0288d1"/>
+    </radialGradient>
+    <radialGradient id="hatGrad" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ff8a65"/>
+      <stop offset="100%" stop-color="#d84315"/>
+    </radialGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#1a237e" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- legs with gradient -->
+  <rect x="18" y="46" width="10" height="18" rx="5" fill="#1a47a0"/>
+  <rect x="19" y="46" width="4" height="16" rx="2" fill="#3b5998" opacity="0.5"/>
+  <rect x="36" y="46" width="10" height="18" rx="5" fill="#1a47a0"/>
+  <rect x="37" y="46" width="4" height="16" rx="2" fill="#3b5998" opacity="0.5"/>
+  <!-- shoes -->
+  <ellipse cx="23" cy="63" rx="7" ry="3" fill="#4e342e"/>
+  <ellipse cx="41" cy="63" rx="7" ry="3" fill="#4e342e"/>
+  <!-- body -->
+  <ellipse cx="32" cy="38" rx="16" ry="18" fill="url(#bodyGrad)" filter="url(#shadow)"/>
+  <!-- belly highlight -->
+  <ellipse cx="30" cy="42" rx="8" ry="6" fill="#e1f5fe" opacity="0.4"/>
+  <!-- eyes -->
+  <ellipse cx="25" cy="34" rx="5" ry="5.5" fill="#fff"/>
+  <ellipse cx="39" cy="34" rx="5" ry="5.5" fill="#fff"/>
+  <circle cx="26" cy="35" r="2.5" fill="#1a237e"/>
+  <circle cx="40" cy="35" r="2.5" fill="#1a237e"/>
+  <!-- eye shine -->
+  <circle cx="24.5" cy="33" r="1.2" fill="#fff" opacity="0.9"/>
+  <circle cx="38.5" cy="33" r="1.2" fill="#fff" opacity="0.9"/>
+  <!-- eyebrows -->
+  <path d="M21 29 Q25 27 29 29" stroke="#1a237e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M35 29 Q39 27 43 29" stroke="#1a237e" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- happy mouth -->
+  <path d="M28 44 Q32 49 36 44" stroke="#1a237e" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- cheek blush -->
+  <circle cx="20" cy="40" r="3" fill="#f48fb1" opacity="0.5"/>
+  <circle cx="44" cy="40" r="3" fill="#f48fb1" opacity="0.5"/>
+  <!-- hat -->
+  <rect x="15" y="14" width="34" height="15" rx="7" fill="url(#hatGrad)"/>
+  <rect x="19" y="25" width="26" height="4" rx="2" fill="#bf360c"/>
+  <!-- hat band -->
+  <rect x="15" y="23" width="34" height="3" rx="1.5" fill="#ffcc02"/>
+  <!-- hat highlight -->
+  <ellipse cx="28" cy="18" rx="10" ry="4" fill="#ffab91" opacity="0.4"/>
+</svg>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 36" width="60" height="36">
+  <defs>
+    <radialGradient id="bushGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#81c784"/>
+      <stop offset="60%" stop-color="#4caf50"/>
+      <stop offset="100%" stop-color="#2e7d32"/>
+    </radialGradient>
+    <filter id="bushShadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#1b5e20" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- shadow on ground -->
+  <ellipse cx="30" cy="34" rx="26" ry="3" fill="#1b5e20" opacity="0.2"/>
+  <!-- back layer -->
+  <ellipse cx="30" cy="24" rx="28" ry="12" fill="#2e7d32" filter="url(#bushShadow)"/>
+  <!-- mid layer left -->
+  <ellipse cx="18" cy="20" rx="15" ry="14" fill="#388e3c"/>
+  <!-- mid layer right -->
+  <ellipse cx="42" cy="20" rx="15" ry="14" fill="#388e3c"/>
+  <!-- top layer -->
+  <ellipse cx="30" cy="16" rx="14" ry="12" fill="url(#bushGrad)"/>
+  <!-- leaf cluster highlights -->
+  <ellipse cx="22" cy="12" rx="6" ry="5" fill="#a5d6a7" opacity="0.5"/>
+  <ellipse cx="38" cy="14" rx="5" ry="4" fill="#a5d6a7" opacity="0.4"/>
+  <ellipse cx="30" cy="10" rx="4" ry="3" fill="#c8e6c9" opacity="0.4"/>
+  <!-- individual leaf shapes -->
+  <path d="M14 18 Q12 14 16 15" fill="#66bb6a" opacity="0.6"/>
+  <path d="M44 16 Q47 13 45 17" fill="#66bb6a" opacity="0.5"/>
+  <!-- small berries -->
+  <circle cx="20" cy="22" r="1.5" fill="#e53935" opacity="0.7"/>
+  <circle cx="36" cy="20" r="1.2" fill="#e53935" opacity="0.6"/>
+  <circle cx="28" cy="24" r="1.3" fill="#e53935" opacity="0.65"/>
+</svg>

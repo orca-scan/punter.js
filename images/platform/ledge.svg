@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 24" width="200" height="24">
+  <defs>
+    <linearGradient id="stoneGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b0bec5"/>
+      <stop offset="30%" stop-color="#90a4ae"/>
+      <stop offset="100%" stop-color="#546e7a"/>
+    </linearGradient>
+  </defs>
+  <!-- main stone body -->
+  <rect x="0" y="0" width="200" height="24" rx="3" fill="url(#stoneGrad)"/>
+  <!-- stone edge highlight -->
+  <rect x="0" y="0" width="200" height="3" rx="2" fill="#cfd8dc" opacity="0.6"/>
+  <!-- bottom edge shadow -->
+  <rect x="0" y="21" width="200" height="3" rx="1" fill="#37474f" opacity="0.5"/>
+  <!-- crack details -->
+  <path d="M40 4 L45 12 L42 18" stroke="#455a64" stroke-width="0.8" fill="none" opacity="0.6"/>
+  <path d="M120 2 L125 10 L122 16 L126 22" stroke="#455a64" stroke-width="0.7" fill="none" opacity="0.5"/>
+  <path d="M170 6 L173 14" stroke="#455a64" stroke-width="0.6" fill="none" opacity="0.4"/>
+  <!-- stone texture spots -->
+  <circle cx="25" cy="12" r="3" fill="#78909c" opacity="0.4"/>
+  <circle cx="70" cy="8" r="2.5" fill="#78909c" opacity="0.35"/>
+  <circle cx="100" cy="15" r="3.5" fill="#78909c" opacity="0.3"/>
+  <circle cx="155" cy="10" r="2.8" fill="#78909c" opacity="0.35"/>
+  <!-- moss patches -->
+  <ellipse cx="12" cy="2" rx="8" ry="3" fill="#66bb6a" opacity="0.8"/>
+  <ellipse cx="60" cy="1" rx="6" ry="2.5" fill="#81c784" opacity="0.7"/>
+  <ellipse cx="90" cy="2" rx="10" ry="3" fill="#66bb6a" opacity="0.75"/>
+  <ellipse cx="140" cy="1" rx="7" ry="2.5" fill="#81c784" opacity="0.7"/>
+  <ellipse cx="185" cy="2" rx="8" ry="3" fill="#66bb6a" opacity="0.8"/>
+  <!-- tiny moss drips -->
+  <path d="M15 5 Q14 8 15 7" fill="#4caf50" opacity="0.5"/>
+  <path d="M92 5 Q91 9 93 8" fill="#4caf50" opacity="0.4"/>
+</svg>
