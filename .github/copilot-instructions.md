@@ -54,6 +54,6 @@ When asked to create or modify a 2D game:
 * Ensure keyboard and pointer controls continue to work
 * Use the timing values supplied by Punter.js rather than creating separate timers
 * Check asset paths before referencing images or sounds
-* Store game sprites as PNG files in /images/<game-name>/
+* Create game sprites as SVG files with logical names and store in /images/<game-name>/
 * Keep sprite filenames lowercase and descriptive
 * Check for obvious collision, movement and scoring issues
