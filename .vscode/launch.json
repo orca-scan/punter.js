@@ -5,8 +5,8 @@
             "name": "Start",
             "type": "node",
             "request": "launch",
-            "runtimeExecutable": "npx",
-            "runtimeArgs": ["http-server", ".", "-p", "4000", "-o"],
+            "runtimeExecutable": "npm",
+            "runtimeArgs": ["start"],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "skipFiles": ["<node_internals>/**"]
