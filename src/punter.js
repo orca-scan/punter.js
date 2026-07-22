@@ -545,6 +545,7 @@
         this.image = opts.image;
         this.preserveAspect = (opts.preserveAspect !== false);
         this.collidable = (opts.collidable !== false);
+        this.boundsMode = (opts.boundsMode === 'rect') ? 'rect' : 'pixel';
         this.outline = (typeof opts.outline === 'string') ? opts.outline : null;
         this.frame = null; // optional override by game logic
         this.repeatX = (opts.repeatX === true);
@@ -594,6 +595,12 @@
 
         this.w = finalSize.w;
         this.h = finalSize.h;
+
+        // pre-cache relBounds so isCollidingWith works from frame 1
+        if (this.collidable && this.boundsMode === 'pixel') {
+            this.relBounds = boundingCache.get(initialDrawKey) || { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+            this._lastBoundsKey = initialDrawKey;
+        }
 
         // cache sprite in memory
         _sprites[this.id] = this;
@@ -785,6 +792,15 @@
      * @returns {void}
      */
     Sprite.prototype.computeBounds = function (img) {
+
+        // rect mode skips pixel analysis entirely
+        if (this.boundsMode === 'rect') {
+            this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
+            this._boundsX = this.x;
+            this._boundsY = this.y;
+            return;
+        }
+
         var frameKey = this.getFrameImage();
 
         if (!this.relBounds || this._lastBoundsKey !== frameKey) {
@@ -806,6 +822,9 @@
             w: this.relBounds.w * scaleX,
             h: this.relBounds.h * scaleY
         };
+
+        this._boundsX = this.x;
+        this._boundsY = this.y;
 
         if (_debuggingEnabled) {
             _canvasCtx.strokeStyle = 'red';
@@ -1030,12 +1049,21 @@
         }
     };
     /**
-     * Tests whether this sprite's pixel-tight bounding box overlaps another sprite's bounding box
+     * Tests whether this sprite's bounding box overlaps another sprite's bounding box.
+     * Automatically refreshes bounds when a sprite's position has changed since the last check
      * @param {Object} target - the other sprite to test collision against
      * @returns {boolean} true if the two bounding boxes overlap
      */
     Sprite.prototype.isCollidingWith = function (target) {
-        if (!this.bounds || !target.bounds) return false;
+        if (!this.collidable || !target.collidable) return false;
+
+        // refresh bounds only when position has changed (dirty check)
+        if (!this.bounds || this.x !== this._boundsX || this.y !== this._boundsY) {
+            this._refreshBounds();
+        }
+        if (!target.bounds || target.x !== target._boundsX || target.y !== target._boundsY) {
+            target._refreshBounds();
+        }
 
         var ab = this.bounds;
         var bb = target.bounds;
@@ -1047,6 +1075,32 @@
             ab.y + ab.h <= bb.y ||
             ab.y >= bb.y + bb.h
         );
+    };
+    /**
+     * Recomputes bounds from current position. For 'rect' mode uses full sprite
+     * dimensions; for 'pixel' mode applies cached relBounds offset
+     * @returns {void}
+     */
+    Sprite.prototype._refreshBounds = function () {
+        if (this.boundsMode === 'rect' || !this.relBounds) {
+            this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
+        } else {
+            var imgKey = this.getFrameImage();
+            var img = images[imgKey];
+            if (!img) { this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h }; }
+            else {
+                var scaleX = this.w / img.naturalWidth;
+                var scaleY = this.h / img.naturalHeight;
+                this.bounds = {
+                    x: this.x + this.relBounds.x * scaleX,
+                    y: this.y + this.relBounds.y * scaleY,
+                    w: this.relBounds.w * scaleX,
+                    h: this.relBounds.h * scaleY
+                };
+            }
+        }
+        this._boundsX = this.x;
+        this._boundsY = this.y;
     };
     /**
      * Marks the sprite as destroyed and removes it from the engine's sprite registry; any held references become inert

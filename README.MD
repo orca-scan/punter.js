@@ -116,6 +116,7 @@ var enemy = punter.createSprite({
   x: 100, y: 200,       // position (number or '%' string, e.g. '50%')
   w: 32, h: 32,         // optional size (auto-detected from image if omitted)
   collidable: true,     // computes bounding box for collisions (default: true)
+  boundsMode: 'pixel',  // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
   outline: 'red'        // optional debug outline color
 });
 ```
