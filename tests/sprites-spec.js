@@ -215,10 +215,8 @@ describe('Sprites', function () {
 
     it('isCollidingWith returns true when bounding boxes overlap', async function () {
         var result = await page.evaluate(function () {
-            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0 });
-            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 0, y: 0 });
-            s1.bounds = { x: 0, y: 0, w: 100, h: 100 };
-            s2.bounds = { x: 50, y: 50, w: 100, h: 100 };
+            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, boundsMode: 'rect' });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 0, y: 0, boundsMode: 'rect' });
             return s1.isCollidingWith(s2);
         });
         expect(result).toBe(true);
@@ -226,22 +224,60 @@ describe('Sprites', function () {
 
     it('isCollidingWith returns false when bounding boxes do not overlap', async function () {
         var result = await page.evaluate(function () {
-            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0 });
-            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 0, y: 0 });
-            s1.bounds = { x: 0, y: 0, w: 100, h: 100 };
-            s2.bounds = { x: 200, y: 200, w: 100, h: 100 };
+            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, boundsMode: 'rect' });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 200, y: 200, boundsMode: 'rect' });
             return s1.isCollidingWith(s2);
         });
         expect(result).toBe(false);
     });
 
-    it('isCollidingWith returns false when either sprite has no bounds', async function () {
+    it('isCollidingWith returns false when either sprite is not collidable', async function () {
         var result = await page.evaluate(function () {
             var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0 });
-            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 0, y: 0 });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 0, y: 0, collidable: false });
             return s1.isCollidingWith(s2);
         });
         expect(result).toBe(false);
+    });
+
+    it('isCollidingWith detects collision after moveX', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 10, h: 10, boundsMode: 'rect' });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 20, y: 0, w: 10, h: 10, boundsMode: 'rect' });
+            var before = s1.isCollidingWith(s2);
+            s1.moveX(15);
+            var after = s1.isCollidingWith(s2);
+            return { before: before, after: after };
+        });
+        expect(result.before).toBe(false);
+        expect(result.after).toBe(true);
+    });
+
+    it('isCollidingWith works in pixel boundsMode using relBounds', async function () {
+        var result = await page.evaluate(function () {
+            // pixel mode scales relBounds by sprite size / natural image size
+            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 10, h: 10, boundsMode: 'pixel' });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 5, y: 5, w: 10, h: 10, boundsMode: 'pixel' });
+            var overlapping = s1.isCollidingWith(s2);
+            var s3 = punter.createSprite({ id: 's3', image: 'hero', x: 50, y: 50, w: 10, h: 10, boundsMode: 'pixel' });
+            var separated = s1.isCollidingWith(s3);
+            return { overlapping: overlapping, separated: separated };
+        });
+        expect(result.overlapping).toBe(true);
+        expect(result.separated).toBe(false);
+    });
+
+    it('pixel boundsMode refreshes bounds after position change', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 10, h: 10, boundsMode: 'pixel' });
+            var s2 = punter.createSprite({ id: 's2', image: 'hero', x: 50, y: 0, w: 10, h: 10, boundsMode: 'pixel' });
+            var before = s1.isCollidingWith(s2);
+            s1.moveX(45);
+            var after = s1.isCollidingWith(s2);
+            return { before: before, after: after };
+        });
+        expect(result.before).toBe(false);
+        expect(result.after).toBe(true);
     });
 
     // --- seen flag ---
