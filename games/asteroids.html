@@ -100,7 +100,7 @@
 
           // ---- game over ----
           if (gameOver) {
-            if (punter.keys[' '] || punter.mouse.clicked) {
+            if (punter.keys[' '] || punter.pointer.clicked) {
               punter.clearInput();
               resetGame();
             }
@@ -124,7 +124,7 @@
 
           // ---- shoot ----
           if (shootTimer > 0) shootTimer--;
-          if (shootTimer === 0 && (punter.keys[' '] || punter.mouse.clicked) && bullets.length < MAX_BULLETS) {
+          if (shootTimer === 0 && (punter.keys[' '] || punter.pointer.clicked) && bullets.length < MAX_BULLETS) {
             fireBullet();
             punter.clearInput();
           }

@@ -119,7 +119,7 @@
 
           // restart if game over and player presses a key
           if (gameOver) {
-            if (punter.keys['Enter'] || punter.keys[' '] || punter.mouse.clicked) {
+            if (punter.keys['Enter'] || punter.keys[' '] || punter.pointer.clicked) {
               punter.go('play');
             }
             return;

@@ -55,42 +55,116 @@
     htmlEl.setAttribute('data-punter-loading', 'true');
 
     var keys = {};
-    var mouse = { x: 0, y: 0, clicked: false };
-    var skipNextMouse = false;
+    var pointer = { x: 0, y: 0, clicked: false, down: false };
+    var _pointerButtons = { left: false, middle: false, right: false };
 
     window.addEventListener('keydown', function (e) { keys[e.key] = true; });
     window.addEventListener('keyup', function (e) { keys[e.key] = false; });
 
+    // maps e.button number to a button name
+    function buttonName(n) {
+        if (n === 1) return 'middle';
+        if (n === 2) return 'right';
+        return 'left';
+    }
+
     /**
-     * Records a click or touch and maps client coordinates to canvas-local coordinates
+     * Maps client coordinates to canvas-local coordinates and updates pointer.x/y
+     * @param {number} clientX - client X coordinate of the input event
+     * @param {number} clientY - client Y coordinate of the input event
+     * @returns {void}
+     */
+    function updatePointerPosition(clientX, clientY) {
+        if (!_canvas) { pointer.x = clientX; pointer.y = clientY; return; }
+        var rect = _canvas.getBoundingClientRect();
+        var canvasScale = _canvas.width / rect.width;
+        pointer.x = Math.round((clientX - rect.left) * canvasScale);
+        pointer.y = Math.round((clientY - rect.top) * canvasScale);
+    }
+
+    /**
+     * Records a click or tap; sets pointer.clicked and updates pointer.x/y
      * @param {number} clientX - client X coordinate of the input event
      * @param {number} clientY - client Y coordinate of the input event
      * @returns {void}
      */
     function registerClick(clientX, clientY) {
-        mouse.clicked = true;
-        if (!_canvas) { mouse.x = clientX; mouse.y = clientY; return; }
-        var rect = _canvas.getBoundingClientRect();
-        var canvasScale = _canvas.width / rect.width;
-        mouse.x = Math.round((clientX - rect.left) * canvasScale);
-        mouse.y = Math.round((clientY - rect.top) * canvasScale);
+        pointer.clicked = true;
+        updatePointerPosition(clientX, clientY);
     }
 
-    document.addEventListener('touchstart', function (e) {
+    if (window.PointerEvent) {
 
-        e.preventDefault();
+        // Pointer Events: one unified API covering mouse, touch, and stylus/pen
+        document.addEventListener('pointerdown', function (e) {
+            var btn = buttonName(e.button);
+            _pointerButtons[btn] = true;
+            pointer.down = _pointerButtons.left;
+            if (e.button === 0) registerClick(e.clientX, e.clientY);
+        });
 
-        if (e.touches.length) {
-            skipNextMouse = true;
-            var touch = e.touches[0];
-            registerClick(touch.clientX, touch.clientY);
-        }
-    }, { capture: true });
+        document.addEventListener('pointerup', function (e) {
+            var btn = buttonName(e.button);
+            _pointerButtons[btn] = false;
+            pointer.down = _pointerButtons.left;
+        });
 
-    document.addEventListener('mousedown', function (e) {
-        if (skipNextMouse) { skipNextMouse = false; return; }
-        registerClick(e.clientX, e.clientY);
-    });
+        document.addEventListener('pointercancel', function (e) {
+            var btn = buttonName(e.button);
+            _pointerButtons[btn] = false;
+            pointer.down = _pointerButtons.left;
+        });
+
+        document.addEventListener('pointermove', function (e) {
+            updatePointerPosition(e.clientX, e.clientY);
+        });
+
+    } else {
+
+        // fallback for browsers without Pointer Events (old Safari, etc.)
+        document.addEventListener('touchstart', function (e) {
+            e.preventDefault();
+            if (e.touches.length) {
+                _pointerButtons.left = true;
+                pointer.down = true;
+                var touch = e.touches[0];
+                registerClick(touch.clientX, touch.clientY);
+            }
+        }, { capture: true });
+
+        document.addEventListener('touchmove', function (e) {
+            if (e.touches.length) {
+                updatePointerPosition(e.touches[0].clientX, e.touches[0].clientY);
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchend', function () {
+            _pointerButtons.left = false;
+            pointer.down = false;
+        });
+
+        document.addEventListener('touchcancel', function () {
+            _pointerButtons.left = false;
+            pointer.down = false;
+        });
+
+        document.addEventListener('mousedown', function (e) {
+            var btn = buttonName(e.button);
+            _pointerButtons[btn] = true;
+            pointer.down = _pointerButtons.left;
+            if (e.button === 0) registerClick(e.clientX, e.clientY);
+        });
+
+        document.addEventListener('mouseup', function (e) {
+            var btn = buttonName(e.button);
+            _pointerButtons[btn] = false;
+            pointer.down = _pointerButtons.left;
+        });
+
+        document.addEventListener('mousemove', function (e) {
+            updatePointerPosition(e.clientX, e.clientY);
+        });
+    }
 
     /**
      * boundingCache - Simple fixed-size cache for sprite bounds
@@ -1200,7 +1274,7 @@
         // fixed timestep: run update() once per logical tick until we've consumed all elapsed time
         while (_loopAccumulator >= _loopStep) {
             eventHandlers.update();
-            mouse.clicked = false;
+            pointer.clicked = false;
             _frame++;
             _totalFrames++;
             if (_frame >= 60) {
@@ -1377,14 +1451,27 @@
     }
 
     /**
-     * Resets all keyboard key states and clears the mouse clicked flag; call between scenes to avoid stale input
+     * Returns true if the specified pointer button is currently held down
+     * @param {string} [button] - 'left', 'middle', or 'right' (defaults to 'left')
+     * @returns {boolean}
+     */
+    function isPointerDown(button) {
+        return _pointerButtons[button || 'left'] || false;
+    }
+
+    /**
+     * Resets all keyboard and pointer states; call between scenes to avoid stale input
      * @returns {void}
      */
     function clearInput() {
         for (var key in keys) {
             keys[key] = false;
         }
-        mouse.clicked = false;
+        pointer.clicked = false;
+        pointer.down = false;
+        _pointerButtons.left = false;
+        _pointerButtons.middle = false;
+        _pointerButtons.right = false;
     };
 
     /**
@@ -1648,7 +1735,8 @@
          // input handling
         clearInput: clearInput,
         keys: keys,
-        mouse: mouse,
+        pointer: pointer,
+        isPointerDown: isPointerDown,
 
         // event listeners
         /**

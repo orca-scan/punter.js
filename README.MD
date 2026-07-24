@@ -154,7 +154,7 @@ Property         | Description
 
 ## 4. Input
 
-Check `punter.keys` and `punter.mouse` inside your `update` handler each frame. Touch taps are automatically mapped to mouse events.
+Check `punter.keys` and `punter.pointer` inside your `update` handler each frame. Works with mouse, touch, and stylus/pen.
 
 Key names match the browser's [`KeyboardEvent.key`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) values. Common ones: `'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `' '` (spacebar), `'Enter'`, `'Escape'`, `'a'` to `'z'`.
 
@@ -172,22 +172,30 @@ punter.scene('level1', function () {
     if (punter.keys['ArrowDown']  || punter.keys['s']) player.moveY(3);
     if (punter.keys[' '])                              punter.playSound('jump'); // spacebar
 
-    // mouse / touch - clicked is true for one frame after a tap or click
-    if (punter.mouse.clicked) {
-      player.x = punter.mouse.x;
-      player.y = punter.mouse.y;
+    // pointer.clicked is true for one frame after a tap or click (good for menus, shooting)
+    if (punter.pointer.clicked) {
+      player.x = punter.pointer.x;
+      player.y = punter.pointer.y;
+    }
+
+    // isPointerDown() is true while a finger or button is held (good for movement, steering)
+    if (punter.isPointerDown()) {
+      player.x = punter.pointer.x;
+      player.y = punter.pointer.y;
     }
   });
 });
 ```
 
-| Property               | Description                                                                             |
-|------------------------|-----------------------------------------------------------------------------------------|
-| `punter.keys['Key']`   | `true` while that key is held down                                                      |
-| `punter.mouse.x`       | X position of the last click/tap in canvas pixels                                       |
-| `punter.mouse.y`       | Y position of the last click/tap in canvas pixels                                       |
-| `punter.mouse.clicked` | `true` for one `update` tick after a click or tap                                       |
-| `punter.clearInput()`  | Resets all key states and clears `mouse.clicked`. Called automatically on `punter.go()` |
+| Property/Method                     | Description                                                                                          |
+|-------------------------------------|------------------------------------------------------------------------------------------------------|
+| `punter.keys['Key']`                | `true` while that key is held down                                                                   |
+| `punter.pointer.x`                  | Current pointer X in canvas pixels (always up to date)                                               |
+| `punter.pointer.y`                  | Current pointer Y in canvas pixels (always up to date)                                               |
+| `punter.pointer.clicked`            | `true` for one `update` tick after a click or tap                                                    |
+| `punter.pointer.down`               | `true` while the primary button or finger is held down                                               |
+| `punter.isPointerDown(button)`      | `true` while the named button is held (`'left'`, `'right'`, `'middle'`; defaults to `'left'`)        |
+| `punter.clearInput()`               | Resets all key and pointer states. Called automatically on `punter.go()`                             |
 
 ## 5. Sound
 
@@ -271,7 +279,7 @@ Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprit
 
 - **Content-trimmed bounding boxes for collision.** The overlap test itself is a plain AABB (rectangle overlap) check, but the box isn't the full sprite sheet - `getBounds` does a per-pixel alpha scan of each image once, finds the tightest rect containing non-transparent pixels, and caches it per image key. So hitboxes match the visible artwork instead of whatever padding is baked into the source image.
 - **A real fixed-timestep loop.** The loop runs `update` on a 60Hz accumulator, decoupled from `draw`, with a 100ms-per-frame cap to avoid a spiral of death after a tab is backgrounded. Game logic behaves the same on a 60Hz and 144Hz screen - most hand-rolled canvas code skips this and gets frame-rate-dependent movement.
-- **Touch and mouse are unified correctly.** One `keys`/`mouse` input model, with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor) and devicePixelRatio, plus explicit suppression of the synthetic mousedown that follows a touchstart so clicks don't double-fire.
+- **Pointer, touch, and stylus are unified.** One `keys`/`pointer` input model backed by the Pointer Events API (with mouse/touch fallback for older browsers), with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor). Covers mouse, touchscreen, and stylus/pen with no extra game code.
 - **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens without you managing that yourself.
 
 None of this is exotic, it's just the stuff that's easy to get wrong when you write it yourself.

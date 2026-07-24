@@ -138,9 +138,9 @@
           if (punter.keys['ArrowUp']   || punter.keys['w']) playerSprite.moveY(-PADDLE_SPEED);
           if (punter.keys['ArrowDown'] || punter.keys['s']) playerSprite.moveY(PADDLE_SPEED);
 
-          // --- Player: tap / click ---
-          if (punter.mouse.clicked) {
-            playerSprite.y = punter.mouse.y - PADDLE_H / 2;
+          // --- Player: tap/click or held touch/mouse ---
+          if (punter.isPointerDown()) {
+            playerSprite.y = punter.pointer.y - PADDLE_H / 2;
           }
 
           // Keep the player paddle inside the screen

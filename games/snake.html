@@ -113,7 +113,7 @@
 
         // wait for player to press a key, then go back to the play scene
         punter.on('update', function () {
-          if (punter.keys['Enter'] || punter.keys[' '] || punter.mouse.clicked) {
+          if (punter.keys['Enter'] || punter.keys[' '] || punter.pointer.clicked) {
             punter.go('play'); // this re-runs the play scene from scratch
           }
         });
