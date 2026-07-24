@@ -100,7 +100,7 @@
 
           // ---- game over ----
           if (gameOver) {
-            if (punter.keys[' '] || punter.pointer.clicked) {
+            if (punter.isKeyDown('space') || punter.pointer.clicked) {
               punter.clearInput();
               resetGame();
             }
@@ -108,11 +108,11 @@
           }
 
           // ---- rotate ----
-          if (punter.keys['ArrowLeft']  || punter.keys['a']) ship.angle -= SHIP_TURN;
-          if (punter.keys['ArrowRight'] || punter.keys['d']) ship.angle += SHIP_TURN;
+          if (punter.isKeyDown('left', 'a')) ship.angle -= SHIP_TURN;
+          if (punter.isKeyDown('right', 'd')) ship.angle += SHIP_TURN;
 
           // ---- thrust ----
-          ship.thrusting = !!(punter.keys['ArrowUp'] || punter.keys['w']);
+          ship.thrusting = punter.isKeyDown('up', 'w');
           if (ship.thrusting) {
             ship.vx += Math.cos(ship.angle) * SHIP_THRUST;
             ship.vy += Math.sin(ship.angle) * SHIP_THRUST;
@@ -124,7 +124,7 @@
 
           // ---- shoot ----
           if (shootTimer > 0) shootTimer--;
-          if (shootTimer === 0 && (punter.keys[' '] || punter.pointer.clicked) && bullets.length < MAX_BULLETS) {
+          if (shootTimer === 0 && (punter.isKeyDown('space') || punter.pointer.clicked) && bullets.length < MAX_BULLETS) {
             fireBullet();
             punter.clearInput();
           }

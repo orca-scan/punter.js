@@ -62,7 +62,7 @@ This starts a local server on port 4000 and opens the games index in your browse
 
     // runs ~60 times/sec - move things, read input, check collisions
     punter.on('update', function () {
-      if (punter.keys['ArrowRight']) player.moveX(2);
+      if (punter.isKeyDown('right')) player.moveX(2);
     });
 
     // runs once per frame after sprites draw - use for score text, HUD, overlays
@@ -154,9 +154,16 @@ Property         | Description
 
 ## 4. Input
 
-Check `punter.keys` and `punter.pointer` inside your `update` handler each frame. Works with mouse, touch, and stylus/pen.
+Call `punter.isKeyDown()` inside your `update` handler each frame. Pass one or more friendly key names — returns `true` if any of them are held (OR logic). Use `+` for combos that require all keys at once (AND logic).
 
-Key names match the browser's [`KeyboardEvent.key`](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) values. Common ones: `'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `' '` (spacebar), `'Enter'`, `'Escape'`, `'a'` to `'z'`.
+| Name | Key |
+|------|-----|
+| `'left'` `'right'` `'up'` `'down'` | Arrow keys |
+| `'space'` | Spacebar |
+| `'enter'` | Enter |
+| `'escape'` / `'esc'` | Escape |
+| `'shift'` `'ctrl'` `'alt'` | Modifier keys |
+| `'a'` – `'z'` | Letter keys (case-insensitive) |
 
 ```js
 punter.scene('level1', function () {
@@ -165,12 +172,15 @@ punter.scene('level1', function () {
 
   punter.on('update', function () {
 
-    // arrow keys or WASD
-    if (punter.keys['ArrowLeft']  || punter.keys['a']) player.moveX(-3);
-    if (punter.keys['ArrowRight'] || punter.keys['d']) player.moveX(3);
-    if (punter.keys['ArrowUp']    || punter.keys['w']) player.moveY(-3);
-    if (punter.keys['ArrowDown']  || punter.keys['s']) player.moveY(3);
-    if (punter.keys[' '])                              punter.playSound('jump'); // spacebar
+    // arrow keys or WASD — multiple args = OR (true if any held)
+    if (punter.isKeyDown('left', 'a'))  player.moveX(-3);
+    if (punter.isKeyDown('right', 'd')) player.moveX(3);
+    if (punter.isKeyDown('up', 'w'))    player.moveY(-3);
+    if (punter.isKeyDown('down', 's'))  player.moveY(3);
+    if (punter.isKeyDown('space'))      punter.playSound('jump');
+
+    // + combos = AND (all keys must be held)
+    if (punter.isKeyDown('shift+a'))    player.moveX(-6); // fast move
 
     // pointer.clicked is true for one frame after a tap or click (good for menus, shooting)
     if (punter.pointer.clicked) {
@@ -189,7 +199,7 @@ punter.scene('level1', function () {
 
 | Property/Method                     | Description                                                                                          |
 |-------------------------------------|------------------------------------------------------------------------------------------------------|
-| `punter.keys['Key']`                | `true` while that key is held down                                                                   |
+| `punter.isKeyDown('left', 'a')`     | `true` while any of the given keys is held; use `+` for combos e.g. `'shift+a'`                     |
 | `punter.pointer.x`                  | Current pointer X in canvas pixels (always up to date)                                               |
 | `punter.pointer.y`                  | Current pointer Y in canvas pixels (always up to date)                                               |
 | `punter.pointer.clicked`            | `true` for one `update` tick after a click or tap                                                    |

@@ -82,11 +82,12 @@ describe('Scenes', function () {
 
     it('go() clears input from the previous scene', async function () {
         var result = await page.evaluate(function () {
-            punter.keys['ArrowLeft'] = true;
+            // simulate a key being held by pressing it via keydown
+            window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft' }));
             punter.pointer.clicked = true;
             punter.scene('afterClear', function () {});
             punter.go('afterClear');
-            return { key: punter.keys['ArrowLeft'], clicked: punter.pointer.clicked };
+            return { key: punter.isKeyDown('left'), clicked: punter.pointer.clicked };
         });
         expect(result.key).toBe(false);
         expect(result.clicked).toBe(false);

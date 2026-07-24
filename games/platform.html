@@ -126,7 +126,7 @@
         punter.on('update', function () {
           // if game ended, wait for restart input
           if (dead || won) {
-            if (punter.keys[' '] || punter.pointer.clicked) {
+            if (punter.isKeyDown('space') || punter.pointer.clicked) {
               punter.clearInput();
               punter.go('play');
             }
@@ -353,8 +353,8 @@
        * Reads keyboard and touch input to set player velocity
        */
       function handleInput() {
-        var left = punter.keys['ArrowLeft'] || punter.keys['a'];
-        var right = punter.keys['ArrowRight'] || punter.keys['d'];
+        var left = punter.isKeyDown('left', 'a');
+        var right = punter.isKeyDown('right', 'd');
         var speed = grounded ? PLAYER_SPEED : AIR_SPEED;
 
         // keyboard movement
@@ -384,7 +384,7 @@
         }
 
         // keyboard jump
-        if (grounded && (punter.keys[' '] || punter.keys['ArrowUp'] || punter.keys['w'])) {
+        if (grounded && punter.isKeyDown('space', 'up', 'w')) {
           doJump();
         }
       }

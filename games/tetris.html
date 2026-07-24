@@ -119,7 +119,7 @@
 
           // restart if game over and player presses a key
           if (gameOver) {
-            if (punter.keys['Enter'] || punter.keys[' '] || punter.pointer.clicked) {
+            if (punter.isKeyDown('enter', 'space') || punter.pointer.clicked) {
               punter.go('play');
             }
             return;
@@ -269,10 +269,10 @@
        * Reads keyboard input and moves/rotates the current piece
        */
       function handleInput() {
-        var leftNow  = !!punter.keys['ArrowLeft'];
-        var rightNow = !!punter.keys['ArrowRight'];
-        var upNow    = !!punter.keys['ArrowUp'];
-        var spaceNow = !!punter.keys[' '];
+        var leftNow  = punter.isKeyDown('left');
+        var rightNow = punter.isKeyDown('right');
+        var upNow    = punter.isKeyDown('up');
+        var spaceNow = punter.isKeyDown('space');
 
         // rotate on fresh press (not held)
         if (upNow && !lastUp) {
@@ -366,7 +366,7 @@
        */
       function handleGravity() {
         // speed increases with level
-        var speed = punter.keys['ArrowDown'] ? FAST_DROP : Math.max(DROP_SPEED - (level - 1) * 3, 4);
+        var speed = punter.isKeyDown('down') ? FAST_DROP : Math.max(DROP_SPEED - (level - 1) * 3, 4);
 
         dropTimer++;
 
@@ -376,7 +376,7 @@
           // try to move down
           if (tryMove(0, 1)) {
             lockTimer = 0; // still falling — reset lock timer
-            if (punter.keys['ArrowDown']) {
+            if (punter.isKeyDown('down')) {
               score += 1; // soft drop bonus
             }
           }
