@@ -124,7 +124,7 @@
 
           // Restart on any input when the game has ended
           if (gameOver || won) {
-            if (punter.keys[' '] || punter.pointer.clicked) {
+            if (punter.isKeyDown('space') || punter.pointer.clicked) {
               punter.clearInput();
               resetGame();
             }
@@ -138,8 +138,8 @@
           paddleSprite.y = h - PADDLE_OFFSET;
 
           // Paddle: keyboard
-          if (punter.keys['ArrowLeft']  || punter.keys['a']) paddleSprite.moveX(-PADDLE_SPEED);
-          if (punter.keys['ArrowRight'] || punter.keys['d']) paddleSprite.moveX(PADDLE_SPEED);
+          if (punter.isKeyDown('left', 'a')) paddleSprite.moveX(-PADDLE_SPEED);
+          if (punter.isKeyDown('right', 'd')) paddleSprite.moveX(PADDLE_SPEED);
 
           // Paddle: tap/click or held touch/mouse
           if (punter.isPointerDown()) {

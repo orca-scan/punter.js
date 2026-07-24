@@ -58,8 +58,33 @@
     var pointer = { x: 0, y: 0, clicked: false, down: false };
     var _pointerButtons = { left: false, middle: false, right: false };
 
-    window.addEventListener('keydown', function (e) { keys[e.key] = true; });
-    window.addEventListener('keyup', function (e) { keys[e.key] = false; });
+    // maps friendly key names to browser KeyboardEvent.key values
+    var keyAliases = {
+        'left':      'ArrowLeft',
+        'right':     'ArrowRight',
+        'up':        'ArrowUp',
+        'down':      'ArrowDown',
+        'space':     ' ',
+        'enter':     'Enter',
+        'escape':    'Escape',
+        'esc':       'Escape',
+        'shift':     'Shift',
+        'ctrl':      'Control',
+        'control':   'Control',
+        'alt':       'Alt',
+        'tab':       'Tab',
+        'backspace': 'Backspace'
+    };
+
+    // store keys lowercase so isKeyDown('a') works even when caps lock is on
+    window.addEventListener('keydown', function (e) {
+        var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        keys[k] = true;
+    });
+    window.addEventListener('keyup', function (e) {
+        var k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        keys[k] = false;
+    });
 
     // maps e.button number to a button name
     function buttonName(n) {
@@ -1451,6 +1476,58 @@
     }
 
     /**
+     * Resolves a friendly key name (e.g. 'left', 'space') to the stored key string
+     * @param {string} name - friendly name or single letter
+     * @returns {string} the key string used in the keys object
+     */
+    function resolveKey(name) {
+        var lower = name.toLowerCase();
+        // check alias map first (e.g. 'left' -> 'ArrowLeft')
+        if (keyAliases[lower]) return keyAliases[lower];
+        // single-char letters are stored lowercase
+        if (lower.length === 1) return lower;
+        // unrecognised — return as-is so it simply won't match anything
+        return name;
+    }
+
+    /**
+     * Returns true if the specified key (or any of the given keys) is currently held down.
+     * Supports friendly names ('left', 'space'), letters ('a'), and + combos ('shift+a').
+     * Multiple arguments use OR logic — true if any one is down.
+     * A + combo uses AND logic — all parts must be down.
+     * Examples:
+     *   punter.isKeyDown('left')           // ArrowLeft held
+     *   punter.isKeyDown('left', 'a')      // ArrowLeft OR 'a' held
+     *   punter.isKeyDown('shift+a')        // Shift AND 'a' both held
+     * @param {...string} keys - one or more key names
+     * @returns {boolean}
+     */
+    function isKeyDown() {
+        // no args — nothing to check
+        if (arguments.length === 0) return false;
+
+        // check each argument; return true if any one matches (OR logic)
+        for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+
+            // handle + combos: 'shift+a' means shift AND a must both be down
+            if (arg.indexOf('+') !== -1) {
+                var parts = arg.split('+');
+                var allDown = true;
+                for (var j = 0; j < parts.length; j++) {
+                    if (!keys[resolveKey(parts[j])]) { allDown = false; break; }
+                }
+                if (allDown) return true;
+            } else {
+                // single key
+                if (keys[resolveKey(arg)]) return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Returns true if the specified pointer button is currently held down
      * @param {string} [button] - 'left', 'middle', or 'right' (defaults to 'left')
      * @returns {boolean}
@@ -1734,7 +1811,7 @@
 
          // input handling
         clearInput: clearInput,
-        keys: keys,
+        isKeyDown: isKeyDown,
         pointer: pointer,
         isPointerDown: isPointerDown,
 

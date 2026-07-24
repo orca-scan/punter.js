@@ -56,10 +56,10 @@
         punter.on('update', function () {
 
           // read arrow keys (prevent reversing into yourself)
-          if (punter.keys['ArrowUp']    && dir.y === 0) nextDir = { x: 0, y: -1 };
-          if (punter.keys['ArrowDown']  && dir.y === 0) nextDir = { x: 0, y: 1 };
-          if (punter.keys['ArrowLeft']  && dir.x === 0) nextDir = { x: -1, y: 0 };
-          if (punter.keys['ArrowRight'] && dir.x === 0) nextDir = { x: 1, y: 0 };
+          if (punter.isKeyDown('up')    && dir.y === 0) nextDir = { x: 0, y: -1 };
+          if (punter.isKeyDown('down')  && dir.y === 0) nextDir = { x: 0, y: 1 };
+          if (punter.isKeyDown('left')  && dir.x === 0) nextDir = { x: -1, y: 0 };
+          if (punter.isKeyDown('right') && dir.x === 0) nextDir = { x: 1, y: 0 };
 
           // only move every SPEED frames (this controls how fast the snake moves)
           if (punter.totalFrames % SPEED !== 0) return;

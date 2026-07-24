@@ -39,14 +39,14 @@ describe('Interface', function () {
         });
     });
 
-    it('exposes keys and pointer objects', async function () {
+    it('exposes isKeyDown and pointer', async function () {
         var result = await page.evaluate(function () {
             return {
-                keysType: typeof punter.keys,
+                isKeyDownType: typeof punter.isKeyDown,
                 pointerType: typeof punter.pointer
             };
         });
-        expect(result.keysType).toBe('object');
+        expect(result.isKeyDownType).toBe('function');
         expect(result.pointerType).toBe('object');
     });
 
