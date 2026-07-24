@@ -30,7 +30,8 @@ describe('Interface', function () {
                 pause: typeof punter.pause,
                 resume: typeof punter.resume,
                 clearInput: typeof punter.clearInput,
-                redraw: typeof punter.redraw
+                redraw: typeof punter.redraw,
+                isPointerDown: typeof punter.isPointerDown
             };
         });
         Object.keys(result).forEach(function (key) {
@@ -38,15 +39,15 @@ describe('Interface', function () {
         });
     });
 
-    it('exposes keys and mouse objects', async function () {
+    it('exposes keys and pointer objects', async function () {
         var result = await page.evaluate(function () {
             return {
                 keysType: typeof punter.keys,
-                mouseType: typeof punter.mouse
+                pointerType: typeof punter.pointer
             };
         });
         expect(result.keysType).toBe('object');
-        expect(result.mouseType).toBe('object');
+        expect(result.pointerType).toBe('object');
     });
 
     // --- computed properties ---

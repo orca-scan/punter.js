@@ -83,10 +83,10 @@ describe('Scenes', function () {
     it('go() clears input from the previous scene', async function () {
         var result = await page.evaluate(function () {
             punter.keys['ArrowLeft'] = true;
-            punter.mouse.clicked = true;
+            punter.pointer.clicked = true;
             punter.scene('afterClear', function () {});
             punter.go('afterClear');
-            return { key: punter.keys['ArrowLeft'], clicked: punter.mouse.clicked };
+            return { key: punter.keys['ArrowLeft'], clicked: punter.pointer.clicked };
         });
         expect(result.key).toBe(false);
         expect(result.clicked).toBe(false);

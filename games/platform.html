@@ -126,7 +126,7 @@
         punter.on('update', function () {
           // if game ended, wait for restart input
           if (dead || won) {
-            if (punter.keys[' '] || punter.mouse.clicked) {
+            if (punter.keys[' '] || punter.pointer.clicked) {
               punter.clearInput();
               punter.go('play');
             }
@@ -368,19 +368,19 @@
           vel.x = 0;
         }
 
-        // mobile touch: tap left/right half to steer, top area to jump
-        if (punter.mouse.clicked) {
-          if (punter.mouse.x < punter.width * 0.4) {
+        // mobile: hold left/right half to steer, tap upper area to jump
+        if (punter.isPointerDown()) {
+          if (punter.pointer.x < punter.width * 0.4) {
             vel.x = -speed;
           }
-          else if (punter.mouse.x > punter.width * 0.6) {
+          else if (punter.pointer.x > punter.width * 0.6) {
             vel.x = speed;
           }
+        }
 
-          // tapping upper portion triggers jump
-          if (grounded && punter.mouse.y < punter.height * 0.75) {
-            doJump();
-          }
+        // tapping upper portion triggers jump (one-shot)
+        if (punter.pointer.clicked && grounded && punter.pointer.y < punter.height * 0.75) {
+          doJump();
         }
 
         // keyboard jump
