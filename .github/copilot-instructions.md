@@ -23,6 +23,7 @@
 * Do not rewrite or rename unrelated code
 * Before finishing, check that the code works directly in a browser
 * Check for console errors
+* Never use —
 
 # ESLint
 
