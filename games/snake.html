@@ -91,8 +91,7 @@
 
         // draw is called once per frame after punter draws all sprites
         // use it for custom drawing (body segments, score text, etc.)
-        punter.on('draw', function () {
-          var ctx = this; // the canvas 2D drawing context
+        punter.on('draw', function (ctx) {
 
           // draw body segments
           ctx.fillStyle = '#66bb6a';
@@ -113,13 +112,12 @@
 
         // wait for player to press a key, then go back to the play scene
         punter.on('update', function () {
-          if (punter.keys['Enter'] || punter.keys[' '] || punter.pointer.clicked) {
+          if (punter.isKeyDown('enter', 'space') || punter.pointer.clicked) {
             punter.go('play'); // this re-runs the play scene from scratch
           }
         });
 
-        punter.on('draw', function () {
-          var ctx = this;
+        punter.on('draw', function (ctx) {
           var w = punter.width;
           var h = punter.height;
 

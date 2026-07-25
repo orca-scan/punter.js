@@ -211,8 +211,7 @@
           if (levelAnnounce > 0) levelAnnounce--;
         });
 
-        punter.on('draw', function () {
-          var ctx = this;
+        punter.on('draw', function (ctx) {
           var w   = punter.width;
           var h   = punter.height;
 

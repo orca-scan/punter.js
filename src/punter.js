@@ -230,15 +230,16 @@
 
         if (typeof config.canvas === 'string') {
             _canvas = document.querySelector(config.canvas);
+            if (!_canvas) throw new Error('punter.setup: could not find a canvas element matching "' + config.canvas + '". Check your selector and that the <canvas> element exists in the HTML.');
         }
         else if (config.canvas instanceof HTMLCanvasElement) {
             _canvas = config.canvas;
         }
         else {
-            throw new Error('Invalid config.canvas');
+            throw new Error('punter.setup: canvas must be a CSS selector string or a <canvas> element.');
         }
 
-        // ensure canvas has connect styles
+        // ensure canvas has correct styles
         _canvas.style.position = 'absolute';
         _canvas.style.top = '50%';
         _canvas.style.left = '50%';
@@ -250,7 +251,6 @@
         _canvas.style.overflow = 'hidden';
         _canvas.style.webkitTouchCallout = 'none';
         _canvas.style.webkitTapHighlightColor = 'transparent';
-        _canvas.style.touchAction = 'none';
         _canvas.style.pointerEvents = 'none';
         _canvas.style.contain = 'strict';
         _canvas.style.willChange = 'transform';
@@ -633,11 +633,12 @@
      */
     function Sprite(opts) {
 
-        if (!opts || typeof opts !== 'object') throw new Error('Sprite: missing opts param');
-        if (!opts.id || _sprites[opts.id]) throw new Error('Sprite: id must be unique');
-        if (!opts.image) throw new Error('Sprite: missing image');
-        if (typeof opts.x === 'undefined') throw new Error('Sprite: missing x');
-        if (typeof opts.y === 'undefined') throw new Error('Sprite: missing y');
+        if (!opts || typeof opts !== 'object') throw new Error('punter.createSprite: pass a config object, e.g. { id: "player", image: "player", x: 50, y: 100 }.');
+        if (!opts.id) throw new Error('punter.createSprite: missing id. Each sprite needs a unique id, e.g. id: "player".');
+        if (_sprites[opts.id]) throw new Error('punter.createSprite: a sprite with id "' + opts.id + '" already exists. Each sprite needs a unique id.');
+        if (!opts.image) throw new Error('punter.createSprite: missing image. Set image to a key from punter.setup images, e.g. image: "player".');
+        if (typeof opts.x === 'undefined') throw new Error('punter.createSprite: missing x. Set x to a pixel position, e.g. x: 100.');
+        if (typeof opts.y === 'undefined') throw new Error('punter.createSprite: missing y. Set y to a pixel position, e.g. y: 100.');
 
         // option values
         this.id = opts.id;
@@ -683,7 +684,7 @@
         var img = images[initialDrawKey];
 
         if (!img || !img.complete || !img.naturalWidth) {
-            throw new Error('Sprite: image not loaded ' + initialDrawKey);
+            throw new Error('punter.createSprite: image "' + initialDrawKey + '" was not found. Add it to the images in punter.setup({ images: { "' + initialDrawKey + '": "path/to/image.png" } }).');
         }
 
         // infer size immediately if needed
@@ -1319,8 +1320,9 @@
         }
 
         // draw handler runs after sprites — use for text, HUD, overlays
+        // ctx is passed both as the first argument and as 'this' for backwards compatibility
         if (eventHandlers.draw) {
-            eventHandlers.draw.call(_canvasCtx);
+            eventHandlers.draw.call(_canvasCtx, _canvasCtx);
         }
 
         // reset the flag after draw
@@ -1351,7 +1353,7 @@
 
         if (!_initilised) throw new Error('punter.setup must be called first');
 
-        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true }); // desynchronized reduces paint latency on supported browsers
+        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true, preserveDrawingBuffer: true }); // desynchronized reduces paint latency on supported browsers
         _canvasCtx.imageSmoothingEnabled = false; // keeps pixel art crisp; prevents blurring on scaled draws
 
         _frame = 0;
@@ -1725,7 +1727,7 @@
          */
         go: function (name) {
 
-            if (!_scenes[name]) throw new Error('punter.go: unknown scene "' + name + '"');
+            if (!_scenes[name]) throw new Error('punter.go: no scene named "' + name + '" has been registered. Use punter.scene("' + name + '", function () { ... }) first.');
             if (!_initilised) { _pendingGo = name; return; }
 
             // update is reset to a no-op (not null) because loop() always calls it without a null check
@@ -1797,7 +1799,7 @@
          * @returns {Object} the newly created Sprite instance
          */
         createSprite: function(opts) {
-            if (!_initilised) throw new Error('createSprite: punter.setup must be called first');
+            if (!_initilised) throw new Error('punter.createSprite: call punter.setup() before creating sprites.');
             return new Sprite(opts);
         },
         /**
@@ -1823,7 +1825,7 @@
          * @returns {void}
          */
         on: function (event, handler) {
-            if (!eventHandlers.hasOwnProperty(event)) throw new Error('punter.on: unknown event "' + event + '"');
+            if (!eventHandlers.hasOwnProperty(event)) throw new Error('punter.on: "' + event + '" is not a valid event name. Use: ready, update, draw, resize, or go.');
             eventHandlers[event] = handler;
         },
 
