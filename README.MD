@@ -154,7 +154,7 @@ Property         | Description
 
 ## 4. Input
 
-Call `punter.isKeyDown()` inside your `update` handler each frame. Pass one or more friendly key names — returns `true` if any of them are held (OR logic). Use `+` for combos that require all keys at once (AND logic).
+Call `punter.isKeyDown()` inside your `update` handler each frame. Pass one or more friendly key names - returns `true` if any of them are held (OR logic). Use `+` for combos that require all keys at once (AND logic).
 
 | Name | Key |
 |------|-----|
@@ -172,7 +172,7 @@ punter.scene('level1', function () {
 
   punter.on('update', function () {
 
-    // arrow keys or WASD — multiple args = OR (true if any held)
+    // arrow keys or WASD - multiple args = OR (true if any held)
     if (punter.isKeyDown('left', 'a'))  player.moveX(-3);
     if (punter.isKeyDown('right', 'd')) player.moveX(3);
     if (punter.isKeyDown('up', 'w'))    player.moveY(-3);
@@ -203,8 +203,8 @@ punter.scene('level1', function () {
 | `punter.pointer.x`                  | Current pointer X in canvas pixels (always up to date)                                               |
 | `punter.pointer.y`                  | Current pointer Y in canvas pixels (always up to date)                                               |
 | `punter.pointer.clicked`            | `true` for one `update` tick after a click or tap                                                    |
-| `punter.pointer.down`               | `true` while the primary button or finger is held down                                               |
 | `punter.isPointerDown(button)`      | `true` while the named button is held (`'left'`, `'right'`, `'middle'`; defaults to `'left'`)        |
+| `punter.pointer.down`               | `true` while the primary button or finger is held down                                               |
 | `punter.clearInput()`               | Resets all key and pointer states. Called automatically on `punter.go()`                             |
 
 ## 5. Sound
@@ -238,7 +238,7 @@ punter.on('ready', function () {
 
 punter.on('update', function () {
   // runs ~60 times/sec - move things, read input, check collisions
-  if (punter.keys['ArrowRight']) player.moveX(3);
+  if (punter.isKeyDown('right')) player.moveX(3);
   if (player.isCollidingWith(enemy)) punter.go('gameOver');
 });
 
@@ -259,6 +259,14 @@ punter.on('go', function (sceneName) {
 });
 ```
 
+## Gotchas for Beginners
+
+- **Sprite IDs must be unique** - reusing one throws an error
+- **`repeatX` and `repeatY` are mutually exclusive** on a single sprite
+- Percentage strings (`'50%'`) for `x`/`y`/`w`/`h` are resolved relative to canvas size
+- Don't manually resize the canvas - the engine owns that via its own `resize()` handling
+- `punter.setup()` must be called before `createSprite`, `playSound`, `pause` etc
+
 ## How the Game Loop Works
 
 This is the engine that keeps everything moving. `punter.go(sceneName)` auto-starts a fixed-timestep loop (60 updates/sec) once a scene is active:
@@ -274,14 +282,6 @@ This is the engine that keeps everything moving. `punter.go(sceneName)` auto-sta
 Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprite state - handy for a pause menu.
 
 `punter.redraw()` clears the canvas and redraws all sprites without advancing game logic - useful for refreshing a static frame while paused.
-
-## Gotchas for Beginners
-
-- **Sprite IDs must be unique** - reusing one throws an error
-- **`repeatX` and `repeatY` are mutually exclusive** on a single sprite
-- Percentage strings (`'50%'`) for `x`/`y`/`w`/`h` are resolved relative to canvas size
-- Don't manually resize the canvas - the engine owns that via its own `resize()` handling
-- `punter.setup()` must be called before `createSprite`, `playSound`, `pause` etc
 
 ---
 

@@ -30,18 +30,14 @@
     <canvas id="game"></canvas>
     <script>
 
-      // =========================================================
-      // COLORS
-      // =========================================================
+      // colors
       var COLOR_TEXT = '#f5c518';
       var COLOR_DIM  = '#2c3033';
 
       // One image name per brick row (matches the images/ folder)
       var BRICK_IMAGES = ['brickRed', 'brickOrange', 'brickYellow', 'brickGreen', 'brickBlue'];
 
-      // =========================================================
-      // HELPERS
-      // =========================================================
+      // helpers
       var DPR = punter.dpr;
 
       function px(n) {
@@ -52,9 +48,7 @@
         return Math.max(min, Math.min(value, max));
       }
 
-      // =========================================================
-      // GAME SETTINGS
-      // =========================================================
+      // game settings
       var PADDLE_W      = px(90);
       var PADDLE_H      = px(14);
       var BALL_SIZE     = px(16);
@@ -66,15 +60,11 @@
       var BRICK_PAD     = px(6);
       var PADDLE_OFFSET = px(40); // distance from bottom
 
-      // =========================================================
-      // GAME STATE
-      // =========================================================
+      // game state
       var paddleSprite, ballSprite, bricks, ballVel;
       var score, lives, gameOver, won;
 
-      // =========================================================
-      // SETUP
-      // =========================================================
+      // setup
       punter.setup({
         canvas: '#game',
         images: {
@@ -94,9 +84,7 @@
         }
       });
 
-      // =========================================================
-      // SCENE: play
-      // =========================================================
+      // play scene
       punter.scene('play', function () {
 
         var w = punter.width;
@@ -117,9 +105,7 @@
         buildBricks();
         resetBall();
 
-        // -------------------------------------------------------
-        // UPDATE — game logic, runs ~60 times per second
-        // -------------------------------------------------------
+        // update: game logic runs ~60 times per second
         punter.on('update', function () {
 
           // Restart on any input when the game has ended
@@ -193,9 +179,7 @@
           }
         });
 
-        // -------------------------------------------------------
-        // DRAW — runs after sprites are drawn; used for HUD and overlays
-        // -------------------------------------------------------
+        // draw: runs after sprites; use for HUD and overlays
         punter.on('draw', function () {
           var ctx = this; // punter passes the canvas 2D context as 'this'
           var w   = punter.width;

@@ -39,7 +39,7 @@
     <canvas id="game"></canvas>
     <script>
 
-      // ─── HELPERS ───────────────────────────────────────────────────────
+      // helpers
 
       var DPR = punter.dpr;
 
@@ -63,8 +63,7 @@
         return Math.max(lo, Math.min(v, hi));
       }
 
-      // ─── TUNING CONSTANTS ─────────────────────────────────────────────
-      // adjust these to change how the game feels
+      // tuning constants — adjust these to change how the game feels
 
       var PLAYER_H       = px(48);
       var PLAYER_SPEED   = px(5);    // ground movement speed
@@ -80,8 +79,7 @@
       var FLAG_H         = px(50);
       var GROUND_MARGIN  = px(24);   // gap below ground to canvas bottom
 
-      // ─── GAME STATE ────────────────────────────────────────────────────
-      // all state is reset in buildLevel() on each restart
+      // game state — all state is reset in buildLevel() on each restart
 
       var player;
       var flag;
@@ -96,7 +94,7 @@
       var won;
       var dead;
 
-      // ─── ENGINE SETUP ──────────────────────────────────────────────────
+      // engine setup
 
       punter.setup({
         canvas: '#game',
@@ -118,7 +116,7 @@
         }
       });
 
-      // ─── MAIN SCENE ────────────────────────────────────────────────────
+      // main scene
 
       punter.scene('play', function () {
         buildLevel();
@@ -185,7 +183,7 @@
         });
       });
 
-      // ─── LEVEL BUILDER ─────────────────────────────────────────────────
+      // level builder
 
       /**
        * Resets state and places all platforms, gems, enemies, and the goal flag
@@ -266,7 +264,7 @@
         addDecor('bush-2', 'bush', Math.floor(w * 0.72), groundY - px(24), px(48), px(24));
       }
 
-      // ─── SPRITE FACTORIES ──────────────────────────────────────────────
+      // sprite factories
 
       /**
        * Creates a platform sprite with full-rect collision bounds
@@ -347,7 +345,7 @@
         }
       }
 
-      // ─── INPUT HANDLING ────────────────────────────────────────────────
+      // input handling
 
       /**
        * Reads keyboard and touch input to set player velocity
@@ -398,7 +396,7 @@
         punter.playSound('jump');
       }
 
-      // ─── PHYSICS ───────────────────────────────────────────────────────
+      // physics
 
       /**
        * Moves the player and resolves collisions with platforms
@@ -448,7 +446,7 @@
         }
       }
 
-      // ─── COLLECTIBLES ──────────────────────────────────────────────────
+      // collectibles
 
       /**
        * Checks if player touches a gem; removes it and increments score
@@ -466,7 +464,7 @@
         }
       }
 
-      // ─── ENEMIES ───────────────────────────────────────────────────────
+      // enemies
 
       /**
        * Moves enemies back and forth; kills player on contact
@@ -487,7 +485,7 @@
         }
       }
 
-      // ─── GOAL ──────────────────────────────────────────────────────────
+      // goal
 
       /**
        * Checks win condition: all gems collected and player touches the flag
@@ -509,7 +507,7 @@
         punter.clearInput();
       }
 
-      // ─── RESIZE HANDLER ────────────────────────────────────────────────
+      // resize handler
       // rebuild the level on resize so everything stays proportional
 
       punter.on('resize', function () {
