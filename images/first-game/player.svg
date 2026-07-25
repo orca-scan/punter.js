@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="32" height="40">
+  <!-- engine flames -->
+  <ellipse cx="16" cy="37" rx="5" ry="4" fill="#ff7300" opacity="0.9"/>
+  <ellipse cx="16" cy="35" rx="3" ry="2.5" fill="#ffdd00"/>
+  <!-- main hull -->
+  <polygon points="16,3 26,28 16,24 6,28" fill="#4a9eff"/>
+  <!-- left wing -->
+  <polygon points="6,28 1,37 10,30" fill="#2a6edd"/>
+  <!-- right wing -->
+  <polygon points="26,28 31,37 22,30" fill="#2a6edd"/>
+  <!-- wing accent lines -->
+  <line x1="7" y1="29" x2="3" y2="35" stroke="#7ecfff" stroke-width="1" opacity="0.6"/>
+  <line x1="25" y1="29" x2="29" y2="35" stroke="#7ecfff" stroke-width="1" opacity="0.6"/>
+  <!-- cockpit window -->
+  <ellipse cx="16" cy="16" rx="5" ry="6" fill="#a5d8ff"/>
+  <ellipse cx="16" cy="16" rx="3.5" ry="4.5" fill="#0a1628"/>
+  <!-- cockpit highlight -->
+  <ellipse cx="14.5" cy="13" rx="1.5" ry="2" fill="white" opacity="0.5"/>
+</svg>

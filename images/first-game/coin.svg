@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- outer gem shape -->
+  <polygon points="12,2 20,7 22,15 12,22 2,15 4,7" fill="#a855f7"/>
+  <!-- facets -->
+  <polygon points="12,2 20,7 12,11" fill="#e879f9"/>
+  <polygon points="12,2 4,7 12,11" fill="#c084fc"/>
+  <polygon points="20,7 22,15 12,11" fill="#7c3aed"/>
+  <polygon points="4,7 2,15 12,11" fill="#9333ea"/>
+  <polygon points="22,15 12,22 12,11" fill="#6d28d9"/>
+  <polygon points="2,15 12,22 12,11" fill="#7c3aed"/>
+  <!-- sparkle -->
+  <circle cx="9" cy="7" r="1.5" fill="white" opacity="0.8"/>
+</svg>
