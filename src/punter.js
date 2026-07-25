@@ -1320,8 +1320,9 @@
         }
 
         // draw handler runs after sprites — use for text, HUD, overlays
+        // ctx is passed both as the first argument and as 'this' for backwards compatibility
         if (eventHandlers.draw) {
-            eventHandlers.draw.call(_canvasCtx);
+            eventHandlers.draw.call(_canvasCtx, _canvasCtx);
         }
 
         // reset the flag after draw
@@ -1352,7 +1353,7 @@
 
         if (!_initilised) throw new Error('punter.setup must be called first');
 
-        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true }); // desynchronized reduces paint latency on supported browsers
+        _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true, preserveDrawingBuffer: true }); // desynchronized reduces paint latency on supported browsers
         _canvasCtx.imageSmoothingEnabled = false; // keeps pixel art crisp; prevents blurring on scaled draws
 
         _frame = 0;

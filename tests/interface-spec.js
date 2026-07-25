@@ -215,6 +215,34 @@ describe('Interface', function () {
         expect(result).toBeGreaterThan(0);
     });
 
+    it('draw handler receives ctx as first argument', async function () {
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                punter.scene('drawCtxArgScene', function () {
+                    punter.on('draw', function (ctx) {
+                        resolve(typeof ctx.fillRect === 'function' && typeof ctx.fillText === 'function');
+                    });
+                });
+                punter.go('drawCtxArgScene');
+            });
+        });
+        expect(result).toBe(true);
+    });
+
+    it('draw handler ctx argument and this refer to the same context', async function () {
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                punter.scene('drawCtxThisScene', function () {
+                    punter.on('draw', function (ctx) {
+                        resolve(ctx === this); // eslint-disable-line no-invalid-this
+                    });
+                });
+                punter.go('drawCtxThisScene');
+            });
+        });
+        expect(result).toBe(true);
+    });
+
     it('sprites are drawn automatically when no draw handler is set', async function () {
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {

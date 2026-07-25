@@ -130,8 +130,7 @@
         });
 
         // draw the game every frame
-        punter.on('draw', function () {
-          var ctx = this; // canvas 2D context
+        punter.on('draw', function (ctx) {
 
           drawBackground(ctx);
           drawGrid(ctx);

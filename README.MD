@@ -66,8 +66,8 @@ This starts a local server on port 4000 and opens the games index in your browse
     });
 
     // runs once per frame after sprites draw - use for score text, HUD, overlays
-    punter.on('draw', function () {
-      // 'this' is the canvas 2D context
+    punter.on('draw', function (ctx) {
+      // ctx is the canvas 2D context
     });
   });
 
@@ -242,11 +242,11 @@ punter.on('update', function () {
   if (player.isCollidingWith(enemy)) punter.go('gameOver');
 });
 
-punter.on('draw', function () {
-  // runs after sprites draw - 'this' is the canvas 2D context
+punter.on('draw', function (ctx) {
+  // runs after sprites draw - ctx is the canvas 2D context
   // use for score text, HUD, overlays; sprites draw themselves automatically
-  this.fillStyle = 'white';
-  this.fillText('Score: ' + score, 10, 20);
+  ctx.fillStyle = 'white';
+  ctx.fillText('Score: ' + score, 10, 20);
 });
 
 punter.on('resize', function () {
