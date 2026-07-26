@@ -1,19 +1,22 @@
 <!doctype html>
 <html lang="en" data-appearance="dark">
-  <head>
-    <title>Punter.js - A JavaScript game engine built for learning</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="A simple, dependency-free 2D game engine designed to help new developers learn JavaScript by building browser games.">
-    <link rel="canonical" href="https://punterjs.org/">
 
-    <meta property="og:title" content="Punter.js - Simple JavaScript 2D Game Engine for Beginners">
-    <meta property="og:description" content="A simple, dependency-free 2D game engine designed to help new developers learn JavaScript by building browser games.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://punterjs.org/">
-    <meta property="og:image" content="https://punterjs.org/images/punterjs.png">
+<head>
+  <title>Punter.js - A simple 2D JavaScript game engine built for learning</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="A simple, dependency-free 2D game engine designed to help new developers learn JavaScript by building browser games.">
+  <link rel="canonical" href="https://punterjs.org/">
 
-    <script type="application/ld+json">
+  <meta property="og:title" content="Punter.js - Simple JavaScript 2D Game Engine for Beginners">
+  <meta property="og:description"
+    content="A simple, dependency-free 2D game engine designed to help new developers learn JavaScript by building browser games.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://punterjs.org/">
+  <meta property="og:image" content="https://punterjs.org/images/punterjs.png">
+
+  <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareSourceCode",
@@ -32,263 +35,267 @@
     }
     </script>
 
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      html {
-        --primary-text-color: #aaa;
-        --primary-button-background-color: #EFD063;
-        --primary-button-border-color: #EFD063;
-        --primary-button-background-color-hover: #F3CB3C;
-        --secondary-button-background-color: #373B3F;
-        --secondary-button-border-color: #666666;
-        --secondary-button-background-color-hover: #666666;
-        --tags-border-color: #8B8E92;
-        --tags-text-color: #8B8E92;
-        --tags-background-color-hover: #1B2125;
-        --tags-border-color-hover: #1B2125;
-        --tags-text-color-hover: #8B8E92;
-        --tags-background-color-selected: #373B3F;
-        --tags-border-color-selected: #8B8E92;
-        --tags-text-color-selected: #F6F6F6;
-        --footer-header-color: #F6F6F6;
-        --footer-links-color: #8B8E92;
-        --font-size-small: 13px;
-        --font-size-medium: 14px;
-        --font-size-large: 16px;
-        --font-size-extra-large: 18px;
-        --font-size-headline-small: 20px;
-        --font-size-headline-medium: 24px;
-        --font-size-large-title: 30px;
-        --font-family-system: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        --font-family-headers: 'Poppins', 'Poppins-fallback', sans-serif;
-        --font-weight-regular: 400;
-        --font-weight-medium: 500;
-        --font-weight-semibold: 600;
-        --app-definition-box-shadow: 0px 5px 25px -5px rgba(18, 16, 9, 0.35), 0px 4px 4px -2px rgba(18, 16, 9, 0.20);
-      }
+    html {
+      --primary-text-color: #aaa;
+      --primary-button-background-color: #EFD063;
+      --primary-button-border-color: #EFD063;
+      --primary-button-background-color-hover: #F3CB3C;
+      --secondary-button-background-color: #373B3F;
+      --secondary-button-border-color: #666666;
+      --secondary-button-background-color-hover: #666666;
+      --tags-border-color: #8B8E92;
+      --tags-text-color: #8B8E92;
+      --tags-background-color-hover: #1B2125;
+      --tags-border-color-hover: #1B2125;
+      --tags-text-color-hover: #8B8E92;
+      --tags-background-color-selected: #373B3F;
+      --tags-border-color-selected: #8B8E92;
+      --tags-text-color-selected: #F6F6F6;
+      --footer-header-color: #F6F6F6;
+      --footer-links-color: #8B8E92;
+      --font-size-small: 13px;
+      --font-size-medium: 14px;
+      --font-size-large: 16px;
+      --font-size-extra-large: 18px;
+      --font-size-headline-small: 20px;
+      --font-size-headline-medium: 24px;
+      --font-size-large-title: 30px;
+      --font-family-system: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-family-headers: 'Poppins', 'Poppins-fallback', sans-serif;
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --app-definition-box-shadow: 0px 5px 25px -5px rgba(18, 16, 9, 0.35), 0px 4px 4px -2px rgba(18, 16, 9, 0.20);
+    }
 
-      html[data-appearance="dark"] {
-        --app-background-color: #2C3033;
-        --app-foreground-color: #1b2125;
-        --app-text-color-primary: #f6f6f6;
-        --app-text-color-secondary: #96989C;
-        --app-border-color-primary: #373b3f;
-        --app-border-color-quaternary: #666666;
-      }
+    html[data-appearance="dark"] {
+      --app-background-color: #2C3033;
+      --app-foreground-color: #1b2125;
+      --app-text-color-primary: #f6f6f6;
+      --app-text-color-secondary: #96989C;
+      --app-border-color-primary: #373b3f;
+      --app-border-color-quaternary: #666666;
+    }
 
-      html, body {
-        width: 100%;
-        min-height: 100%;
-        background: var(--app-background-color);
-        font-family: var(--font-family-system);
-        color: var(--app-text-color-secondary);
-      }
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--app-background-color);
+      font-family: var(--font-family-system);
+      color: var(--app-text-color-secondary);
+    }
 
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .logo {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-family: var(--font-family-headers);
+      font-size: var(--font-size-large-title);
+      font-weight: var(--font-weight-semibold);
+      color: var(--app-text-color-primary);
+      margin-bottom: 8px;
+    }
+
+    .tagline {
+      font-size: var(--font-size-extra-large);
+      color: var(--app-text-color-secondary);
+      margin-bottom: 24px;
+    }
+
+    .intro {
+      font-size: var(--font-size-large);
+      color: var(--primary-text-color);
+      line-height: 1.6;
+      max-width: 560px;
+      margin: 0 auto 40px;
+    }
+
+    .intro code {
+      background: var(--app-foreground-color);
+      border: 1px solid var(--app-border-color-primary);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 0.9em;
+      color: var(--app-text-color-primary);
+    }
+
+    .cta-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 48px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: var(--font-size-large);
+      font-weight: var(--font-weight-medium);
+      text-decoration: none;
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--primary-button-background-color);
+      border-color: var(--primary-button-border-color);
+      color: #1b2125;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-button-background-color-hover);
+    }
+
+    .btn-secondary {
+      background: var(--secondary-button-background-color);
+      border-color: var(--secondary-button-border-color);
+      color: var(--app-text-color-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--secondary-button-background-color-hover);
+    }
+
+    h2.section-title {
+      font-family: var(--font-family-headers);
+      font-size: var(--font-size-headline-small);
+      color: var(--app-text-color-primary);
+      font-weight: var(--font-weight-semibold);
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .games {
+      list-style: none;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .games a {
+      display: block;
+      padding: 16px 24px;
+      background: var(--app-foreground-color);
+      border: 1px solid var(--app-border-color-primary);
+      border-radius: 8px;
+      color: var(--app-text-color-primary);
+      text-decoration: none;
+      font-size: var(--font-size-extra-large);
+      font-weight: var(--font-weight-semibold);
+      transition: border-color 0.15s, color 0.15s;
+      text-align: left;
+    }
+
+    .games a span {
+      display: block;
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-regular);
+      color: var(--tags-text-color);
+      margin-top: 4px;
+    }
+
+    .games a:hover {
+      border-color: var(--primary-button-background-color);
+      color: var(--primary-button-background-color);
+    }
+
+    .footer {
+      margin-top: 24px;
+      font-size: var(--font-size-medium);
+      color: var(--footer-links-color);
+      border-top: 1px solid var(--app-border-color-primary);
+      padding-top: 24px;
+    }
+
+    .footer p {
+      margin-bottom: 8px;
+    }
+
+    .footer a {
+      color: var(--primary-button-background-color);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (min-width: 480px) {
+      .games {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 479px) {
       .container {
-        max-width: 720px;
-        margin: 0 auto;
-        padding: 60px 20px;
-        text-align: center;
-      }
-
-      .logo {
-        width: 220px;
-        max-width: 100%;
-        height: auto;
-        margin-bottom: 20px;
+        padding: 40px 16px;
       }
 
       h1 {
-        font-family: var(--font-family-headers);
-        font-size: var(--font-size-large-title);
-        font-weight: var(--font-weight-semibold);
-        color: var(--app-text-color-primary);
-        margin-bottom: 8px;
+        font-size: var(--font-size-headline-medium);
       }
 
       .tagline {
-        font-size: var(--font-size-extra-large);
-        color: var(--app-text-color-secondary);
-        margin-bottom: 24px;
-      }
-
-      .intro {
         font-size: var(--font-size-large);
-        color: var(--primary-text-color);
-        line-height: 1.6;
-        max-width: 560px;
-        margin: 0 auto 40px;
-      }
-
-      .intro code {
-        background: var(--app-foreground-color);
-        border: 1px solid var(--app-border-color-primary);
-        border-radius: 4px;
-        padding: 1px 6px;
-        font-size: 0.9em;
-        color: var(--app-text-color-primary);
-      }
-
-      .cta-row {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 48px;
-        flex-wrap: wrap;
-      }
-
-      .btn {
-        display: inline-block;
-        padding: 12px 22px;
-        border-radius: 8px;
-        font-size: var(--font-size-large);
-        font-weight: var(--font-weight-medium);
-        text-decoration: none;
-        border: 1px solid transparent;
-      }
-
-      .btn-primary {
-        background: var(--primary-button-background-color);
-        border-color: var(--primary-button-border-color);
-        color: #1b2125;
-      }
-
-      .btn-primary:hover {
-        background: var(--primary-button-background-color-hover);
-      }
-
-      .btn-secondary {
-        background: var(--secondary-button-background-color);
-        border-color: var(--secondary-button-border-color);
-        color: var(--app-text-color-primary);
-      }
-
-      .btn-secondary:hover {
-        background: var(--secondary-button-background-color-hover);
       }
 
       h2.section-title {
-        font-family: var(--font-family-headers);
-        font-size: var(--font-size-headline-small);
-        color: var(--app-text-color-primary);
-        font-weight: var(--font-weight-semibold);
-        margin-bottom: 16px;
-        text-align: left;
+        font-size: var(--font-size-large);
       }
+    }
+  </style>
+</head>
 
-      .games {
-        list-style: none;
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 12px;
-        margin-bottom: 48px;
-      }
-
-      .games a {
-        display: block;
-        padding: 16px 24px;
-        background: var(--app-foreground-color);
-        border: 1px solid var(--app-border-color-primary);
-        border-radius: 8px;
-        color: var(--app-text-color-primary);
-        text-decoration: none;
-        font-size: var(--font-size-extra-large);
-        font-weight: var(--font-weight-semibold);
-        transition: border-color 0.15s, color 0.15s;
-        text-align: left;
-      }
-
-      .games a span {
-        display: block;
-        font-size: var(--font-size-small);
-        font-weight: var(--font-weight-regular);
-        color: var(--tags-text-color);
-        margin-top: 4px;
-      }
-
-      .games a:hover {
-        border-color: var(--primary-button-background-color);
-        color: var(--primary-button-background-color);
-      }
-
-      .footer {
-        margin-top: 24px;
-        font-size: var(--font-size-medium);
-        color: var(--footer-links-color);
-        border-top: 1px solid var(--app-border-color-primary);
-        padding-top: 24px;
-      }
-
-      .footer p {
-        margin-bottom: 8px;
-      }
-
-      .footer a {
-        color: var(--primary-button-background-color);
-        text-decoration: none;
-      }
-
-      .footer a:hover {
-        text-decoration: underline;
-      }
-
-      @media (min-width: 480px) {
-        .games {
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-
-      @media (max-width: 479px) {
-        .container {
-          padding: 40px 16px;
-        }
-
-        h1 {
-          font-size: var(--font-size-headline-medium);
-        }
-
-        .tagline {
-          font-size: var(--font-size-large);
-        }
-
-        h2.section-title {
-          font-size: var(--font-size-large);
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <img class="logo" src="images/punterjs.png" alt="Punter.js logo" width="220" height="132">
-      <h1>Punter.js</h1>
-      <h2 class="tagline">A JavaScript game engine built for learning.</h2>
-      <p class="intro">
-        Punter.js renders to the HTML5 <code>&lt;canvas&gt;</code> element using plain JavaScript.
-        No dependencies, no build step, no bundler - just drop in one script file and start drawing sprites,
-        handling input and running a game loop.
-      </p>
-      <div class="cta-row">
-        <a class="btn btn-primary" href="https://github.com/orca-scan/punter.js">Get started on GitHub</a>
-      </div>
-
-      <h2 class="section-title">Example games built with Punter.js</h2>
-      <ul class="games">
-        <li><a href="games/asteroids.html">Asteroids<span>Vector movement &amp; shooting</span></a></li>
-        <li><a href="games/platform.html">Platform<span>Gravity &amp; tile collision</span></a></li>
-        <li><a href="games/pong.html">Pong<span>Two-paddle canvas game</span></a></li>
-        <li><a href="games/breakout.html">Breakout<span>Brick-breaker with collision</span></a></li>
-        <li><a href="games/tetris.html">Tetris<span>Grid stacking &amp; line clearing</span></a></li>
-        <li><a href="games/snake.html">Snake<span>Grid movement &amp; growth</span></a></li>
-      </ul>
-
-      <div class="footer">
-        <p>Punter.js was created by the Orca Scan team to help students and new developers learn JavaScript by building browser games. We also simplify <a href="https://orcascan.com">barcode tracking</a> :)</p>
-      </div>
+<body>
+  <div class="container">
+    <img class="logo" src="images/punterjs.png" alt="Punter.js logo" width="220" height="132">
+    <h1>Punter.js</h1>
+    <h2 class="tagline">A simple 2D JavaScript game engine built for learning.</h2>
+    <p class="intro">
+      Learn JavaScript by recreating classic games like Pong, Snake and Asteroids. One HTML file. One script. No build step.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/orca-scan/punter.js">Build your first game</a>
     </div>
-  </body>
+
+    <h2 class="section-title">Example games</h2>
+    <ul class="games">
+      <li><a href="games/asteroids.html">Asteroids<span>Vector movement and shooting</span></a></li>
+      <li><a href="games/platform.html">Platform<span>Gravity and tile collision</span></a></li>
+      <li><a href="games/pong.html">Pong<span>Movement and ball collision</span></a></li>
+      <li><a href="games/breakout.html">Breakout<span>Collision and level design</span></a></li>
+      <li><a href="games/tetris.html">Tetris<span>Grid stacking and line clearing</span></a></li>
+      <li><a href="games/snake.html">Snake<span>Grid movement and growth</span></a></li>
+    </ul>
+
+    <div class="footer">
+      <p>
+        Punter.js was created by the Orca Scan team to teach students how to build browser games with JavaScript.
+        We also simplify <a href="https://orcascan.com">barcode tracking</a> :)
+      </p>
+    </div>
+  </div>
+</body>
+
 </html>
