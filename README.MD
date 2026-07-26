@@ -271,19 +271,19 @@ punter.on('go', function (sceneName) {
 
 ## How the Game Loop Works
 
-This is the engine that keeps everything moving. `punter.go(sceneName)` auto-starts a fixed-timestep loop (60 updates/sec) once a scene is active:
+Once you call `punter.go()`, the engine runs a loop 60 times every second. Each loop does this:
 
-1. `update` runs 0+ times to catch up to real time (capped at 100ms per frame to avoid a spiral of death)
-2. Canvas is cleared
-3. All registered sprites are drawn automatically
-4. The `draw` event handler runs, for HUD/overlay drawing on top
-5. Repeats via `requestAnimationFrame`
+1. Runs your `update` code (move things, check collisions)
+2. Clears the screen
+3. Draws all sprites
+4. Runs your `draw` code (score, HUD)
+5. Starts again
 
-"Fixed timestep" means `update` always advances your game logic by the same fixed amount each time it runs, no matter how fast or slow the player's device actually is. This matters because without it, the same game would play at different speeds on different phones - a slow device would make your character move in slow motion, a fast one would speed it up. This engine avoids that problem for you.
+Each `update` always moves the game forward by the same amount of time - so your game runs at the same speed on fast and slow devices. Without this, a slow phone would make everything move in slow motion.
 
-Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprite state - handy for a pause menu.
+Use `punter.pause()` and `punter.resume()` to freeze and unfreeze the loop - good for a pause menu.
 
-`punter.redraw()` clears the canvas and redraws all sprites without advancing game logic - useful for refreshing a static frame while paused.
+`punter.redraw()` redraws the screen without running any game logic - useful when the game is paused.
 
 ---
 
