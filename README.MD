@@ -80,7 +80,7 @@ This starts a local server on port 4000 and opens the games index in your browse
 
 ## 1. Setup
 
-`punter.setup(config)` call this once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading. Config options are:
+Call `punter.setup(config)` once at the start. It loads images and sounds ahead of time, sets up the canvas, and fires the `ready` event when everything's finished loading. Config options are:
 
 Option   | Type           | Description
 :--------|:---------------|:--------------------------------------------------------
