@@ -287,7 +287,9 @@ Use `punter.pause()` and `punter.resume()` to freeze and unfreeze the loop - goo
 
 ---
 
-## What's actually different here
+## Technical details
+
+You do not need to understand this section to build a game. These are some of the details Punter.js handles for you:
 
 - **Content-trimmed bounding boxes for collision.** The overlap test itself is a plain AABB (rectangle overlap) check, but the box isn't the full sprite sheet - `getBounds` does a per-pixel alpha scan of each image once, finds the tightest rect containing non-transparent pixels, and caches it per image key. So hitboxes match the visible artwork instead of whatever padding is baked into the source image.
 - **A real fixed-timestep loop.** The loop runs `update` on a 60Hz accumulator, decoupled from `draw`, with a 100ms-per-frame cap to avoid a spiral of death after a tab is backgrounded. Game logic behaves the same on a 60Hz and 144Hz screen - most hand-rolled canvas code skips this and gets frame-rate-dependent movement.
