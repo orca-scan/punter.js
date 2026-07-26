@@ -62,16 +62,14 @@ At the top of your `<script>`, set up the numbers that control your game and cre
 
 ```js
 // game settings - change these to make the game easier or harder
-var SPEED      = 5 * punter.dpr;  // pixels the rocket moves each frame
-var GEM_SIZE   = 28 * punter.dpr; // how big each gem is drawn
-var GEM_COUNT  = 7;               // gems on screen at once
-var TIME_LIMIT = 30;              // seconds per round
+var SPEED      = 5;  // pixels the rocket moves each frame
+var GEM_SIZE   = 28; // how big each gem is drawn
+var GEM_COUNT  = 7;  // gems on screen at once
+var TIME_LIMIT = 30; // seconds per round
 
 // game state - reset each round inside the play screen
 var player, gems, score, startFrame, timeLeft, flashFrames, lowTimeWarned, highScore;
 ```
-
-`punter.dpr` is the device pixel ratio. Multiplying sizes by it makes everything look sharp on high-resolution screens like a MacBook Retina display or a phone.
 
 ---
 
@@ -251,7 +249,6 @@ Think of it like choosing a pen colour and then stamping something onto the scre
 
 ```js
 punter.on('draw', function (ctx) { // ctx is the drawing pen, passed in automatically
-  var dpr = punter.dpr;
 
   // purple flash on gem collect - a rectangle over the whole screen that fades out
   if (flashFrames > 0) {
@@ -260,30 +257,30 @@ punter.on('draw', function (ctx) { // ctx is the drawing pen, passed in automati
   }
 
   // gem count - top left corner
-  ctx.fillStyle    = '#e879f9';                              // purple text
-  ctx.font         = 'bold ' + (20 * dpr) + 'px monospace'; // size scales with screen
-  ctx.textBaseline = 'top';                                  // measure from the top of the letters
-  ctx.textAlign    = 'left';                                 // anchor to the left edge
-  ctx.fillText('GEMS  ' + score, 14 * dpr, 14 * dpr);       // stamp it 14px from the corner
+  ctx.fillStyle    = '#e879f9';          // purple text
+  ctx.font         = 'bold 20px monospace';
+  ctx.textBaseline = 'top';             // measure from the top of the letters
+  ctx.textAlign    = 'left';            // anchor to the left edge
+  ctx.fillText('GEMS  ' + score, 14, 14); // stamp it 14px from the corner
 
   // personal best - smaller, faded white, just below the score
   ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  ctx.font      = (13 * dpr) + 'px monospace';
-  ctx.fillText('BEST  ' + highScore, 14 * dpr, 40 * dpr);
+  ctx.font      = '13px monospace';
+  ctx.fillText('BEST  ' + highScore, 14, 40);
 
   // countdown timer - top right corner, turns red when under 10 seconds
   ctx.fillStyle    = timeLeft <= 10 ? '#ff4444' : '#7ecfff';
-  ctx.font         = 'bold ' + (20 * dpr) + 'px monospace';
+  ctx.font         = 'bold 20px monospace';
   ctx.textBaseline = 'top';
-  ctx.textAlign    = 'right';                                // anchor to the right edge this time
-  ctx.fillText('TIME  ' + timeLeft, punter.width - 14 * dpr, 14 * dpr);
+  ctx.textAlign    = 'right';           // anchor to the right edge this time
+  ctx.fillText('TIME  ' + timeLeft, punter.width - 14, 14);
 
   // controls hint - centred at the bottom, very faint
   ctx.fillStyle    = 'rgba(255,255,255,0.25)';
-  ctx.font         = (12 * dpr) + 'px monospace';
+  ctx.font         = '12px monospace';
   ctx.textBaseline = 'bottom';
   ctx.textAlign    = 'center';
-  ctx.fillText('WASD or arrow keys to move', punter.width / 2, punter.height - 10 * dpr);
+  ctx.fillText('WASD or arrow keys to move', punter.width / 2, punter.height - 10);
 });
 ```
 
@@ -309,9 +306,8 @@ punter.scene('gameover', function () {
   });
 
   punter.on('draw', function (ctx) {
-    var w   = punter.width;
-    var h   = punter.height;
-    var dpr = punter.dpr;
+    var w = punter.width;
+    var h = punter.height;
 
     // semi-transparent black rectangle over the whole screen = dark overlay
     ctx.fillStyle = 'rgba(0,0,0,0.75)';
@@ -323,28 +319,28 @@ punter.scene('gameover', function () {
 
     // headline - purple if it's a new record, white otherwise
     ctx.fillStyle = isNewBest ? '#e879f9' : '#ffffff';
-    ctx.font      = 'bold ' + (38 * dpr) + 'px monospace';
-    ctx.fillText(isNewBest ? 'NEW BEST!' : "TIME'S UP!", w / 2, h / 2 - 52 * dpr);
+    ctx.font      = 'bold 38px monospace';
+    ctx.fillText(isNewBest ? 'NEW BEST!' : "TIME'S UP!", w / 2, h / 2 - 52);
 
     // final gem count
     ctx.fillStyle = '#e879f9';
-    ctx.font      = 'bold ' + (30 * dpr) + 'px monospace';
+    ctx.font      = 'bold 30px monospace';
     ctx.fillText(score + (score === 1 ? ' GEM' : ' GEMS'), w / 2, h / 2);
 
     // personal best
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font      = (16 * dpr) + 'px monospace';
-    ctx.fillText('BEST: ' + highScore, w / 2, h / 2 + 38 * dpr);
+    ctx.font      = '16px monospace';
+    ctx.fillText('BEST: ' + highScore, w / 2, h / 2 + 38);
 
     // restart prompt
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
-    ctx.font      = (14 * dpr) + 'px monospace';
-    ctx.fillText('SPACE or tap to play again', w / 2, h / 2 + 72 * dpr);
+    ctx.font      = '14px monospace';
+    ctx.fillText('SPACE or tap to play again', w / 2, h / 2 + 72);
   });
 });
 ```
 
-The whole trick here is the same three-step pattern from Step 9: pick a colour, pick a font, stamp text. The `h / 2 - 52 * dpr` math just offsets each line vertically so they don't overlap. You can eyeball these numbers - change them, refresh, and see what looks good.
+The whole trick here is the same three-step pattern from Step 9: pick a colour, pick a font, stamp text. The `h / 2 - 52` math just offsets each line vertically so they don't overlap. You can eyeball these numbers - change them, refresh, and see what looks good.
 
 Switching screens with `punter.go()` destroys all sprites from the previous screen automatically. No cleanup code needed.
 
@@ -364,7 +360,7 @@ function spawnGem() {
     x = margin + Math.random() * (punter.width  - margin * 2);
     y = margin + Math.random() * (punter.height - margin * 2);
     tries++;
-  } while (tries < 10 && player && Math.abs(x - player.x) < 70 * punter.dpr && Math.abs(y - player.y) < 70 * punter.dpr);
+  } while (tries < 10 && player && Math.abs(x - player.x) < 70 && Math.abs(y - player.y) < 70);
 
   gems.push(punter.createSprite({
     id:    'gem-' + Date.now() + '-' + gems.length,

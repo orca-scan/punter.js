@@ -25,6 +25,8 @@
     var _canvasCtx;
     var _boundsCanvas;
     var _dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var _width = 0;
+    var _height = 0;
     var _boundsCtx;
     var _initilised = false;
     var _scenes = {};
@@ -102,9 +104,10 @@
     function updatePointerPosition(clientX, clientY) {
         if (!_canvas) { pointer.x = clientX; pointer.y = clientY; return; }
         var rect = _canvas.getBoundingClientRect();
-        var canvasScale = _canvas.width / rect.width;
-        pointer.x = Math.round((clientX - rect.left) * canvasScale);
-        pointer.y = Math.round((clientY - rect.top) * canvasScale);
+        var scaleX = _width / rect.width;
+        var scaleY = _height / rect.height;
+        pointer.x = Math.round((clientX - rect.left) * scaleX);
+        pointer.y = Math.round((clientY - rect.top) * scaleY);
     }
 
     /**
@@ -1354,7 +1357,7 @@
         if (!_initilised) throw new Error('punter.setup must be called first');
 
         _canvasCtx = _canvas.getContext('2d', { alpha: true, desynchronized: true, preserveDrawingBuffer: true }); // desynchronized reduces paint latency on supported browsers
-        _canvasCtx.imageSmoothingEnabled = false; // keeps pixel art crisp; prevents blurring on scaled draws
+        scaleCanvasContext();
 
         _frame = 0;
         _loopLast = performance.now();
@@ -1621,6 +1624,16 @@
     }
 
     /**
+     * Scales the canvas context for high-density screens; must be called after canvas dimensions change
+     * @returns {void}
+     */
+    function scaleCanvasContext() {
+        if (!_canvasCtx) return;
+        _canvasCtx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
+        _canvasCtx.imageSmoothingEnabled = false;
+    }
+
+    /**
      * Recalculates canvas dimensions to fit the viewport, rescales all active sprites, and fires the resize event
      * @returns {void}
      */
@@ -1648,26 +1661,23 @@
             internalH = Math.round(internalW / screenRatio);
         }
 
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        _dpr = dpr;
+        _width = internalW;
+        _height = internalH;
+        _dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-        // scale canvas pixel buffer by dpr for sharp rendering on high-density (retina) screens
-        if (dpr > 1) {
-            _canvas.width = internalW * dpr;
-            _canvas.height = internalH * dpr;
-        }
-        else {
-            _canvas.width = internalW;
-            _canvas.height = internalH;
-        }
+        // use a larger backing buffer while keeping game coordinates logical
+        _canvas.width = _width * _dpr;
+        _canvas.height = _height * _dpr;
 
-        var scaleX = screenW / internalW;
-        var scaleY = screenH / internalH;
+        scaleCanvasContext();
+
+        var scaleX = screenW / _width;
+        var scaleY = screenH / _height;
         var scale = Math.min(scaleX, scaleY);
 
         // css size stays at logical pixels; translate(-50%,-50%) centers the absolute-positioned canvas
-        _canvas.style.width = internalW + 'px';
-        _canvas.style.height = internalH + 'px';
+        _canvas.style.width = _width + 'px';
+        _canvas.style.height = _height + 'px';
         _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';  // scale to fill the viewport
 
         setDevVars();
@@ -1780,7 +1790,7 @@
         redraw: function () {
             if (!this.canvas || !this.ctx) return;
 
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.clearRect(0, 0, this.width, this.height);
 
             for (var id in _sprites) {
                 if (Object.prototype.hasOwnProperty.call(_sprites, id)) {
@@ -1864,23 +1874,13 @@
         },
         width: {
             get: function () {
-                return _canvas ? _canvas.width : null;
-            },
-            set: function (value) {
-                if (_canvas && typeof value === 'number') {
-                    _canvas.width = value;
-                }
+                return _canvas ? _width : null;
             },
             enumerable: true
         },
         height: {
             get: function () {
-                return _canvas ? _canvas.height : null;
-            },
-            set: function (value) {
-                if (_canvas && typeof value === 'number') {
-                    _canvas.height = value;
-                }
+                return _canvas ? _height : null;
             },
             enumerable: true
         },
@@ -1921,12 +1921,6 @@
                     if (_sprites[key]) arr.push(_sprites[key]);
                 }
                 return arr;
-            },
-            enumerable: true
-        },
-        dpr: {
-            get: function () {
-                return _dpr;
             },
             enumerable: true
         },

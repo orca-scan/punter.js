@@ -42,19 +42,17 @@
       // =========================================================
       // SETTINGS
       // =========================================================
-      var DPR = punter.dpr;
-
-      var SHIP_SIZE         = 18 * DPR;
+      var SHIP_SIZE         = 18;
       var SHIP_TURN         = 0.065;        // radians per frame
-      var SHIP_THRUST       = 0.18 * DPR;
+      var SHIP_THRUST       = 0.18;
       var SHIP_FRICTION     = 0.97;
-      var BULLET_SPEED      = 11 * DPR;
+      var BULLET_SPEED      = 11;
       var BULLET_LIFE       = 55;           // frames before bullet expires
       var MAX_BULLETS       = 5;
       var SHOOT_COOLDOWN    = 11;           // frames between shots
       var INVINCIBLE_FRAMES = 180;          // frames of invincibility after death
-      var AST_RADII         = [50 * DPR, 28 * DPR, 14 * DPR]; // large, medium, small
-      var AST_BASE_SPEEDS   = [0.8 * DPR, 1.4 * DPR, 2.2 * DPR];
+      var AST_RADII         = [50, 28, 14]; // large, medium, small
+      var AST_BASE_SPEEDS   = [0.8, 1.4, 2.2];
       var AST_SCORES        = [20, 50, 100];
       var INIT_ASTEROIDS    = 4;
       var STAR_COUNT        = 80;
@@ -146,7 +144,7 @@
           // ---- bullet vs asteroid ----
           for (var bi = bullets.length - 1; bi >= 0; bi--) {
             for (var ai = asteroids.length - 1; ai >= 0; ai--) {
-              var hr = asteroids[ai].radius + 3 * DPR;
+              var hr = asteroids[ai].radius + 3;
               if (dist2(bullets[bi].x, bullets[bi].y, asteroids[ai].x, asteroids[ai].y) < hr * hr) {
                 var hit = asteroids.splice(ai, 1)[0];
                 bullets.splice(bi, 1);
@@ -204,7 +202,7 @@
 
           // ---- update popups ----
           for (var po = popups.length - 1; po >= 0; po--) {
-            popups[po].y -= 0.6 * DPR;
+            popups[po].y -= 0.6;
             if (--popups[po].life <= 0) popups.splice(po, 1);
           }
 
@@ -274,7 +272,7 @@
         var count = 6 + (2 - size) * 3;
         for (var i = 0; i < count; i++) {
           var angle = Math.random() * Math.PI * 2;
-          var speed = (0.8 + Math.random() * 2.5) * DPR;
+          var speed = 0.8 + Math.random() * 2.5;
           particles.push({
             x: x, y: y,
             vx: Math.cos(angle) * speed,
@@ -305,7 +303,7 @@
           do {
             x = Math.random() * w;
             y = Math.random() * h;
-          } while (dist2(x, y, w / 2, h / 2) < sqr(120 * DPR));
+          } while (dist2(x, y, w / 2, h / 2) < sqr(120));
           asteroids.push(makeAsteroid(x, y, 0));
         }
       }
@@ -388,7 +386,7 @@
         if (!stars) return;
         for (var i = 0; i < stars.length; i++) {
           ctx.fillStyle = 'rgba(255,255,255,' + stars[i].a + ')';
-          ctx.fillRect(stars[i].x, stars[i].y, DPR, DPR);
+          ctx.fillRect(stars[i].x, stars[i].y, 1, 1);
         }
       }
 
@@ -397,7 +395,7 @@
         ctx.translate(ship.x, ship.y);
         ctx.rotate(ship.angle + Math.PI / 2);
         ctx.strokeStyle = COLOR_SHIP;
-        ctx.lineWidth   = 2 * DPR;
+        ctx.lineWidth   = 2;
         ctx.lineJoin    = 'round';
 
         // ship body
@@ -428,7 +426,7 @@
         ctx.rotate(ast.spin);
         ctx.strokeStyle = COLOR_ASTEROID;
         ctx.fillStyle   = COLOR_AST_FILL;
-        ctx.lineWidth   = 2 * DPR;
+        ctx.lineWidth   = 2;
         ctx.lineJoin    = 'round';
         ctx.beginPath();
         ctx.moveTo(ast.pts[0].x, ast.pts[0].y);
@@ -442,23 +440,23 @@
       function drawBullet(ctx, b) {
         ctx.fillStyle = COLOR_BULLET;
         ctx.beginPath();
-        ctx.arc(b.x, b.y, 3 * DPR, 0, Math.PI * 2);
+        ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
 
       function drawHUD(ctx, w, h) {
-        var pad = 16 * DPR;
+        var pad = 16;
 
         ctx.textBaseline = 'top';
-        ctx.font         = 'bold ' + 16 * DPR + 'px monospace';
+        ctx.font         = 'bold 16px monospace';
         ctx.fillStyle    = COLOR_TEXT;
         ctx.textAlign    = 'left';
         ctx.fillText(score, pad, pad);
 
         if (highScore > 0) {
           ctx.fillStyle = COLOR_DIM;
-          ctx.font      = 11 * DPR + 'px monospace';
-          ctx.fillText('HI ' + highScore, pad, pad + 20 * DPR);
+          ctx.font      = '11px monospace';
+          ctx.fillText('HI ' + highScore, pad, pad + 20);
         }
 
         ctx.textAlign = 'right';
@@ -467,12 +465,12 @@
         // life icons centred at the top
         for (var i = 0; i < lives; i++) {
           ctx.save();
-          ctx.translate(w / 2 + (i - (lives - 1) / 2) * 22 * DPR, 20 * DPR);
+          ctx.translate(w / 2 + (i - (lives - 1) / 2) * 22, 20);
           ctx.rotate(-Math.PI / 2);
           ctx.strokeStyle = COLOR_SHIP;
-          ctx.lineWidth   = 1.5 * DPR;
+          ctx.lineWidth   = 1.5;
           ctx.lineJoin    = 'round';
-          var s = 7 * DPR;
+          var s = 7;
           ctx.beginPath();
           ctx.moveTo(0, -s);
           ctx.lineTo(s * 0.55, s * 0.75);
@@ -484,16 +482,16 @@
         }
 
         ctx.fillStyle    = COLOR_DIM;
-        ctx.font         = 12 * DPR + 'px monospace';
+        ctx.font         = '12px monospace';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('ARROWS / WASD  \u00b7  SPACE to fire', w / 2, h - 10 * DPR);
+        ctx.fillText('ARROWS / WASD  \u00b7  SPACE to fire', w / 2, h - 10);
 
         ctx.fillStyle    = COLOR_DIM;
-        ctx.font         = 12 * DPR + 'px monospace';
+        ctx.font         = '12px monospace';
         ctx.textAlign    = 'right';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('Created by Charlie Crofts', w - pad, h - 10 * DPR);
+        ctx.fillText('Created by Charlie Crofts', w - pad, h - 10);
       }
 
       function drawGameOver(ctx, w, h) {
@@ -502,14 +500,14 @@
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle    = COLOR_TEXT;
-        ctx.font         = 'bold ' + 40 * DPR + 'px monospace';
-        ctx.fillText('GAME OVER', w / 2, h / 2 - 32 * DPR);
-        ctx.font = 20 * DPR + 'px monospace';
-        ctx.fillText('Score: ' + score, w / 2, h / 2 + 10 * DPR);
+        ctx.font         = 'bold 40px monospace';
+        ctx.fillText('GAME OVER', w / 2, h / 2 - 32);
+        ctx.font = '20px monospace';
+        ctx.fillText('Score: ' + score, w / 2, h / 2 + 10);
         ctx.fillStyle = COLOR_DIM;
-        ctx.font      = 14 * DPR + 'px monospace';
-        ctx.fillText('Best: ' + highScore, w / 2, h / 2 + 36 * DPR);
-        ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + 58 * DPR);
+        ctx.font      = '14px monospace';
+        ctx.fillText('Best: ' + highScore, w / 2, h / 2 + 36);
+        ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + 58);
       }
       function drawParticles(ctx) {
         for (var i = 0; i < particles.length; i++) {
@@ -517,7 +515,7 @@
           var alpha = p.life / p.maxLife;
           ctx.fillStyle = 'rgba(136,153,170,' + alpha + ')';
           ctx.beginPath();
-          ctx.arc(p.x, p.y, (0.5 + alpha) * 2 * DPR, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, (0.5 + alpha) * 2, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -526,7 +524,7 @@
         ctx.save();
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font         = 'bold ' + 13 * DPR + 'px monospace';
+        ctx.font         = 'bold 13px monospace';
         for (var i = 0; i < popups.length; i++) {
           var p         = popups[i];
           ctx.globalAlpha = p.life / p.maxLife;
@@ -550,7 +548,7 @@
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillStyle    = COLOR_TEXT;
-        ctx.font         = 'bold ' + 32 * DPR + 'px monospace';
+        ctx.font         = 'bold 32px monospace';
         ctx.fillText('LEVEL ' + level, w / 2, h / 2);
         ctx.restore();
       }

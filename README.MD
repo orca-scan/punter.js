@@ -292,7 +292,7 @@ Use `punter.pause()` / `punter.resume()` to stop/restart it without losing sprit
 - **Content-trimmed bounding boxes for collision.** The overlap test itself is a plain AABB (rectangle overlap) check, but the box isn't the full sprite sheet - `getBounds` does a per-pixel alpha scan of each image once, finds the tightest rect containing non-transparent pixels, and caches it per image key. So hitboxes match the visible artwork instead of whatever padding is baked into the source image.
 - **A real fixed-timestep loop.** The loop runs `update` on a 60Hz accumulator, decoupled from `draw`, with a 100ms-per-frame cap to avoid a spiral of death after a tab is backgrounded. Game logic behaves the same on a 60Hz and 144Hz screen - most hand-rolled canvas code skips this and gets frame-rate-dependent movement.
 - **Pointer, touch, and stylus are unified.** One `keys`/`pointer` input model backed by the Pointer Events API (with mouse/touch fallback for older browsers), with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor). Covers mouse, touchscreen, and stylus/pen with no extra game code.
-- **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens without you managing that yourself.
+- **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens. All game coordinates - sprite positions, movement, pointer, and custom canvas drawing - use logical pixels; the engine handles the physical scaling internally.
 
 None of this is exotic, it's just the stuff that's easy to get wrong when you write it yourself.
 
@@ -334,8 +334,8 @@ Property                  | Description
 `punter.sceneName`        | name of the currently active scene
 `punter.sprites`          | array of all currently registered sprites
 `punter.getSprite(id)`    | get a sprite by id, `null` if not found
-`punter.width`            | canvas buffer width in pixels (DPR-scaled)
-`punter.height`           | canvas buffer height in pixels (DPR-scaled)
+`punter.width`            | logical pixel width of the canvas
+`punter.height`           | logical pixel height of the canvas
 `punter.frame`            | current frame counter (0–59, resets each second)
 `punter.totalFrames`      | total frames since the loop started (never resets)
 `punter.canvas`           | the `<canvas>` element
@@ -346,7 +346,6 @@ Property                  | Description
 `punter.isMobile`         | `true` on mobile devices
 `punter.isDesktop`        | `true` on non-mobile devices
 `punter.orientation`      | `'portrait'` or `'landscape'`
-`punter.dpr`              | devicePixelRatio in use (capped at 2)
 
 ## License
 

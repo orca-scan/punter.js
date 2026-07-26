@@ -41,17 +41,6 @@
 
       // helpers
 
-      var DPR = punter.dpr;
-
-      /**
-       * Converts logical pixels to device-scaled pixels
-       * @param {number} n - logical pixel value
-       * @returns {number}
-       */
-      function px(n) {
-        return n * DPR;
-      }
-
       /**
        * Clamps value between min and max
        * @param {number} v
@@ -65,19 +54,19 @@
 
       // tuning constants — adjust these to change how the game feels
 
-      var PLAYER_H       = px(48);
-      var PLAYER_SPEED   = px(5);    // ground movement speed
-      var AIR_SPEED      = px(4);    // reduced control in the air
-      var JUMP_FORCE     = px(13);   // initial upward velocity on jump
-      var GRAVITY        = px(0.7);  // downward acceleration per frame
-      var MAX_FALL       = px(12);   // terminal velocity
-      var ENEMY_SPEED    = px(2);    // patrol speed
-      var GEM_SIZE       = px(22);   // collectible size
-      var GROUND_H       = px(20);   // thickness of ground tile
-      var LEDGE_H        = px(16);   // thickness of floating ledges
-      var FLAG_W         = px(30);   // goal flag dimensions
-      var FLAG_H         = px(50);
-      var GROUND_MARGIN  = px(24);   // gap below ground to canvas bottom
+      var PLAYER_H       = 48;
+      var PLAYER_SPEED   = 5;    // ground movement speed
+      var AIR_SPEED      = 4;    // reduced control in the air
+      var JUMP_FORCE     = 13;   // initial upward velocity on jump
+      var GRAVITY        = 0.7;  // downward acceleration per frame
+      var MAX_FALL       = 12;   // terminal velocity
+      var ENEMY_SPEED    = 2;    // patrol speed
+      var GEM_SIZE       = 22;   // collectible size
+      var GROUND_H       = 20;   // thickness of ground tile
+      var LEDGE_H        = 16;   // thickness of floating ledges
+      var FLAG_W         = 30;   // goal flag dimensions
+      var FLAG_H         = 50;
+      var GROUND_MARGIN  = 24;   // gap below ground to canvas bottom
 
       // game state — all state is reset in buildLevel() on each restart
 
@@ -146,21 +135,21 @@
           // hud: gem counter top-left with shadow
           ctx.save();
           ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
-          ctx.shadowBlur = px(3);
-          ctx.shadowOffsetY = px(1);
+          ctx.shadowBlur = 3;
+          ctx.shadowOffsetY = 1;
           ctx.fillStyle = '#fff';
-          ctx.font = 'bold ' + px(16) + 'px sans-serif';
+          ctx.font = 'bold 16px sans-serif';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'top';
-          ctx.fillText('Gems: ' + score + ' / ' + totalGems, px(12), px(12));
+          ctx.fillText('Gems: ' + score + ' / ' + totalGems, 12, 12);
           ctx.restore();
 
           // hint text at bottom
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
-          ctx.font = px(12) + 'px sans-serif';
+          ctx.font = '12px sans-serif';
           ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.fillText('Arrows / WASD to move \u2022 SPACE to jump \u2022 Tap to play on mobile', w / 2, h - px(8));
+          ctx.fillText('Arrows / WASD to move • SPACE to jump • Tap to play on mobile', w / 2, h - 8);
 
           // win/lose overlay
           if (won || dead) {
@@ -168,15 +157,15 @@
             ctx.fillRect(0, 0, w, h);
             ctx.save();
             ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = px(6);
+            ctx.shadowBlur = 6;
             ctx.fillStyle = '#fff';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.font = 'bold ' + px(32) + 'px sans-serif';
-            ctx.fillText(won ? 'LEVEL COMPLETE!' : 'OOPS!', w / 2, h / 2 - px(20));
-            ctx.font = px(16) + 'px sans-serif';
+            ctx.font = 'bold 32px sans-serif';
+            ctx.fillText(won ? 'LEVEL COMPLETE!' : 'OOPS!', w / 2, h / 2 - 20);
+            ctx.font = '16px sans-serif';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-            ctx.fillText('Tap or press SPACE to retry', w / 2, h / 2 + px(20));
+            ctx.fillText('Tap or press SPACE to retry', w / 2, h / 2 + 20);
             ctx.restore();
           }
         });
@@ -211,10 +200,10 @@
 
         // floating ledges — one-way platforms you can jump through from below
         // staggered so each is reachable with a single jump from the previous
-        var ledge1Y = h - px(120);
-        var ledge2Y = h - px(195);
-        var ledge3Y = h - px(270);
-        var ledge4Y = h - px(345);
+        var ledge1Y = h - 120;
+        var ledge2Y = h - 195;
+        var ledge3Y = h - 270;
+        var ledge4Y = h - 345;
         addPlatform('ledge-1', 'ledge', Math.floor(w * 0.12), ledge1Y, ledgeW, LEDGE_H, true);
         addPlatform('ledge-2', 'ledge', Math.floor(w * 0.40), ledge2Y, ledgeW, LEDGE_H, true);
         addPlatform('ledge-3', 'ledge', Math.floor(w * 0.62), ledge3Y, ledgeW, LEDGE_H, true);
@@ -224,7 +213,7 @@
         player = punter.createSprite({
           id: 'player',
           image: 'player',
-          x: px(40),
+          x: 40,
           y: groundY - PLAYER_H,
           h: PLAYER_H,
           preserveAspect: true,
@@ -244,23 +233,23 @@
         });
 
         // gems placed above each ledge
-        addGem('gem-1', Math.floor(w * 0.19), ledge1Y - px(28));
-        addGem('gem-2', Math.floor(w * 0.47), ledge2Y - px(28));
-        addGem('gem-3', Math.floor(w * 0.69), ledge3Y - px(28));
-        addGem('gem-4', Math.floor(w * 0.39), ledge4Y - px(28));
-        addGem('gem-5', Math.floor(w * 0.55), groundY - px(30));
+        addGem('gem-1', Math.floor(w * 0.19), ledge1Y - 28);
+        addGem('gem-2', Math.floor(w * 0.47), ledge2Y - 28);
+        addGem('gem-3', Math.floor(w * 0.69), ledge3Y - 28);
+        addGem('gem-4', Math.floor(w * 0.39), ledge4Y - 28);
+        addGem('gem-5', Math.floor(w * 0.55), groundY - 30);
 
         // patrolling slime enemies on ledge surfaces
-        addEnemy('slime-1', Math.floor(w * 0.43), ledge2Y - px(24), Math.floor(w * 0.40), Math.floor(w * 0.56));
-        addEnemy('slime-2', Math.floor(w * 0.65), ledge3Y - px(24), Math.floor(w * 0.62), Math.floor(w * 0.78));
+        addEnemy('slime-1', Math.floor(w * 0.43), ledge2Y - 24, Math.floor(w * 0.40), Math.floor(w * 0.56));
+        addEnemy('slime-2', Math.floor(w * 0.65), ledge3Y - 24, Math.floor(w * 0.62), Math.floor(w * 0.78));
 
         // drifting clouds (no collision)
         clouds = [];
-        clouds.push(addCloud('cloud-1', Math.floor(w * 0.1), px(30), px(80), px(40)));
-        clouds.push(addCloud('cloud-2', Math.floor(w * 0.6), px(50), px(70), px(35)));
-        clouds.push(addCloud('cloud-3', Math.floor(w * 0.35), px(15), px(60), px(30)));
-        addDecor('bush-1', 'bush', Math.floor(w * 0.08), groundY - px(24), px(48), px(24));
-        addDecor('bush-2', 'bush', Math.floor(w * 0.72), groundY - px(24), px(48), px(24));
+        clouds.push(addCloud('cloud-1', Math.floor(w * 0.1), 30, 80, 40));
+        clouds.push(addCloud('cloud-2', Math.floor(w * 0.6), 50, 70, 35));
+        clouds.push(addCloud('cloud-3', Math.floor(w * 0.35), 15, 60, 30));
+        addDecor('bush-1', 'bush', Math.floor(w * 0.08), groundY - 24, 48, 24);
+        addDecor('bush-2', 'bush', Math.floor(w * 0.72), groundY - 24, 48, 24);
       }
 
       // sprite factories
@@ -301,7 +290,7 @@
         var s = punter.createSprite({
           id: id, image: 'slime',
           x: x, y: y,
-          w: px(24), h: px(24),
+          w: 24, h: 24,
           boundsMode: 'rect'
         });
         s.minX = minX;
@@ -339,7 +328,7 @@
        */
       function moveClouds() {
         for (var i = 0; i < clouds.length; i++) {
-          var speed = px(0.3) + (i * px(0.15));
+          var speed = 0.3 + (i * 0.15);
           clouds[i].parallaxScrollX(-speed, 2000);
         }
       }
@@ -440,7 +429,7 @@
         }
 
         // fell off the world
-        if (player.y > punter.height + px(20)) {
+        if (player.y > punter.height + 20) {
           die();
         }
       }
@@ -452,7 +441,7 @@
        */
       function checkGems() {
         for (var i = gems.length - 1; i >= 0; i--) {
-          gems[i].bounce(px(4), 12); // gentle float animation
+          gems[i].bounce(4, 12); // gentle float animation
 
           if (player.isCollidingWith(gems[i])) {
             gems[i].destroy();
