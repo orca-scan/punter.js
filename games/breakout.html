@@ -38,27 +38,21 @@
       var BRICK_IMAGES = ['brickRed', 'brickOrange', 'brickYellow', 'brickGreen', 'brickBlue'];
 
       // helpers
-      var DPR = punter.dpr;
-
-      function px(n) {
-        return n * DPR;
-      }
-
       function clamp(value, min, max) {
         return Math.max(min, Math.min(value, max));
       }
 
       // game settings
-      var PADDLE_W      = px(90);
-      var PADDLE_H      = px(14);
-      var BALL_SIZE     = px(16);
-      var BALL_SPEED    = px(6);
-      var PADDLE_SPEED  = px(8);
+      var PADDLE_W      = 90;
+      var PADDLE_H      = 14;
+      var BALL_SIZE     = 16;
+      var BALL_SPEED    = 6;
+      var PADDLE_SPEED  = 8;
       var BRICK_ROWS    = 5;
       var BRICK_COLS    = 8;
-      var BRICK_H       = px(22);
-      var BRICK_PAD     = px(6);
-      var PADDLE_OFFSET = px(40); // distance from bottom
+      var BRICK_H       = 22;
+      var BRICK_PAD     = 6;
+      var PADDLE_OFFSET = 40; // distance from bottom
 
       // game state
       var paddleSprite, ballSprite, bricks, ballVel;
@@ -186,31 +180,31 @@
 
           // HUD: score and lives
           ctx.fillStyle    = COLOR_TEXT;
-          ctx.font         = 'bold ' + px(18) + 'px monospace';
+          ctx.font         = 'bold 18px monospace';
           ctx.textBaseline = 'top';
           ctx.textAlign    = 'left';
-          ctx.fillText('Score: ' + score, px(12), px(12));
+          ctx.fillText('Score: ' + score, 12, 12);
           ctx.textAlign = 'right';
-          ctx.fillText('Lives: ' + lives, w - px(12), px(12));
+          ctx.fillText('Lives: ' + lives, w - 12, 12);
 
           // Controls hint
           ctx.fillStyle    = COLOR_DIM;
-          ctx.font         = px(14) + 'px monospace';
+          ctx.font         = '14px monospace';
           ctx.textBaseline = 'bottom';
           ctx.textAlign    = 'center';
-          ctx.fillText('Arrow keys or A / D  ·  tap to move', w / 2, h - px(12));
+          ctx.fillText('Arrow keys or A / D  ·  tap to move', w / 2, h - 12);
 
           // Game over / win overlay
           if (gameOver || won) {
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
             ctx.fillRect(0, 0, w, h);
             ctx.fillStyle    = COLOR_TEXT;
-            ctx.font         = 'bold ' + px(40) + 'px monospace';
+            ctx.font         = 'bold 40px monospace';
             ctx.textAlign    = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(won ? 'YOU WIN!' : 'GAME OVER', w / 2, h / 2 - px(24));
-            ctx.font = px(18) + 'px monospace';
-            ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + px(24));
+            ctx.fillText(won ? 'YOU WIN!' : 'GAME OVER', w / 2, h / 2 - 24);
+            ctx.font = '18px monospace';
+            ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + 24);
           }
         });
       });
@@ -229,7 +223,7 @@
               id:    'brick-' + r + '-' + c,
               image: BRICK_IMAGES[r],
               x:   BRICK_PAD + c * (brickW + BRICK_PAD),
-              y:   px(50)    + r * (BRICK_H + BRICK_PAD),
+              y:   50         + r * (BRICK_H + BRICK_PAD),
               w:   brickW,
               h:   BRICK_H
             }));

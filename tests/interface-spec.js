@@ -52,7 +52,7 @@ describe('Interface', function () {
 
     // --- computed properties ---
 
-    it('width and height return the canvas dimensions', async function () {
+    it('width and height return logical pixel dimensions', async function () {
         var result = await page.evaluate(function () {
             return { width: punter.width, height: punter.height };
         });
@@ -60,15 +60,6 @@ describe('Interface', function () {
         expect(typeof result.height).toBe('number');
         expect(result.width).toBeGreaterThan(0);
         expect(result.height).toBeGreaterThan(0);
-    });
-
-    it('dpr is a number between 1 and 2', async function () {
-        var result = await page.evaluate(function () {
-            return punter.dpr;
-        });
-        expect(typeof result).toBe('number');
-        expect(result).toBeGreaterThanOrEqual(1);
-        expect(result).toBeLessThanOrEqual(2);
     });
 
     it('frame is a non-negative number', async function () {
