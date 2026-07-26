@@ -12,13 +12,13 @@ Created by the Orca Scan team to help students and new developers learn JavaScri
 
 **New to game programming?** Build your [first-game.md](first-game.md) in under 15 minutes with the step-by-step guide⁠.
 
-## Game programming terms:**
+## Game programming terms
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
 - **Sprite** - an image-based game object (player, enemy, coin). It has a position, can move, animate and collide
 - **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene
 - **Game loop** - code that runs 60 times per second to move sprites, check collisions and redraw the screen
 
-**Try the examples**
+## Examples
 
 This project includes a few example games to help you get started. Download and run the examples locally using:
 
