@@ -8,19 +8,19 @@
 
 A simple 2D JavaScript game engine built for learning.
 
-Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/game) and was designed to help students and new developers learn JavaScript through game development. Its deliberately simple design prioritises learning over complexity, keeping the important parts visible instead of hiding them behind frameworks and abstractions.
+Created by the Orca Scan team to help students and new developers learn JavaScript by making games. Punter.js also powers [OrcaCam](https://orcascan.com/game). It keeps the important parts visible rather than hiding them behind frameworks and abstractions.
 
-**New to game programming?** A few terms used throughout this doc:
+**New to game programming?** Build your [first-game.md](first-game.md) in under 15 minutes with the step-by-step guide⁠.
+
+## Game programming terms:**
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
 - **Sprite** - an image-based game object (player, enemy, coin). It has a position, can move, animate and collide
 - **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene
 - **Game loop** - code that runs 60 times per second to move sprites, check collisions and redraw the screen
 
-Start with [first-game.md](first-game.md) - a step-by-step guide that builds your first game in under 15 minutes.
-
 **Try the examples**
 
-This project includes a few examples games to help you get started. Download and run the examples locally using:
+This project includes a few example games to help you get started. Download and run the examples locally using:
 
 ```bash
 git clone https://github.com/orca-scan/punter.js.git
