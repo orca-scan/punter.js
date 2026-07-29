@@ -6,7 +6,7 @@
 
 <p align="center"><img src="images/punterjs.png" width="290" height="174" /></p>
 
-A simple 2D JavaScript game engine built for learning.
+A teaching-focused JavaScript game engine for the browser.
 
 Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/game) and was designed to help students and new developers learn JavaScript by making games. Its deliberately simple design keeps the important parts visible instead of hiding them behind frameworks and abstractions.
 
