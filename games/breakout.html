@@ -85,8 +85,8 @@
         var h = punter.height;
 
         // Create the paddle and ball sprites
-        paddleSprite = punter.createSprite({ id: 'paddle', image: 'paddle', x: w / 2 - PADDLE_W / 2, y: h - PADDLE_OFFSET, w: PADDLE_W, h: PADDLE_H });
-        ballSprite   = punter.createSprite({ id: 'ball',   image: 'ball',   x: w / 2, y: h / 2, w: BALL_SIZE, h: BALL_SIZE });
+        paddleSprite = punter.createSprite({ image: 'paddle', x: w / 2 - PADDLE_W / 2, y: h - PADDLE_OFFSET, w: PADDLE_W, h: PADDLE_H });
+        ballSprite   = punter.createSprite({ image: 'ball',   x: w / 2, y: h / 2, w: BALL_SIZE, h: BALL_SIZE });
 
         // Set up game state for the first time
         bricks   = [];
@@ -220,7 +220,6 @@
         for (var r = 0; r < BRICK_ROWS; r++) {
           for (var c = 0; c < BRICK_COLS; c++) {
             bricks.push(punter.createSprite({
-              id:    'brick-' + r + '-' + c,
               image: BRICK_IMAGES[r],
               x:   BRICK_PAD + c * (brickW + BRICK_PAD),
               y:   50         + r * (BRICK_H + BRICK_PAD),

@@ -194,9 +194,9 @@
         vel = { x: 0, y: 0 };
 
         // ground: three segments with a gap for danger
-        addPlatform('ground-l', 'ground', 0, groundY, Math.floor(w * 0.38), GROUND_H);
-        addPlatform('ground-m', 'ground', Math.floor(w * 0.43), groundY, Math.floor(w * 0.22), GROUND_H);
-        addPlatform('ground-r', 'ground', Math.floor(w * 0.70), groundY, Math.floor(w * 0.30), GROUND_H);
+        addPlatform('ground', 0, groundY, Math.floor(w * 0.38), GROUND_H);
+        addPlatform('ground', Math.floor(w * 0.43), groundY, Math.floor(w * 0.22), GROUND_H);
+        addPlatform('ground', Math.floor(w * 0.70), groundY, Math.floor(w * 0.30), GROUND_H);
 
         // floating ledges — one-way platforms you can jump through from below
         // staggered so each is reachable with a single jump from the previous
@@ -204,14 +204,13 @@
         var ledge2Y = h - 195;
         var ledge3Y = h - 270;
         var ledge4Y = h - 345;
-        addPlatform('ledge-1', 'ledge', Math.floor(w * 0.12), ledge1Y, ledgeW, LEDGE_H, true);
-        addPlatform('ledge-2', 'ledge', Math.floor(w * 0.40), ledge2Y, ledgeW, LEDGE_H, true);
-        addPlatform('ledge-3', 'ledge', Math.floor(w * 0.62), ledge3Y, ledgeW, LEDGE_H, true);
-        addPlatform('ledge-4', 'ledge', Math.floor(w * 0.32), ledge4Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge', Math.floor(w * 0.12), ledge1Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge', Math.floor(w * 0.40), ledge2Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge', Math.floor(w * 0.62), ledge3Y, ledgeW, LEDGE_H, true);
+        addPlatform('ledge', Math.floor(w * 0.32), ledge4Y, ledgeW, LEDGE_H, true);
 
         // player starts on the left ground
         player = punter.createSprite({
-          id: 'player',
           image: 'player',
           x: 40,
           y: groundY - PLAYER_H,
@@ -222,7 +221,6 @@
 
         // goal flag on the top ledge
         flag = punter.createSprite({
-          id: 'flag',
           image: 'flag',
           x: Math.floor(w * 0.42),
           y: ledge4Y - FLAG_H,
@@ -233,23 +231,23 @@
         });
 
         // gems placed above each ledge
-        addGem('gem-1', Math.floor(w * 0.19), ledge1Y - 28);
-        addGem('gem-2', Math.floor(w * 0.47), ledge2Y - 28);
-        addGem('gem-3', Math.floor(w * 0.69), ledge3Y - 28);
-        addGem('gem-4', Math.floor(w * 0.39), ledge4Y - 28);
-        addGem('gem-5', Math.floor(w * 0.55), groundY - 30);
+        addGem(Math.floor(w * 0.19), ledge1Y - 28);
+        addGem(Math.floor(w * 0.47), ledge2Y - 28);
+        addGem(Math.floor(w * 0.69), ledge3Y - 28);
+        addGem(Math.floor(w * 0.39), ledge4Y - 28);
+        addGem(Math.floor(w * 0.55), groundY - 30);
 
         // patrolling slime enemies on ledge surfaces
-        addEnemy('slime-1', Math.floor(w * 0.43), ledge2Y - 24, Math.floor(w * 0.40), Math.floor(w * 0.56));
-        addEnemy('slime-2', Math.floor(w * 0.65), ledge3Y - 24, Math.floor(w * 0.62), Math.floor(w * 0.78));
+        addEnemy(Math.floor(w * 0.43), ledge2Y - 24, Math.floor(w * 0.40), Math.floor(w * 0.56));
+        addEnemy(Math.floor(w * 0.65), ledge3Y - 24, Math.floor(w * 0.62), Math.floor(w * 0.78));
 
         // drifting clouds (no collision)
         clouds = [];
-        clouds.push(addCloud('cloud-1', Math.floor(w * 0.1), 30, 80, 40));
-        clouds.push(addCloud('cloud-2', Math.floor(w * 0.6), 50, 70, 35));
-        clouds.push(addCloud('cloud-3', Math.floor(w * 0.35), 15, 60, 30));
-        addDecor('bush-1', 'bush', Math.floor(w * 0.08), groundY - 24, 48, 24);
-        addDecor('bush-2', 'bush', Math.floor(w * 0.72), groundY - 24, 48, 24);
+        clouds.push(addCloud(Math.floor(w * 0.1), 30, 80, 40));
+        clouds.push(addCloud(Math.floor(w * 0.6), 50, 70, 35));
+        clouds.push(addCloud(Math.floor(w * 0.35), 15, 60, 30));
+        addDecor('bush', Math.floor(w * 0.08), groundY - 24, 48, 24);
+        addDecor('bush', Math.floor(w * 0.72), groundY - 24, 48, 24);
       }
 
       // sprite factories
@@ -258,9 +256,9 @@
        * Creates a platform sprite with full-rect collision bounds
        * @param {boolean} [oneWay] - if true, player can jump through from below
        */
-      function addPlatform(id, image, x, y, w, h, oneWay) {
+      function addPlatform(image, x, y, w, h, oneWay) {
         var s = punter.createSprite({
-          id: id, image: image,
+          image: image,
           x: x, y: y, w: w, h: h,
           preserveAspect: false,
           boundsMode: 'rect'
@@ -273,9 +271,9 @@
       /**
        * Creates a bouncing gem collectible
        */
-      function addGem(id, x, y) {
+      function addGem(x, y) {
         var s = punter.createSprite({
-          id: id, image: 'gem',
+          image: 'gem',
           x: x, y: y,
           w: GEM_SIZE, h: GEM_SIZE,
           boundsMode: 'rect'
@@ -286,9 +284,9 @@
       /**
        * Creates a patrolling enemy between minX and maxX
        */
-      function addEnemy(id, x, y, minX, maxX) {
+      function addEnemy(x, y, minX, maxX) {
         var s = punter.createSprite({
-          id: id, image: 'slime',
+          image: 'slime',
           x: x, y: y,
           w: 24, h: 24,
           boundsMode: 'rect'
@@ -302,9 +300,9 @@
       /**
        * Creates a non-collidable decoration sprite
        */
-      function addDecor(id, image, x, y, w, h) {
+      function addDecor(image, x, y, w, h) {
         punter.createSprite({
-          id: id, image: image,
+          image: image,
           x: x, y: y, w: w, h: h,
           preserveAspect: true,
           collidable: false
@@ -314,9 +312,9 @@
       /**
        * Creates a cloud sprite that drifts using parallaxScrollX
        */
-      function addCloud(id, x, y, w, h) {
+      function addCloud(x, y, w, h) {
         return punter.createSprite({
-          id: id, image: 'cloud',
+          image: 'cloud',
           x: x, y: y, w: w, h: h,
           preserveAspect: true,
           collidable: false

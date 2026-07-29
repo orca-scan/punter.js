@@ -47,7 +47,8 @@
       var SHIP_THRUST       = 0.18;
       var SHIP_FRICTION     = 0.97;
       var BULLET_SPEED      = 11;
-      var BULLET_LIFE       = 55;           // frames before bullet expires
+      var BULLET_SIZE       = 6;
+      var BULLET_LIFE       = 55;           // frames before bullet disappears
       var MAX_BULLETS       = 5;
       var SHOOT_COOLDOWN    = 11;           // frames between shots
       var INVINCIBLE_FRAMES = 180;          // frames of invincibility after death
@@ -60,7 +61,9 @@
       // =========================================================
       // STATE
       // =========================================================
-      var ship, asteroids, bullets, stars;
+      var ship, stars;
+      var asteroids     = [];
+      var bullets       = [];
       var score, lives, level, gameOver, invTimer, shootTimer;
       var particles, popups, levelAnnounce;
       var highScore = parseInt(localStorage.getItem('ast_hi'), 10) || 0;
@@ -105,7 +108,7 @@
             return;
           }
 
-          // ---- rotate ----
+          // ---- rotate ship ----
           if (punter.isKeyDown('left', 'a')) ship.angle -= SHIP_TURN;
           if (punter.isKeyDown('right', 'd')) ship.angle += SHIP_TURN;
 
@@ -129,30 +132,37 @@
 
           // ---- move bullets ----
           for (var i = bullets.length - 1; i >= 0; i--) {
-            bullets[i].x = wrap(bullets[i].x + bullets[i].vx, w);
-            bullets[i].y = wrap(bullets[i].y + bullets[i].vy, h);
-            if (--bullets[i].life <= 0) bullets.splice(i, 1);
+            var blt = bullets[i];
+            blt.x = wrap(blt.x + blt.vx, w);
+            blt.y = wrap(blt.y + blt.vy, h);
+            if (--blt.life <= 0) {
+              blt.destroy();
+              bullets.splice(i, 1);
+            }
           }
 
-          // ---- move asteroids ----
+          // ---- move and spin asteroids ----
           for (var i = 0; i < asteroids.length; i++) {
             asteroids[i].x = wrap(asteroids[i].x + asteroids[i].vx, w);
             asteroids[i].y = wrap(asteroids[i].y + asteroids[i].vy, h);
-            asteroids[i].spin += asteroids[i].spinSpeed;
+            asteroids[i].rotate(asteroids[i].spinSpeed);
           }
 
           // ---- bullet vs asteroid ----
           for (var bi = bullets.length - 1; bi >= 0; bi--) {
             for (var ai = asteroids.length - 1; ai >= 0; ai--) {
-              var hr = asteroids[ai].radius + 3;
-              if (dist2(bullets[bi].x, bullets[bi].y, asteroids[ai].x, asteroids[ai].y) < hr * hr) {
-                var hit = asteroids.splice(ai, 1)[0];
-                bullets.splice(bi, 1);
+              if (bullets[bi].isCollidingWith(asteroids[ai])) {
+                var hit    = asteroids.splice(ai, 1)[0];
+                var hitBlt = bullets.splice(bi, 1)[0];
+                var cx     = hit.x + hit.w / 2;
+                var cy     = hit.y + hit.h / 2;
+                hit.destroy();
+                hitBlt.destroy();
                 score += AST_SCORES[hit.size];
                 spawnFragments(hit);
                 punter.playSound(hit.size === 0 ? 'hitBig' : hit.size === 1 ? 'hitMed' : 'hitSml');
-                spawnDebris(hit.x, hit.y, hit.size);
-                addPopup(hit.x, hit.y, '+' + AST_SCORES[hit.size]);
+                spawnDebris(cx, cy, hit.size);
+                addPopup(cx, cy, '+' + AST_SCORES[hit.size]);
                 break;
               }
             }
@@ -163,14 +173,14 @@
             invTimer--;
           } else {
             for (var ai = 0; ai < asteroids.length; ai++) {
-              var cr = asteroids[ai].radius * 0.85 + SHIP_SIZE * 0.45;
-              if (dist2(ship.x, ship.y, asteroids[ai].x, asteroids[ai].y) < cr * cr) {
+              if (ship.isCollidingWith(asteroids[ai])) {
                 lives--;
                 invTimer = INVINCIBLE_FRAMES;
+                ship.blink(130, INVINCIBLE_FRAMES * (1000 / 60));
                 ship.vx  = 0;
                 ship.vy  = 0;
-                ship.x   = w / 2;
-                ship.y   = h / 2;
+                ship.x   = w / 2 - SHIP_SIZE;
+                ship.y   = h / 2 - SHIP_SIZE;
                 punter.playSound('die');
                 if (lives <= 0) {
                   gameOver = true;
@@ -209,19 +219,14 @@
           if (levelAnnounce > 0) levelAnnounce--;
         });
 
+        // ship, asteroids and bullets are vector sprites — the engine draws them automatically.
+        // the draw handler only needs to handle the background, particles, and UI.
         punter.on('draw', function (ctx) {
-          var w   = punter.width;
-          var h   = punter.height;
+          var w = punter.width;
+          var h = punter.height;
 
           drawStars(ctx);
-
-          for (var i = 0; i < asteroids.length; i++) drawAsteroid(ctx, asteroids[i]);
           drawParticles(ctx);
-          for (var i = 0; i < bullets.length; i++)   drawBullet(ctx, bullets[i]);
-
-          // blink ship during invincibility
-          if (invTimer <= 0 || Math.floor(invTimer / 8) % 2 === 0) drawShip(ctx);
-
           drawHUD(ctx, w, h);
           drawPopups(ctx);
           if (levelAnnounce > 0) drawLevelAnnounce(ctx, w, h);
@@ -234,31 +239,48 @@
       // =========================================================
 
       /**
-       * Fires a bullet from the ship nose in the facing direction
+       * Fires a bullet sprite from the ship nose in the facing direction
        */
       function fireBullet() {
-        bullets.push({
-          x:    ship.x + Math.cos(ship.angle) * SHIP_SIZE,
-          y:    ship.y + Math.sin(ship.angle) * SHIP_SIZE,
-          vx:   Math.cos(ship.angle) * BULLET_SPEED + ship.vx * 0.5,
-          vy:   Math.sin(ship.angle) * BULLET_SPEED + ship.vy * 0.5,
-          life: BULLET_LIFE
+        // compute the nose of the ship in world coordinates
+        var noseX = ship.x + SHIP_SIZE + Math.cos(ship.angle) * SHIP_SIZE;
+        var noseY = ship.y + SHIP_SIZE + Math.sin(ship.angle) * SHIP_SIZE;
+
+        var bullet = punter.createSprite({
+          x: noseX - BULLET_SIZE / 2,
+          y: noseY - BULLET_SIZE / 2,
+          w: BULLET_SIZE,
+          h: BULLET_SIZE,
+          vector: function (ctx, w, h) {
+            ctx.fillStyle = COLOR_BULLET;
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
         });
+
+        bullet.vx   = Math.cos(ship.angle) * BULLET_SPEED + ship.vx * 0.5;
+        bullet.vy   = Math.sin(ship.angle) * BULLET_SPEED + ship.vy * 0.5;
+        bullet.life = BULLET_LIFE;
+        bullets.push(bullet);
+
         shootTimer = SHOOT_COOLDOWN;
         punter.playSound('shoot');
       }
 
       /**
-       * Breaks an asteroid into two smaller pieces deflected in opposite directions
+       * Breaks an asteroid sprite into two smaller fragment sprites
        */
-      function spawnFragments(ast) {
-        if (ast.size >= 2) return;
-        var nextSize = ast.size + 1;
-        var baseDir  = Math.atan2(ast.vy, ast.vx);
+      function spawnFragments(hit) {
+        if (hit.size >= 2) return;
+        var nextSize = hit.size + 1;
+        var cx       = hit.x + hit.w / 2;
+        var cy       = hit.y + hit.h / 2;
+        var baseDir  = Math.atan2(hit.vy, hit.vx);
         for (var i = 0; i < 2; i++) {
           var spread = (Math.PI / 4) * (i === 0 ? 1 : -1);
           var spd    = AST_BASE_SPEEDS[nextSize] * (0.7 + Math.random() * 0.6);
-          var frag   = makeAsteroid(ast.x, ast.y, nextSize);
+          var frag   = makeAsteroid(cx, cy, nextSize);
           frag.vx = Math.cos(baseDir + spread) * spd;
           frag.vy = Math.sin(baseDir + spread) * spd;
           asteroids.push(frag);
@@ -266,7 +288,7 @@
       }
 
       /**
-       * Spawns debris particles when an asteroid is destroyed
+       * Spawns debris particles at the position where an asteroid was destroyed
        */
       function spawnDebris(x, y, size) {
         var count = 6 + (2 - size) * 3;
@@ -295,7 +317,7 @@
       // =========================================================
 
       /**
-       * Spawns count large asteroids away from the canvas centre
+       * Spawns count large asteroid sprites at random positions away from the canvas centre
        */
       function spawnAsteroids(w, h, count) {
         for (var i = 0; i < count; i++) {
@@ -309,7 +331,11 @@
       }
 
       /**
-       * Creates an asteroid with a random jagged polygon shape
+       * Creates and returns an asteroid vector sprite with a random jagged shape.
+       * The engine draws it and tracks its bounding box automatically.
+       * @param {number} x - centre x position
+       * @param {number} y - centre y position
+       * @param {number} size - 0 = large, 1 = medium, 2 = small
        */
       function makeAsteroid(x, y, size) {
         var r      = AST_RADII[size];
@@ -320,16 +346,37 @@
           var jag = r * (0.65 + Math.random() * 0.5);
           pts.push({ x: Math.cos(a) * jag, y: Math.sin(a) * jag });
         }
+
+        var asteroid = punter.createSprite({
+          x: x - r,  // top-left: centre minus radius
+          y: y - r,
+          w: r * 2,
+          h: r * 2,
+          vector: function (ctx, w, h) {
+            // translate to sprite centre then rotate using the engine-managed angle
+            ctx.translate(w / 2, h / 2);
+            ctx.rotate(this.angle);
+            ctx.strokeStyle = COLOR_ASTEROID;
+            ctx.fillStyle   = COLOR_AST_FILL;
+            ctx.lineWidth   = 2;
+            ctx.lineJoin    = 'round';
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, pts[0].y);
+            for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+        });
+
         var speed = AST_BASE_SPEEDS[size] * (0.5 + Math.random() * 0.6);
         var dir   = Math.random() * Math.PI * 2;
-        return {
-          x: x, y: y,
-          vx: Math.cos(dir) * speed,
-          vy: Math.sin(dir) * speed,
-          radius: r, size: size,
-          spin: 0, spinSpeed: (Math.random() - 0.5) * 0.04,
-          pts: pts
-        };
+        asteroid.vx        = Math.cos(dir) * speed;
+        asteroid.vy        = Math.sin(dir) * speed;
+        asteroid.size      = size;
+        asteroid.spinSpeed = (Math.random() - 0.5) * 0.04;
+
+        return asteroid;
       }
 
       /**
@@ -350,26 +397,69 @@
       }
 
       /**
-       * Resets all game state for a new game
+       * Resets all game state and sprites ready for a new game
        */
       function resetGame() {
         var w = punter.width  || 375;
         var h = punter.height || 667;
 
-        ship = {
-          x: w / 2, y: h / 2,
-          vx: 0, vy: 0,
-          angle: -Math.PI / 2, // pointing up
-          thrusting: false
-        };
-        asteroids  = [];
-        bullets    = [];
-        score      = 0;
-        lives      = 3;
-        level      = 1;
-        gameOver   = false;
-        invTimer   = 0;
-        shootTimer     = 0;
+        // destroy sprites from any previous game
+        for (var i = 0; i < asteroids.length; i++) asteroids[i].destroy();
+        for (var i = 0; i < bullets.length; i++) bullets[i].destroy();
+        var existingShip = punter.getSprite('ship');
+        if (existingShip) existingShip.destroy();
+
+        // the ship is a vector sprite — the engine draws and tracks its bounds automatically
+        ship = punter.createSprite({
+          id: 'ship',
+          x: w / 2 - SHIP_SIZE,  // top-left: centre minus half-size
+          y: h / 2 - SHIP_SIZE,
+          w: SHIP_SIZE * 2,
+          h: SHIP_SIZE * 2,
+          collidable: true,
+          vector: function (ctx) {
+            // translate to the sprite centre before rotating
+            ctx.translate(SHIP_SIZE, SHIP_SIZE);
+            ctx.rotate(this.angle + Math.PI / 2);
+            ctx.strokeStyle = COLOR_SHIP;
+            ctx.lineWidth   = 2;
+            ctx.lineJoin    = 'round';
+
+            // ship body
+            ctx.beginPath();
+            ctx.moveTo(0, -SHIP_SIZE);
+            ctx.lineTo(SHIP_SIZE * 0.55, SHIP_SIZE * 0.75);
+            ctx.lineTo(0, SHIP_SIZE * 0.35);
+            ctx.lineTo(-SHIP_SIZE * 0.55, SHIP_SIZE * 0.75);
+            ctx.closePath();
+            ctx.stroke();
+
+            // thrust flame (flickers every other frame)
+            if (this.thrusting && punter.frame % 2 === 0) {
+              var fl = SHIP_SIZE * (1.0 + Math.random() * 0.5);
+              ctx.strokeStyle = COLOR_THRUST;
+              ctx.beginPath();
+              ctx.moveTo(-SHIP_SIZE * 0.22, SHIP_SIZE * 0.5);
+              ctx.lineTo(0, SHIP_SIZE * 0.35 + fl);
+              ctx.lineTo(SHIP_SIZE * 0.22, SHIP_SIZE * 0.5);
+              ctx.stroke();
+            }
+          }
+        });
+
+        ship.vx        = 0;
+        ship.vy        = 0;
+        ship.angle     = -Math.PI / 2; // pointing up
+        ship.thrusting = false;
+
+        asteroids     = [];
+        bullets       = [];
+        score         = 0;
+        lives         = 3;
+        level         = 1;
+        gameOver      = false;
+        invTimer      = 0;
+        shootTimer    = 0;
         particles     = [];
         popups        = [];
         levelAnnounce = 0;
@@ -379,7 +469,7 @@
       }
 
       // =========================================================
-      // DRAW HELPERS
+      // DRAW HELPERS  (HUD, particles and effects only)
       // =========================================================
 
       function drawStars(ctx) {
@@ -388,60 +478,6 @@
           ctx.fillStyle = 'rgba(255,255,255,' + stars[i].a + ')';
           ctx.fillRect(stars[i].x, stars[i].y, 1, 1);
         }
-      }
-
-      function drawShip(ctx) {
-        ctx.save();
-        ctx.translate(ship.x, ship.y);
-        ctx.rotate(ship.angle + Math.PI / 2);
-        ctx.strokeStyle = COLOR_SHIP;
-        ctx.lineWidth   = 2;
-        ctx.lineJoin    = 'round';
-
-        // ship body
-        ctx.beginPath();
-        ctx.moveTo(0, -SHIP_SIZE);
-        ctx.lineTo(SHIP_SIZE * 0.55, SHIP_SIZE * 0.75);
-        ctx.lineTo(0, SHIP_SIZE * 0.35);
-        ctx.lineTo(-SHIP_SIZE * 0.55, SHIP_SIZE * 0.75);
-        ctx.closePath();
-        ctx.stroke();
-
-        // thrust flame (flickers every other frame)
-        if (ship.thrusting && punter.frame % 2 === 0) {
-          var fl = SHIP_SIZE * (1.0 + Math.random() * 0.5);
-          ctx.strokeStyle = COLOR_THRUST;
-          ctx.beginPath();
-          ctx.moveTo(-SHIP_SIZE * 0.22, SHIP_SIZE * 0.5);
-          ctx.lineTo(0, SHIP_SIZE * 0.35 + fl);
-          ctx.lineTo(SHIP_SIZE * 0.22, SHIP_SIZE * 0.5);
-          ctx.stroke();
-        }
-        ctx.restore();
-      }
-
-      function drawAsteroid(ctx, ast) {
-        ctx.save();
-        ctx.translate(ast.x, ast.y);
-        ctx.rotate(ast.spin);
-        ctx.strokeStyle = COLOR_ASTEROID;
-        ctx.fillStyle   = COLOR_AST_FILL;
-        ctx.lineWidth   = 2;
-        ctx.lineJoin    = 'round';
-        ctx.beginPath();
-        ctx.moveTo(ast.pts[0].x, ast.pts[0].y);
-        for (var i = 1; i < ast.pts.length; i++) ctx.lineTo(ast.pts[i].x, ast.pts[i].y);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      function drawBullet(ctx, b) {
-        ctx.fillStyle = COLOR_BULLET;
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
-        ctx.fill();
       }
 
       function drawHUD(ctx, w, h) {
@@ -509,6 +545,7 @@
         ctx.fillText('Best: ' + highScore, w / 2, h / 2 + 36);
         ctx.fillText('Press SPACE or tap to restart', w / 2, h / 2 + 58);
       }
+
       function drawParticles(ctx) {
         for (var i = 0; i < particles.length; i++) {
           var p     = particles[i];
@@ -552,6 +589,7 @@
         ctx.fillText('LEVEL ' + level, w / 2, h / 2);
         ctx.restore();
       }
+
       // =========================================================
       // MATH HELPERS
       // =========================================================
@@ -563,7 +601,7 @@
         return v;
       }
 
-      /** Squared distance between two points */
+      /** Squared distance between two points — used for the asteroid spawn safe zone */
       function dist2(x1, y1, x2, y2) {
         return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
       }

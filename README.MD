@@ -14,7 +14,7 @@ Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/g
 
 ## Game programming terms
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
-- **Sprite** - an image-based game object (player, enemy, coin). It has a position, can move, animate and collide
+- **Sprite** - a game object (player, enemy, coin) drawn with an image or code. It has a position, can move, animate and collide
 - **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene
 - **Game loop** - code that runs 60 times per second to move sprites, check collisions and redraw the screen
 
@@ -56,7 +56,7 @@ This starts a local server on port 4000 and opens the games index in your browse
 
     // create a sprite using the 'player' image loaded above
     var player = punter.createSprite({
-      id: 'player',   // unique id - no two sprites can share one
+      id: 'player',   // optional — auto-generated if omitted; must be unique if provided
       image: 'player', // key from config.images
       x: 50,           // pixels from left edge of canvas
       y: 50            // pixels from top edge of canvas
@@ -109,14 +109,15 @@ punter.go('menu'); // destroys sprites from the previous scene, then switches an
 
 ## 3. Sprites
 
-A sprite is any image-based object in your game - the player, an enemy, a coin, a wall. You create one by giving it a unique `id`, telling it which loaded `image` to use, and where to place it (`x`, `y`).
+A sprite is any game object with a position — the player, an enemy, a coin, a wall. Tell it how to look (an `image`, a `vector` draw function, or both) and where to place it (`x`, `y`). Give it an `id` if you need to look it up later — otherwise the engine generates one for you.
 
 ```js
 var enemy = punter.createSprite({
-  id: 'enemy1',           // must be unique
+  id: 'enemy1',            // optional — auto-generated if omitted; useful when you need punter.getSprite('enemy1') later
   image: 'enemy',          // matches a key from config.images (or an array of keys for animation)
+  vector: null,            // optional draw function — see "Vector sprites" below
   x: 100, y: 200,          // position (number or '%' string, e.g. '50%')
-  w: 32, h: 32,            // optional size (auto-detected from image if omitted)
+  w: 32, h: 32,            // optional size (auto-detected from image if omitted; required for vector-only)
   preserveAspect: true,    // maintain image aspect ratio (default: true)
   collidable: true,        // computes bounding box for collisions (default: true)
   boundsMode: 'pixel',     // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
@@ -130,6 +131,31 @@ var enemy = punter.createSprite({
 
 `x` and `y` are the sprite's position in pixels, measured from the top-left corner of the canvas - so `x: 0, y: 0` is the top-left, and increasing `x` moves right, increasing `y` moves down. Once created, `enemy` is a normal JavaScript object you keep a reference to and call methods on, like `enemy.moveX(5)`.
 
+### Vector sprites
+
+Not every sprite needs an image file. Pass a `vector` function to draw the sprite with canvas code — useful for simple shapes, procedural graphics, or games that don't use image files at all. The engine calls it each frame with `(ctx, w, h)`, where `ctx` is the canvas context already translated to the sprite's top-left corner.
+
+```js
+// a triangle drawn with code instead of a PNG
+var ship = punter.createSprite({
+  id: 'ship',
+  x: 100, y: 200,
+  w: 36, h: 36,
+  vector: function (ctx, w, h) {
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2, 0);    // tip
+    ctx.lineTo(w, h);         // bottom-right
+    ctx.lineTo(0, h);         // bottom-left
+    ctx.closePath();
+    ctx.stroke();
+  }
+});
+```
+
+When both `image` and `vector` are set, the image draws first and the vector function draws on top — useful for overlays like health bars or damage effects. Vector-only sprites default to `boundsMode: 'rect'` since there is no image to scan.
+
 ### sprite methods
 
 Method                                     | Description
@@ -139,10 +165,12 @@ Method                                     | Description
 `sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis
 `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array
 `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position
+`sprite.blink(ms?, durationMs?)`           | Flash on/off every `ms` ms (default 130); auto-stops after `durationMs` if given, otherwise blinks indefinitely; call `blink(0)` to stop early
 `sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay
 `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
 `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
-`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`
+`sprite.rotate(amount)`                    | Add `amount` (radians) to `sprite.angle`; vector functions can read `this.angle` directly
+`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; `other` can be a sprite or a plain `{ x, y, w, h }` rect
 `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored
 
 ### sprite properties
