@@ -14,7 +14,7 @@ Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/g
 
 ## Game programming terms
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
-- **Sprite** - an image-based game object (player, enemy, coin). It has a position, can move, animate and collide
+- **Sprite** - a game object (player, enemy, coin) drawn with an image or code. It has a position, can move, animate and collide
 - **Scene** - one screen of your game (menu, level, game over). Sprites and logic are set up inside a scene
 - **Game loop** - code that runs 60 times per second to move sprites, check collisions and redraw the screen
 
