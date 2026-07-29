@@ -743,6 +743,16 @@
 
         if (this.destroyed) return;
 
+        // blink: skip draw on the hidden phase; auto-clear state once duration expires
+        if (typeof this._blinkStart === 'number') {
+            var blinkElapsed = Date.now() - this._blinkStart;
+            if (this._blinkDuration > 0 && blinkElapsed >= this._blinkDuration) {
+                this._blinkStart = null; // duration expired — stop blinking, stay visible
+            } else if (Math.floor(blinkElapsed / this._blinkMs) % 2 !== 0) {
+                return; // hidden phase
+            }
+        }
+
         // always track visibility for seen
         if (!this._seen && this.visible) {
             this._seen = true;
@@ -1124,6 +1134,23 @@
 
         this.bounceTick = (this.bounceTick === undefined) ? 0 : this.bounceTick + 1;
         this.y = Math.floor(this.initialY + Math.sin(this.bounceTick / speed) * range);
+    };
+    /**
+     * Flashes the sprite on/off every ms milliseconds; call once to start.
+     * Auto-stops after durationMs if given, otherwise blinks indefinitely.
+     * Call blink(0) to stop an active blink early.
+     * @param {number} [ms=130] - milliseconds per on/off phase
+     * @param {number} [durationMs] - total duration in ms; omit to blink indefinitely
+     * @returns {void}
+     */
+    Sprite.prototype.blink = function (ms, durationMs) {
+        if (ms === 0) {
+            this._blinkStart = null; // stop an active blink
+            return;
+        }
+        this._blinkMs       = (typeof ms === 'number' && ms > 0) ? ms : 130;
+        this._blinkDuration = (typeof durationMs === 'number' && durationMs > 0) ? durationMs : 0;
+        this._blinkStart    = Date.now();
     };
     /**
      * Scrolls a sprite in the X direction and respawns after delay if offscreen

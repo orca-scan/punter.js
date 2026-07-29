@@ -484,4 +484,100 @@ describe('Sprites', function () {
         expect(result.w).toBe(40);
         expect(result.h).toBe(50);
     });
+
+    // --- blink ---
+
+    it('blink hides the sprite on the off phase and shows it on the on phase', async function () {
+        var result = await page.evaluate(function () {
+            var orig = Date.now;
+            var fakeNow = 0;
+            Date.now = function () { return fakeNow; };
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            var ctx = canvas.getContext('2d');
+            var drawn = [];
+
+            var s = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 32, h: 32,
+                vector: function () { drawn.push(fakeNow); }
+            });
+            s.blink(130);
+
+            fakeNow = 0;   s.draw(ctx); // on phase — drawn
+            fakeNow = 130; s.draw(ctx); // off phase — skipped
+            fakeNow = 260; s.draw(ctx); // on phase — drawn
+
+            Date.now = orig;
+            return drawn;
+        });
+        expect(result).toEqual([0, 260]);
+    });
+
+    it('blink auto-stops after durationMs and sprite stays visible', async function () {
+        var result = await page.evaluate(function () {
+            var orig = Date.now;
+            var fakeNow = 0;
+            Date.now = function () { return fakeNow; };
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            var ctx = canvas.getContext('2d');
+            var drawn = [];
+
+            var s = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 32, h: 32,
+                vector: function () { drawn.push(fakeNow); }
+            });
+            s.blink(130, 200);
+
+            fakeNow = 0;   s.draw(ctx); // on phase
+            fakeNow = 130; s.draw(ctx); // off phase
+            fakeNow = 200; s.draw(ctx); // duration expired — visible, blink cleared
+            fakeNow = 330; s.draw(ctx); // still visible (no active blink)
+
+            Date.now = orig;
+            return drawn;
+        });
+        expect(result).toEqual([0, 200, 330]);
+    });
+
+    it('blink(0) stops an active blink immediately', async function () {
+        var result = await page.evaluate(function () {
+            var orig = Date.now;
+            var fakeNow = 0;
+            Date.now = function () { return fakeNow; };
+
+            var canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            var ctx = canvas.getContext('2d');
+            var drawn = [];
+
+            var s = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 32, h: 32,
+                vector: function () { drawn.push(fakeNow); }
+            });
+            s.blink(130);
+
+            fakeNow = 130; s.draw(ctx); // off phase — skipped
+            s.blink(0);                 // stop blink
+            s.draw(ctx);                // visible again
+
+            Date.now = orig;
+            return drawn;
+        });
+        expect(result).toEqual([130]);
+    });
+
+    it('blink uses 130ms as the default phase duration', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0 });
+            s.blink();
+            return s._blinkMs;
+        });
+        expect(result).toBe(130);
+    });
 });

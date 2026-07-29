@@ -176,6 +176,7 @@
               if (ship.isCollidingWith(asteroids[ai])) {
                 lives--;
                 invTimer = INVINCIBLE_FRAMES;
+                ship.blink(130, INVINCIBLE_FRAMES * (1000 / 60));
                 ship.vx  = 0;
                 ship.vy  = 0;
                 ship.x   = w / 2 - SHIP_SIZE;
@@ -417,9 +418,6 @@
           h: SHIP_SIZE * 2,
           collidable: true,
           vector: function (ctx) {
-            // during invincibility, blink by skipping alternate 8-frame groups
-            if (invTimer > 0 && Math.floor(invTimer / 8) % 2 !== 0) return;
-
             // translate to the sprite centre before rotating
             ctx.translate(SHIP_SIZE, SHIP_SIZE);
             ctx.rotate(this.angle + Math.PI / 2);

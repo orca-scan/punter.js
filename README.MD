@@ -165,6 +165,7 @@ Method                                     | Description
 `sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis
 `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array
 `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position
+`sprite.blink(ms?, durationMs?)`           | Flash on/off every `ms` ms (default 130); auto-stops after `durationMs` if given, otherwise blinks indefinitely; call `blink(0)` to stop early
 `sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay
 `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
 `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
