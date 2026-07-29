@@ -45,6 +45,7 @@
     var _loopFpsCounter = 0;
     var _loopFpsTimer = 0;
     var _sprites = {}; // key: id, value: sprite
+    var _spriteCounter = 0; // auto-increments when no id is supplied to createSprite
     var eventHandlers = {
         ready: function() {},
         update: function() {},
@@ -625,7 +626,7 @@
      * Creates a sprite with optional animation, scaling, and collision bounds.
      * Supply image, vector, or both — image draws first, vector draws on top.
      * @param {Object} opts - Sprite config
-     * @param {string} opts.id - unique id for the sprite
+     * @param {string} [opts.id] - unique id for the sprite; auto-generated if omitted
      * @param {string|string[]} [opts.image] - image name from config.images (use array for animations)
      * @param {Function} [opts.vector] - draw function called each frame with (ctx, w, h); ctx is pre-translated to the sprite's position
      * @param {number} opts.x - x position
@@ -638,16 +639,15 @@
      */
     function Sprite(opts) {
 
-        if (!opts || typeof opts !== 'object') throw new Error('punter.createSprite: pass a config object, e.g. { id: "player", image: "player", x: 50, y: 100 }.');
-        if (!opts.id) throw new Error('punter.createSprite: missing id. Each sprite needs a unique id, e.g. id: "player".');
-        if (_sprites[opts.id]) throw new Error('punter.createSprite: a sprite with id "' + opts.id + '" already exists. Each sprite needs a unique id.');
+        if (!opts || typeof opts !== 'object') throw new Error('punter.createSprite: pass a config object, e.g. { image: "player", x: 50, y: 100 }.');
         if (!opts.image && typeof opts.vector !== 'function') throw new Error('punter.createSprite: set image, vector, or both. e.g. image: "player" or vector: function(ctx, w, h) { ... }');
         if (!opts.image && typeof opts.vector === 'function' && (typeof opts.w === 'undefined' || typeof opts.h === 'undefined')) throw new Error('punter.createSprite: vector sprites need w and h since there is no image to measure. e.g. w: 40, h: 40');
         if (typeof opts.x === 'undefined') throw new Error('punter.createSprite: missing x. Set x to a pixel position, e.g. x: 100.');
         if (typeof opts.y === 'undefined') throw new Error('punter.createSprite: missing y. Set y to a pixel position, e.g. y: 100.');
 
-        // option values
-        this.id = opts.id;
+        // option values — id is optional; auto-generate one when not provided
+        this.id = opts.id || ('sprite_' + (++_spriteCounter));
+        if (_sprites[this.id]) throw new Error('punter.createSprite: a sprite with id "' + this.id + '" already exists. Each sprite needs a unique id.');
         this.image = opts.image || null;
         this.vector = typeof opts.vector === 'function' ? opts.vector : null;
         this.preserveAspect = (opts.preserveAspect !== false);

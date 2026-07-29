@@ -109,11 +109,11 @@ punter.go('menu'); // destroys sprites from the previous scene, then switches an
 
 ## 3. Sprites
 
-A sprite is any game object with a position — the player, an enemy, a coin, a wall. Give it a unique `id`, tell it how to look (an `image`, a `vector` draw function, or both), and where to place it (`x`, `y`).
+A sprite is any game object with a position — the player, an enemy, a coin, a wall. Tell it how to look (an `image`, a `vector` draw function, or both) and where to place it (`x`, `y`). Give it an `id` if you need to look it up later — otherwise the engine generates one for you.
 
 ```js
 var enemy = punter.createSprite({
-  id: 'enemy1',           // must be unique
+  id: 'enemy1',            // optional — auto-generated if omitted; useful when you need punter.getSprite('enemy1') later
   image: 'enemy',          // matches a key from config.images (or an array of keys for animation)
   vector: null,            // optional draw function — see "Vector sprites" below
   x: 100, y: 200,          // position (number or '%' string, e.g. '50%')

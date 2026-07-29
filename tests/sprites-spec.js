@@ -67,11 +67,19 @@ describe('Sprites', function () {
         var result = await page.evaluate(function () {
             var errors = [];
             try { punter.createSprite(); } catch (e) { errors.push('no-opts'); }
-            try { punter.createSprite({ id: 's1', image: 'hero' }); } catch (e) { errors.push('no-x'); }
+            try { punter.createSprite({ image: 'hero' }); } catch (e) { errors.push('no-x'); }
             return errors;
         });
         expect(result).toContain('no-opts');
         expect(result).toContain('no-x');
+    });
+
+    it('auto-generates a unique id when none is provided', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ image: 'hero', x: 0, y: 0 });
+            return typeof s.id === 'string' && s.id.length > 0;
+        });
+        expect(result).toBe(true);
     });
 
     // --- retrieval ---
