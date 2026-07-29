@@ -109,14 +109,15 @@ punter.go('menu'); // destroys sprites from the previous scene, then switches an
 
 ## 3. Sprites
 
-A sprite is any image-based object in your game - the player, an enemy, a coin, a wall. You create one by giving it a unique `id`, telling it which loaded `image` to use, and where to place it (`x`, `y`).
+A sprite is any game object with a position — the player, an enemy, a coin, a wall. Give it a unique `id`, tell it how to look (an `image`, a `vector` draw function, or both), and where to place it (`x`, `y`).
 
 ```js
 var enemy = punter.createSprite({
   id: 'enemy1',           // must be unique
   image: 'enemy',          // matches a key from config.images (or an array of keys for animation)
+  vector: null,            // optional draw function — see "Vector sprites" below
   x: 100, y: 200,          // position (number or '%' string, e.g. '50%')
-  w: 32, h: 32,            // optional size (auto-detected from image if omitted)
+  w: 32, h: 32,            // optional size (auto-detected from image if omitted; required for vector-only)
   preserveAspect: true,    // maintain image aspect ratio (default: true)
   collidable: true,        // computes bounding box for collisions (default: true)
   boundsMode: 'pixel',     // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
@@ -129,6 +130,31 @@ var enemy = punter.createSprite({
 ```
 
 `x` and `y` are the sprite's position in pixels, measured from the top-left corner of the canvas - so `x: 0, y: 0` is the top-left, and increasing `x` moves right, increasing `y` moves down. Once created, `enemy` is a normal JavaScript object you keep a reference to and call methods on, like `enemy.moveX(5)`.
+
+### Vector sprites
+
+Not every sprite needs an image file. Pass a `vector` function to draw the sprite with canvas code — useful for simple shapes, procedural graphics, or games that don't use image files at all. The engine calls it each frame with `(ctx, w, h)`, where `ctx` is the canvas context already translated to the sprite's top-left corner.
+
+```js
+// a triangle drawn with code instead of a PNG
+var ship = punter.createSprite({
+  id: 'ship',
+  x: 100, y: 200,
+  w: 36, h: 36,
+  vector: function (ctx, w, h) {
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(w / 2, 0);    // tip
+    ctx.lineTo(w, h);         // bottom-right
+    ctx.lineTo(0, h);         // bottom-left
+    ctx.closePath();
+    ctx.stroke();
+  }
+});
+```
+
+When both `image` and `vector` are set, the image draws first and the vector function draws on top — useful for overlays like health bars or damage effects. Vector-only sprites default to `boundsMode: 'rect'` since there is no image to scan.
 
 ### sprite methods
 

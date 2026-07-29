@@ -622,14 +622,16 @@
     }
 
     /**
-     * Creates a sprite with optional animation, scaling, and collision bounds
+     * Creates a sprite with optional animation, scaling, and collision bounds.
+     * Supply image, vector, or both — image draws first, vector draws on top.
      * @param {Object} opts - Sprite config
      * @param {string} opts.id - unique id for the sprite
-     * @param {string|string[]} opts.image - image name from config.images (use array for animations)
+     * @param {string|string[]} [opts.image] - image name from config.images (use array for animations)
+     * @param {Function} [opts.vector] - draw function called each frame with (ctx, w, h); ctx is pre-translated to the sprite's position
      * @param {number} opts.x - x position
      * @param {number} opts.y - y position
-     * @param {number} [opts.w] - width
-     * @param {number} [opts.h] - height
+     * @param {number} [opts.w] - width (required when using vector without image)
+     * @param {number} [opts.h] - height (required when using vector without image)
      * @param {boolean} [opts.preserveAspect=true] - maintain image aspect ratio
      * @param {boolean} [collidable=true] - whether to compute collision bounds (default = true)
      * @returns {Object} new sprite object
@@ -639,16 +641,19 @@
         if (!opts || typeof opts !== 'object') throw new Error('punter.createSprite: pass a config object, e.g. { id: "player", image: "player", x: 50, y: 100 }.');
         if (!opts.id) throw new Error('punter.createSprite: missing id. Each sprite needs a unique id, e.g. id: "player".');
         if (_sprites[opts.id]) throw new Error('punter.createSprite: a sprite with id "' + opts.id + '" already exists. Each sprite needs a unique id.');
-        if (!opts.image) throw new Error('punter.createSprite: missing image. Set image to a key from punter.setup images, e.g. image: "player".');
+        if (!opts.image && typeof opts.vector !== 'function') throw new Error('punter.createSprite: set image, vector, or both. e.g. image: "player" or vector: function(ctx, w, h) { ... }');
+        if (!opts.image && typeof opts.vector === 'function' && (typeof opts.w === 'undefined' || typeof opts.h === 'undefined')) throw new Error('punter.createSprite: vector sprites need w and h since there is no image to measure. e.g. w: 40, h: 40');
         if (typeof opts.x === 'undefined') throw new Error('punter.createSprite: missing x. Set x to a pixel position, e.g. x: 100.');
         if (typeof opts.y === 'undefined') throw new Error('punter.createSprite: missing y. Set y to a pixel position, e.g. y: 100.');
 
         // option values
         this.id = opts.id;
-        this.image = opts.image;
+        this.image = opts.image || null;
+        this.vector = typeof opts.vector === 'function' ? opts.vector : null;
         this.preserveAspect = (opts.preserveAspect !== false);
         this.collidable = (opts.collidable !== false);
-        this.boundsMode = (opts.boundsMode === 'rect') ? 'rect' : 'pixel';
+        // vector-only sprites default to rect bounds since there is no image to pixel-scan
+        this.boundsMode = (opts.boundsMode === 'rect' || (!opts.image && this.vector)) ? 'rect' : 'pixel';
         this.outline = (typeof opts.outline === 'string') ? opts.outline : null;
         this.frame = null; // optional override by game logic
         this.repeatX = (opts.repeatX === true);
@@ -683,26 +688,29 @@
         this._frameIndex = 0;
         this._animated = Array.isArray(this.image);
 
-        var initialDrawKey = Array.isArray(this.image) ? this.image[0] : this.image;
-        var img = images[initialDrawKey];
+        if (this.image) {
+            var initialDrawKey = Array.isArray(this.image) ? this.image[0] : this.image;
+            var img = images[initialDrawKey];
 
-        if (!img || !img.complete || !img.naturalWidth) {
-            throw new Error('punter.createSprite: image "' + initialDrawKey + '" was not found. Add it to the images in punter.setup({ images: { "' + initialDrawKey + '": "path/to/image.png" } }).');
-        }
+            if (!img || !img.complete || !img.naturalWidth) {
+                throw new Error('punter.createSprite: image "' + initialDrawKey + '" was not found. Add it to the images in punter.setup({ images: { "' + initialDrawKey + '": "path/to/image.png" } }).');
+            }
 
-        // infer size immediately if needed
-        this.aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 1;
+            // infer size from the image if w or h were not provided
+            this.aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 1;
 
-        // now get the final size
-        var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, img.naturalWidth, img.naturalHeight);
+            var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, img.naturalWidth, img.naturalHeight);
+            this.w = finalSize.w;
+            this.h = finalSize.h;
 
-        this.w = finalSize.w;
-        this.h = finalSize.h;
-
-        // pre-cache relBounds so isCollidingWith works from frame 1
-        if (this.collidable && this.boundsMode === 'pixel') {
-            this.relBounds = boundingCache.get(initialDrawKey) || { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
-            this._lastBoundsKey = initialDrawKey;
+            // pre-cache relBounds so isCollidingWith works from frame 1
+            if (this.collidable && this.boundsMode === 'pixel') {
+                this.relBounds = boundingCache.get(initialDrawKey) || { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+                this._lastBoundsKey = initialDrawKey;
+            }
+        } else {
+            // vector-only sprite — w and h were validated above, no image to measure
+            this.aspectRatio = 1;
         }
 
         // cache sprite in memory
@@ -742,6 +750,34 @@
 
         if (this.repeatX) return this.drawRepeatX(ctx);
         if (this.repeatY) return this.drawRepeatY(ctx);
+
+        // vector-only sprite: call the vector function and return early
+        if (!this.image && this.vector) {
+            var vx = Math.floor(this.x);
+            var vy = Math.floor(this.y);
+            var vw = Math.floor(this.w);
+            var vh = Math.floor(this.h);
+
+            // skip draw if fully offscreen
+            if (vx + vw <= 0 || vy + vh <= 0 || vx >= engine.width || vy >= engine.height) return;
+
+            ctx.save();
+            ctx.translate(vx, vy);
+            this.vector(ctx, vw, vh);
+            ctx.restore();
+
+            if (_debuggingEnabled) {
+                drawSpriteLabels(ctx, vx, vy, vw, vh, engine.height);
+            }
+
+            // keep rect bounds up to date so isCollidingWith works
+            if (this.collidable) {
+                this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
+                this._boundsX = this.x;
+                this._boundsY = this.y;
+            }
+            return;
+        }
 
         var drawKey = this.getFrameImage();               // frame key to draw (single or animated)
         var img = images[drawKey];                      // loaded image object
@@ -804,6 +840,14 @@
         if (dw > 0 && dh > 0 && sw > 0 && sh > 0) {
             ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
 
+            // if a vector function is also set, draw it on top of the image
+            if (this.vector) {
+                ctx.save();
+                ctx.translate(dx, dy);
+                this.vector(ctx, dw, dh);
+                ctx.restore();
+            }
+
             if (this.outline) {
                 // draw box around the destination area
                 ctx.strokeStyle = this.outline; // outline color
@@ -829,6 +873,23 @@
     Sprite.prototype.resize = function () {
 
         if (this.destroyed) return;
+
+        // vector-only sprite: rescale position and size without needing an image
+        if (!this.image && this.vector) {
+            var vScaleW = engine.width / this.originalCanvasW;
+            var vScaleH = engine.height / this.originalCanvasH;
+            var vW = resolveSize(this.originalW, engine.width);
+            var vH = resolveSize(this.originalH, engine.height);
+            var vX = resolvePosition(this.originalX, engine.width, vScaleW, this.x);
+            var vY = resolvePosition(this.originalY, engine.height, vScaleH, this.y);
+            this.x = this.initialX = (vX > 0) ? vX : this.x;
+            this.y = this.initialY = (vY > 0) ? vY : this.y;
+            if (vW > 0) this.w = vW;
+            if (vH > 0) this.h = vH;
+            this.originalCanvasW = engine.width;
+            this.originalCanvasH = engine.height;
+            return;
+        }
 
         var imgKey = this.getFrameImage();
         var img = images[imgKey];
@@ -1158,18 +1219,27 @@
      * @returns {boolean} true if the two bounding boxes overlap
      */
     Sprite.prototype.isCollidingWith = function (target) {
-        if (!this.collidable || !target.collidable) return false;
+        if (!this.collidable) return false;
 
-        // refresh bounds only when position has changed (dirty check)
+        // refresh this sprite's bounds when position has changed (dirty check)
         if (!this.bounds || this.x !== this._boundsX || this.y !== this._boundsY) {
             this._refreshBounds();
         }
-        if (!target.bounds || target.x !== target._boundsX || target.y !== target._boundsY) {
-            target._refreshBounds();
-        }
 
         var ab = this.bounds;
-        var bb = target.bounds;
+        var bb;
+
+        // target can be a sprite or a plain { x, y, w, h } bounding rect
+        if (typeof target._refreshBounds === 'function') {
+            if (!target.collidable) return false;
+            if (!target.bounds || target.x !== target._boundsX || target.y !== target._boundsY) {
+                target._refreshBounds();
+            }
+            bb = target.bounds;
+        } else {
+            // plain rect: { x, y, w, h } — no collidable check needed
+            bb = target;
+        }
 
         // aabb test: if separated on any single axis, the boxes cannot overlap
         return !(
@@ -1204,6 +1274,15 @@
         }
         this._boundsX = this.x;
         this._boundsY = this.y;
+    };
+    /**
+     * Rotates the sprite by adding the given angle in radians to this.angle.
+     * Vector functions can use this.angle directly for rendering.
+     * @param {number} amount - radians to add
+     * @returns {void}
+     */
+    Sprite.prototype.rotate = function (amount) {
+        this.angle = (this.angle || 0) + amount;
     };
     /**
      * Marks the sprite as destroyed and removes it from the engine's sprite registry; any held references become inert

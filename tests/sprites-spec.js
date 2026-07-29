@@ -280,6 +280,27 @@ describe('Sprites', function () {
         expect(result.after).toBe(true);
     });
 
+    it('isCollidingWith accepts a plain { x, y, w, h } rect object', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 10, y: 10, w: 20, h: 20, boundsMode: 'rect' });
+            var overlapping = s.isCollidingWith({ x: 20, y: 20, w: 20, h: 20 });
+            var separated   = s.isCollidingWith({ x: 100, y: 100, w: 20, h: 20 });
+            return { overlapping: overlapping, separated: separated };
+        });
+        expect(result.overlapping).toBe(true);
+        expect(result.separated).toBe(false);
+    });
+
+    it('rotate increments sprite angle', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32, vector: function () {} });
+            s.rotate(1);
+            s.rotate(0.5);
+            return s.angle;
+        });
+        expect(result).toBeCloseTo(1.5, 5);
+    });
+
     // --- seen flag ---
 
     it('seen flag starts as false and can be set', async function () {
@@ -332,5 +353,127 @@ describe('Sprites', function () {
         expect(result.w).toBe(73);
         expect(result.h).toBe(47);
         await svgPage.close();
+    });
+
+    // --- vector sprites ---
+
+    it('creates a vector sprite with the given x, y, w and h', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 10, y: 20, w: 50, h: 60, vector: function () {} });
+            return { id: s.id, x: s.x, y: s.y, w: s.w, h: s.h };
+        });
+        expect(result.id).toBe('s1');
+        expect(result.x).toBe(10);
+        expect(result.y).toBe(20);
+        expect(result.w).toBe(50);
+        expect(result.h).toBe(60);
+    });
+
+    it('vector sprite defaults boundsMode to rect', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32, vector: function () {} });
+            return s.boundsMode;
+        });
+        expect(result).toBe('rect');
+    });
+
+    it('throws when vector sprite is missing w', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.createSprite({ id: 's1', x: 0, y: 0, h: 32, vector: function () {} });
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(true);
+    });
+
+    it('throws when vector sprite is missing h', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, vector: function () {} });
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(true);
+    });
+
+    it('throws when neither image nor vector is provided', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32 });
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(true);
+    });
+
+    it('vector sprite isCollidingWith returns true when bounding boxes overlap', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32, vector: function () {} });
+            var s2 = punter.createSprite({ id: 's2', x: 10, y: 10, w: 32, h: 32, vector: function () {} });
+            return s1.isCollidingWith(s2);
+        });
+        expect(result).toBe(true);
+    });
+
+    it('vector sprite isCollidingWith returns false when bounding boxes do not overlap', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32, vector: function () {} });
+            var s2 = punter.createSprite({ id: 's2', x: 200, y: 200, w: 32, h: 32, vector: function () {} });
+            return s1.isCollidingWith(s2);
+        });
+        expect(result).toBe(false);
+    });
+
+    it('vector sprite moveX and moveY work', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 50, y: 60, w: 32, h: 32, vector: function () {} });
+            s.moveX(10);
+            s.moveY(-5);
+            return { x: s.x, y: s.y };
+        });
+        expect(result.x).toBe(60);
+        expect(result.y).toBe(55);
+    });
+
+    it('vector sprite destroy removes it from the registry', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 0, y: 0, w: 32, h: 32, vector: function () {} });
+            s.destroy();
+            return { destroyed: s.destroyed, found: punter.getSprite('s1') };
+        });
+        expect(result.destroyed).toBe(true);
+        expect(result.found).toBeNull();
+    });
+
+    it('image and vector can coexist on a sprite', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, vector: function () {} });
+            return { hasImage: !!s.image, hasVector: typeof s.vector === 'function' };
+        });
+        expect(result.hasImage).toBe(true);
+        expect(result.hasVector).toBe(true);
+    });
+
+    it('vector function is called with ctx, w and h when draw is triggered', async function () {
+        var result = await page.evaluate(function () {
+            var args = null;
+            // create an offscreen canvas to supply a real 2d context
+            var canvas = document.createElement('canvas');
+            canvas.width = 100;
+            canvas.height = 100;
+            var ctx = canvas.getContext('2d');
+            var s = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 40, h: 50,
+                vector: function (drawCtx, w, h) {
+                    args = { hasCtx: !!drawCtx, w: w, h: h };
+                }
+            });
+            s.draw(ctx);
+            return args;
+        });
+        expect(result.hasCtx).toBe(true);
+        expect(result.w).toBe(40);
+        expect(result.h).toBe(50);
     });
 });
