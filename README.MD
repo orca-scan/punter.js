@@ -56,7 +56,7 @@ This starts a local server on port 4000 and opens the games index in your browse
 
     // create a sprite using the 'player' image loaded above
     var player = punter.createSprite({
-      id: 'player',   // unique id - no two sprites can share one
+      id: 'player',   // optional — auto-generated if omitted; must be unique if provided
       image: 'player', // key from config.images
       x: 50,           // pixels from left edge of canvas
       y: 50            // pixels from top edge of canvas
@@ -168,7 +168,8 @@ Method                                     | Description
 `sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay
 `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
 `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
-`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; call inside `update`
+`sprite.rotate(amount)`                    | Add `amount` (radians) to `sprite.angle`; vector functions can read `this.angle` directly
+`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; `other` can be a sprite or a plain `{ x, y, w, h }` rect
 `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored
 
 ### sprite properties
