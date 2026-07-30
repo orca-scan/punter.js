@@ -661,6 +661,57 @@
     'String', 'window'
   ];
 
+  // curated property-to-values map; only properties a game dev would commonly use
+  var CSS_PROP_VALUES = {
+    'display':                   ['block', 'inline', 'inline-block', 'flex', 'inline-flex', 'grid', 'none', 'table', 'table-cell'],
+    'position':                  ['static', 'relative', 'absolute', 'fixed', 'sticky'],
+    'visibility':                ['visible', 'hidden', 'collapse'],
+    'overflow':                  ['visible', 'hidden', 'scroll', 'auto', 'clip'],
+    'overflow-x':                ['visible', 'hidden', 'scroll', 'auto'],
+    'overflow-y':                ['visible', 'hidden', 'scroll', 'auto'],
+    'box-sizing':                ['border-box', 'content-box'],
+    'float':                     ['left', 'right', 'none'],
+    'clear':                     ['left', 'right', 'both', 'none'],
+    'flex-direction':            ['row', 'row-reverse', 'column', 'column-reverse'],
+    'flex-wrap':                 ['nowrap', 'wrap', 'wrap-reverse'],
+    'justify-content':           ['flex-start', 'flex-end', 'center', 'space-between', 'space-around', 'space-evenly'],
+    'align-items':               ['flex-start', 'flex-end', 'center', 'stretch', 'baseline'],
+    'align-self':                ['auto', 'flex-start', 'flex-end', 'center', 'stretch', 'baseline'],
+    'text-align':                ['left', 'right', 'center', 'justify'],
+    'text-decoration':           ['none', 'underline', 'overline', 'line-through'],
+    'text-transform':            ['none', 'uppercase', 'lowercase', 'capitalize'],
+    'vertical-align':            ['baseline', 'top', 'middle', 'bottom', 'text-top', 'text-bottom', 'sub', 'super'],
+    'white-space':               ['normal', 'nowrap', 'pre', 'pre-wrap', 'pre-line'],
+    'word-break':                ['normal', 'break-all', 'keep-all', 'break-word'],
+    'font-style':                ['normal', 'italic', 'oblique'],
+    'font-weight':               ['normal', 'bold', 'bolder', 'lighter', '100', '200', '300', '400', '500', '600', '700', '800', '900'],
+    'font-variant':              ['normal', 'small-caps'],
+    'background-repeat':         ['repeat', 'no-repeat', 'repeat-x', 'repeat-y', 'round', 'space'],
+    'background-size':           ['auto', 'cover', 'contain'],
+    'background-attachment':     ['scroll', 'fixed', 'local'],
+    'background-position':       ['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'],
+    'border-style':              ['none', 'solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset', 'hidden'],
+    'border-collapse':           ['separate', 'collapse'],
+    'cursor':                    ['auto', 'default', 'pointer', 'crosshair', 'text', 'move', 'grab', 'grabbing', 'zoom-in', 'zoom-out', 'not-allowed', 'none', 'wait', 'progress', 'help', 'ns-resize', 'ew-resize'],
+    'pointer-events':            ['auto', 'none', 'all'],
+    'user-select':               ['none', 'auto', 'text', 'all'],
+    '-webkit-user-select':       ['none', 'auto', 'text', 'all'],
+    'touch-action':              ['auto', 'none', 'pan-x', 'pan-y', 'pan-left', 'pan-right', 'pan-up', 'pan-down', 'pinch-zoom', 'manipulation'],
+    'resize':                    ['none', 'both', 'horizontal', 'vertical'],
+    'object-fit':                ['fill', 'contain', 'cover', 'none', 'scale-down'],
+    'mix-blend-mode':            ['normal', 'multiply', 'screen', 'overlay', 'darken', 'lighten', 'color-dodge', 'color-burn', 'hard-light', 'soft-light', 'difference', 'exclusion'],
+    'list-style-type':           ['none', 'disc', 'circle', 'square', 'decimal', 'lower-alpha', 'upper-alpha', 'lower-roman', 'upper-roman'],
+    'table-layout':              ['auto', 'fixed'],
+    'direction':                 ['ltr', 'rtl'],
+    'animation-direction':       ['normal', 'reverse', 'alternate', 'alternate-reverse'],
+    'animation-fill-mode':       ['none', 'forwards', 'backwards', 'both'],
+    'animation-play-state':      ['running', 'paused'],
+    'transition-timing-function': ['ease', 'linear', 'ease-in', 'ease-out', 'ease-in-out', 'step-start', 'step-end'],
+    'animation-timing-function': ['ease', 'linear', 'ease-in', 'ease-out', 'ease-in-out', 'step-start', 'step-end'],
+    'appearance':                ['none', 'auto'],
+    'outline-style':             ['none', 'solid', 'dashed', 'dotted', 'double', 'groove', 'ridge', 'inset', 'outset']
+  };
+
   /**
    * Builds a CodeMirror hint list from a definitions object
    * @param {Object} defs - map of name to {params, info}
@@ -759,6 +810,46 @@
     return null;
   }
 
+  /**
+   * Context-aware hint dispatcher: routes to HTML, CSS, or Punter/JS hints based on inner mode
+   * @param {Object} cm - CodeMirror instance
+   * @param {Object} options - hint options passed by CodeMirror
+   * @returns {Object|null}
+   */
+  function studioHint(cm, options) {
+    var cur = cm.getCursor();
+    var inner = cm.getModeAt(cur);
+    var outerMode = cm.getOption('mode');
+
+    if (inner && inner.name === 'css') {
+      // check if cursor is in value position: "property: <partial>"
+      var before = cm.getLine(cur.line).slice(0, cur.ch);
+      var valMatch = before.match(/([\.\w-]+)\s*:\s*([\w-]*)$/);
+      if (valMatch) {
+        var prop = valMatch[1];
+        var partial = valMatch[2];
+        var values = CSS_PROP_VALUES[prop];
+        if (values) {
+          var list = values.filter(function (v) {
+            return v.indexOf(partial) === 0;
+          });
+          return {
+            list: list,
+            from: CodeMirror.Pos(cur.line, cur.ch - partial.length),
+            to: CodeMirror.Pos(cur.line, cur.ch)
+          };
+        }
+      }
+      return CodeMirror.hint.css ? CodeMirror.hint.css(cm, options) : null;
+    }
+
+    if (outerMode === 'htmlmixed' && (!inner || inner.name !== 'javascript')) {
+      return CodeMirror.hint.html ? CodeMirror.hint.html(cm, options) : null;
+    }
+
+    return punterHint(cm, options);
+  }
+
   // --- initialise CodeMirror 5 ---
   // codemirror.min.js loads before this script so CodeMirror is available globally
   // fromTextArea replaces the textarea in-place; its current value is used as initial content
@@ -775,21 +866,28 @@
         matchBrackets: true,
         autofocus: false,
         extraKeys: {
-          'Ctrl-Space': function (cm) { cm.showHint({ hint: punterHint, completeSingle: false }); },
+          'Ctrl-Space': function (cm) { cm.showHint({ hint: studioHint, completeSingle: false }); },
           Tab: function (cm) { cm.replaceSelection('  '); }
         }
       }
     );
     window.studioEditor.on('change', scheduleAutoSave);
-    // auto-show hints on dot only when cursor is in a JavaScript context
+    // auto-show hints: dot in JS, < or word-char in HTML, word-char or hyphen in CSS
     window.studioEditor.on('inputRead', function (cm, change) {
-      if (change.text[0] === '.') {
-        var cur = cm.getCursor();
-        var inner = cm.getModeAt(cur);
-        var inJs = cm.getOption('mode') === 'javascript' || (inner && inner.name === 'javascript');
-        if (inJs) {
-          cm.showHint({ hint: punterHint, completeSingle: false });
-        }
+      var cur = cm.getCursor();
+      var inner = cm.getModeAt(cur);
+      var outerMode = cm.getOption('mode');
+      var inJs = outerMode === 'javascript' || (inner && inner.name === 'javascript');
+      var inCss = inner && inner.name === 'css';
+      var inHtml = outerMode === 'htmlmixed' && !inJs && !inCss;
+      var ch = change.text[0];
+
+      if (ch === '.' && inJs) {
+        cm.showHint({ hint: studioHint, completeSingle: false });
+      } else if (inHtml && (ch === '<' || /\w/.test(ch))) {
+        cm.showHint({ hint: studioHint, completeSingle: false });
+      } else if (inCss && (/[\w-]/.test(ch) || ch === ':')) {
+        cm.showHint({ hint: studioHint, completeSingle: false });
       }
     });
   }
