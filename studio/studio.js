@@ -159,7 +159,7 @@
    * @returns {string}
    */
   function stripEditLink(html) {
-    return html.replace(/<a\b[^>]*>Edit in (?:Playground|Studio)<\/a>\s*/g, '');
+    return html.replace(/<a\b[^>]*\?game=[^>]*>[\s\S]*?<\/a>\s*/g, '');
   }
 
   /**
