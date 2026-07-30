@@ -983,6 +983,22 @@
     window.studioEditor.on('blur', function () {
       editorPaneEl.classList.remove('is-focused');
     });
+
+    // use capture phase so we intercept before the browser opens its native find bar
+    document.addEventListener('keydown', function (e) {
+      if (!window.studioEditor) return;
+      var isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      var mod = isMac ? e.metaKey : e.ctrlKey;
+      if (!mod) return;
+      var cmd = (e.key === 'f' || e.key === 'F') ? 'find'
+              : (e.key === 'h' || e.key === 'H') ? 'replace'
+              : null;
+      if (!cmd) return;
+      e.preventDefault();
+      window.studioEditor.focus();
+      // defer exec until after focus has transferred
+      setTimeout(function () { window.studioEditor.execCommand(cmd); }, 0);
+    }, true);
   }
 
   // --- initialise on load ---
