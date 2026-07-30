@@ -886,8 +886,9 @@
 
         // vector-only sprite: rescale position and size without needing an image
         if (!this.image && this.vector) {
-            var vScaleW = engine.width / this.originalCanvasW;
-            var vScaleH = engine.height / this.originalCanvasH;
+            // guard against originalCanvasW = 0 (sprite created before first resize)
+            var vScaleW = this.originalCanvasW > 0 ? engine.width / this.originalCanvasW : 1;
+            var vScaleH = this.originalCanvasH > 0 ? engine.height / this.originalCanvasH : 1;
             var vW = resolveSize(this.originalW, engine.width);
             var vH = resolveSize(this.originalH, engine.height);
             var vX = resolvePosition(this.originalX, engine.width, vScaleW, this.x);
@@ -917,8 +918,9 @@
             });
         }
 
-        var scaleW = engine.width / this.originalCanvasW;
-        var scaleH = engine.height / this.originalCanvasH;
+        // guard against originalCanvasW = 0 (sprite created before first resize)
+        var scaleW = this.originalCanvasW > 0 ? engine.width / this.originalCanvasW : 1;
+        var scaleH = this.originalCanvasH > 0 ? engine.height / this.originalCanvasH : 1;
 
         // scale proportionally
         var resolvedW = resolveSize(this.originalW, engine.width);

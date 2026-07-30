@@ -580,4 +580,32 @@ describe('Sprites', function () {
         });
         expect(result).toBe(130);
     });
+
+    // --- resize guard (originalCanvasW = 0) ---
+
+    it('image sprite resize does not produce Infinity when originalCanvasW is 0', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 10, y: 20 });
+            // simulate sprite created before the first resize event
+            s.originalCanvasW = 0;
+            s.originalCanvasH = 0;
+            s.resize();
+            return { x: s.x, y: s.y, xFinite: isFinite(s.x), yFinite: isFinite(s.y) };
+        });
+        expect(result.xFinite).toBe(true);
+        expect(result.yFinite).toBe(true);
+    });
+
+    it('vector sprite resize does not produce Infinity when originalCanvasW is 0', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', x: 10, y: 20, w: 32, h: 32, vector: function () {} });
+            // simulate sprite created before the first resize event
+            s.originalCanvasW = 0;
+            s.originalCanvasH = 0;
+            s.resize();
+            return { x: s.x, y: s.y, xFinite: isFinite(s.x), yFinite: isFinite(s.y) };
+        });
+        expect(result.xFinite).toBe(true);
+        expect(result.yFinite).toBe(true);
+    });
 });
