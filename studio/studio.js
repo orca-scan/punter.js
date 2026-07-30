@@ -935,6 +935,7 @@
         indentWithTabs: false,
         tabSize: 2,
         matchBrackets: true,
+        styleActiveLine: true,
         autofocus: false,
         extraKeys: {
           'Ctrl-Space': function (cm) { cm.showHint({ hint: studioHint, completeSingle: false }); },

@@ -257,6 +257,11 @@ select:focus-visible {
   color: var(--app-text-color-primary);
 }
 
+/* lighten the line the cursor is currently on */
+.CodeMirror-activeline-background {
+  background: rgba(255, 255, 255, 0.06);
+}
+
 /* hint dropdown — overrides CDN show-hint.css to match dark theme */
 .CodeMirror-hints {
   background: var(--app-foreground-color);
