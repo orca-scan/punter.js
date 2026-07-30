@@ -26,6 +26,7 @@
   var downloadBtn = document.getElementById('st-download-btn');
   var outputEl    = document.getElementById('st-output');
   var previewEl     = document.querySelector('.st-preview');
+  var editorPaneEl  = document.querySelector('.st-editor-pane');
   var placeholder   = document.getElementById('st-placeholder');
 
   // --- html/css fold ---
@@ -311,7 +312,11 @@
 
     // defer one tick so the button click doesn't steal focus back
     var capturedFrame = frame;
-    setTimeout(function () { capturedFrame.focus(); }, 0);
+    setTimeout(function () {
+      capturedFrame.focus();
+      previewEl.classList.add('is-focused');
+      editorPaneEl.classList.remove('is-focused');
+    }, 0);
 
     saveToStorage();
   }
@@ -546,6 +551,18 @@
   }
 
   // --- button events ---
+
+  // when focus moves into the iframe the parent window blurs
+  window.addEventListener('blur', function () {
+    if (!previewFrame) return;
+    previewEl.classList.add('is-focused');
+    editorPaneEl.classList.remove('is-focused');
+  });
+
+  // when focus returns to the parent window the editor pane is active
+  window.addEventListener('focus', function () {
+    previewEl.classList.remove('is-focused');
+  });
 
   runBtn.addEventListener('click', function () {
     runGame();
@@ -957,6 +974,13 @@
       } else if (inCss && (/[\w-]/.test(ch) || ch === ':')) {
         cm.showHint({ hint: studioHint, completeSingle: false });
       }
+    });
+    window.studioEditor.on('focus', function () {
+      editorPaneEl.classList.add('is-focused');
+      previewEl.classList.remove('is-focused');
+    });
+    window.studioEditor.on('blur', function () {
+      editorPaneEl.classList.remove('is-focused');
     });
   }
 

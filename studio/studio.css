@@ -170,6 +170,17 @@ select:focus-visible {
   display: block;
 }
 
+/* highlight whichever pane currently has focus — ::after overlays child content */
+.st-preview.is-focused::after,
+.st-editor-pane.is-focused::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(239, 208, 99, 0.6);
+  pointer-events: none;
+  z-index: 10;
+}
+
 .st-preview-placeholder {
   position: absolute;
   inset: 0;
@@ -187,6 +198,7 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .st-editor-wrap {
