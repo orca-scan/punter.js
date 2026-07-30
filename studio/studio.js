@@ -4,6 +4,7 @@
   // --- constants ---
 
   var STORAGE_KEY = 'punter-studio-v1';
+  var HTML_FOLD_KEY = 'punter-studio-html-folded';
 
   // whitelisted example names — prevents path traversal via ?learn=
   var KNOWN_EXAMPLES = ['move', 'keyboard', 'collision', 'pointer'];
@@ -24,8 +25,59 @@
   var resetBtn    = document.getElementById('st-reset-btn');
   var downloadBtn = document.getElementById('st-download-btn');
   var outputEl    = document.getElementById('st-output');
-  var previewEl   = document.querySelector('.st-preview');
-  var placeholder = document.getElementById('st-placeholder');
+  var previewEl     = document.querySelector('.st-preview');
+  var placeholder   = document.getElementById('st-placeholder');
+
+  // --- html/css fold ---
+
+  /**
+   * Returns whether the HTML/CSS block should be folded (default: true)
+   * @returns {boolean}
+   */
+  function isHtmlFolded() {
+    try {
+      var val = localStorage.getItem(HTML_FOLD_KEY);
+      return val === null || val === 'true';
+    } catch (e) {
+      return true;
+    }
+  }
+
+  /**
+   * Saves the HTML/CSS fold preference to localStorage
+   * @param {boolean} folded
+   */
+  function setHtmlFolded(folded) {
+    try {
+      localStorage.setItem(HTML_FOLD_KEY, String(folded));
+    } catch (e) {}
+  }
+
+  /**
+   * Finds the line number of the <head> tag in the editor
+   * @returns {number} -1 if not found
+   */
+  function findHeadLine() {
+    var cm = window.studioEditor;
+    if (!cm) return -1;
+    for (var i = 0; i < cm.lineCount(); i++) {
+      if (cm.getLine(i).trim().indexOf('<head') === 0) return i;
+    }
+    return -1;
+  }
+
+  /**
+   * Folds or unfolds the <head> block using CodeMirror xml-fold
+   * @param {string} force - 'fold' or 'unfold'
+   */
+  function foldHeadBlock(force) {
+    var cm = window.studioEditor;
+    if (!cm || !CodeMirror.fold || !CodeMirror.fold.xml) return;
+    var line = findHeadLine();
+    if (line < 0) return;
+    var col = cm.getLine(line).indexOf('<');
+    cm.foldCode(CodeMirror.Pos(line, col), CodeMirror.fold.xml, force);
+  }
 
   // --- editor abstraction ---
   // both functions work whether CodeMirror is loaded or not
@@ -177,6 +229,8 @@
       var cleaned = stripEditLink(html);
       originalCode = cleaned;
       setCode(cleaned);
+      // wait for CM to parse htmlmixed content before applying default fold
+      setTimeout(function () { foldHeadBlock(isHtmlFolded() ? 'fold' : 'unfold'); }, 50);
       clearOutput();
       runGame();
     });
@@ -871,7 +925,21 @@
         }
       }
     );
+    // foldGutter must be set after init so it can correctly append to the gutters list
+    window.studioEditor.setOption('foldGutter', true);
+    window.studioEditor.setOption('gutters', ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']);
     window.studioEditor.on('change', scheduleAutoSave);
+    // save <head> fold state when user clicks the fold gutter
+    window.studioEditor.on('gutterClick', function (cm, line, gutter) {
+      if (gutter !== 'CodeMirror-foldgutter') return;
+      var headLine = findHeadLine();
+      if (line !== headLine) return;
+      setTimeout(function () {
+        var marks = cm.findMarks(CodeMirror.Pos(headLine, 0), CodeMirror.Pos(headLine + 1, 0));
+        var folded = marks.some(function (m) { return m.__isFold; });
+        setHtmlFolded(folded);
+      }, 0);
+    });
     // auto-show hints: dot in JS, < or word-char in HTML, word-char or hyphen in CSS
     window.studioEditor.on('inputRead', function (cm, change) {
       var cur = cm.getCursor();

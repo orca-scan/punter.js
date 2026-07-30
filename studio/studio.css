@@ -230,6 +230,21 @@ select:focus-visible {
   height: 100%;
 }
 
+/* fold gutter — match dark theme */
+.CodeMirror-foldgutter {
+  width: 1em;
+}
+
+.CodeMirror-foldgutter-open,
+.CodeMirror-foldgutter-folded {
+  color: var(--app-text-color-secondary);
+}
+
+.CodeMirror-foldgutter-open:hover,
+.CodeMirror-foldgutter-folded:hover {
+  color: var(--app-text-color-primary);
+}
+
 /* hint dropdown — overrides CDN show-hint.css to match dark theme */
 .CodeMirror-hints {
   background: var(--app-foreground-color);
