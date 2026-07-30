@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en" data-appearance="dark">
+
+<head>
+  <title>Punter.js Studio</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Edit JavaScript and run a Punter.js game right in your browser. No install required.">
+
+  <!-- CodeMirror 5 styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.css">
+
+  <link rel="stylesheet" href="studio.css">
+</head>
+
+<body>
+  <header class="st-header">
+    <span class="st-title">
+      <a href="../" aria-label="Punter.js homepage">Punter.js</a> Studio
+    </span>
+
+    <div class="st-controls">
+      <div class="st-select-wrap">
+        <label for="st-example-select">Example:</label>
+        <select id="st-example-select" aria-label="Select an example">
+          <option value="move">Move a sprite</option>
+          <option value="keyboard">Keyboard input</option>
+          <option value="collision">Collision</option>
+          <option value="pointer">Pointer input</option>
+        </select>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary"   id="st-run-btn"      type="button">Run</button>
+        <button class="btn btn-secondary" id="st-reset-btn"    type="button">Reset</button>
+        <button class="btn btn-secondary" id="st-download-btn" type="button">Download</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="st-body">
+    <section class="st-preview" aria-label="Game preview">
+      <!-- iframe is created here dynamically on Run -->
+      <div class="st-preview-placeholder" id="st-placeholder" aria-hidden="true">
+        Press Run to start the game
+      </div>
+    </section>
+
+    <div class="st-editor-pane">
+      <div class="st-editor-wrap" id="st-editor-wrap">
+        <label for="st-textarea" class="visually-hidden">JavaScript code editor</label>
+        <textarea
+          id="st-textarea"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          aria-label="JavaScript code editor"
+        ></textarea>
+      </div>
+
+      <!-- error and console output -->
+      <div
+        class="st-output"
+        id="st-output"
+        role="log"
+        aria-live="polite"
+        aria-label="Output and error messages"
+      ></div>
+    </div>
+  </main>
+
+  <footer class="st-footer">
+    <a href="../">&#8592; Punter.js homepage</a>
+  </footer>
+
+  <!-- CodeMirror 5: plain script tags, no ES modules required -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/xml-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/html-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/css-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/xml-fold.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/search/search.min.js"></script>
+
+  <script src="studio.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Keyboard input</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #1b2125; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      // try changing the speeds
+      var NORMAL_SPEED = 3;
+      var FAST_SPEED   = 7;
+
+      punter.setup({ canvas: '#game' });
+
+      punter.scene('main', function () {
+
+        var player = punter.createSprite({
+          x: 100,
+          y: 100,
+          w: 40,
+          h: 40,
+          vector: function (ctx, w, h) {
+            // color changes when shift is held
+            ctx.fillStyle = punter.isKeyDown('shift') ? '#ff6b6b' : '#EFD063';
+            ctx.fillRect(0, 0, w, h);
+          }
+        });
+
+        punter.on('update', function () {
+          // hold shift for fast movement
+          var speed = punter.isKeyDown('shift') ? FAST_SPEED : NORMAL_SPEED;
+
+          if (punter.isKeyDown('left',  'a')) player.moveX(-speed);
+          if (punter.isKeyDown('right', 'd')) player.moveX(speed);
+          if (punter.isKeyDown('up',    'w')) player.moveY(-speed);
+          if (punter.isKeyDown('down',  's')) player.moveY(speed);
+        });
+
+        punter.on('draw', function (ctx) {
+          ctx.fillStyle = '#aaa';
+          ctx.font = '14px monospace';
+          ctx.fillText('Arrow keys or WASD to move', 12, 24);
+          ctx.fillText('Hold Shift for fast mode',   12, 44);
+        });
+      });
+
+      punter.go('main');
+
+    </script>
+  </body>
+</html>

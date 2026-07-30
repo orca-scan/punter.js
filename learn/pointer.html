@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Pointer input</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #1b2125; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      punter.setup({ canvas: '#game' });
+
+      punter.scene('main', function () {
+
+        var player = punter.createSprite({
+          x: 160,
+          y: 160,
+          w: 40,
+          h: 40,
+          boundsMode: 'rect',
+          vector: function (ctx, w, h) {
+            // color changes when pointer is held down
+            ctx.fillStyle = punter.isPointerDown() ? '#ff6b6b' : '#EFD063';
+            ctx.fillRect(0, 0, w, h);
+          }
+        });
+
+        punter.on('update', function () {
+          // snap to tap/click position
+          if (punter.pointer.clicked) {
+            player.x = punter.pointer.x - player.w / 2;
+            player.y = punter.pointer.y - player.h / 2;
+          }
+
+          // smoothly follow the pointer while held down
+          if (punter.isPointerDown()) {
+            player.x += (punter.pointer.x - player.w / 2 - player.x) * 0.15;
+            player.y += (punter.pointer.y - player.h / 2 - player.y) * 0.15;
+          }
+        });
+
+        punter.on('draw', function (ctx) {
+          ctx.fillStyle = '#aaa';
+          ctx.font = '14px monospace';
+          ctx.fillText('Click or tap to move the square', 12, 24);
+          ctx.fillText('Hold to drag it',                 12, 44);
+        });
+      });
+
+      punter.go('main');
+
+    </script>
+  </body>
+</html>

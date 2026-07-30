@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Collision</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #1b2125; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      punter.setup({ canvas: '#game' });
+
+      punter.scene('main', function () {
+
+        // the coin — a yellow circle sitting in the middle of the screen
+        var coin = punter.createSprite({
+          x: 160,
+          y: 160,
+          w: 30,
+          h: 30,
+          boundsMode: 'rect',
+          vector: function (ctx, w, h) {
+            ctx.fillStyle = '#EFD063';
+            ctx.beginPath();
+            ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        });
+
+        // the player — move into the coin to collect it
+        var player = punter.createSprite({
+          x: 60,
+          y: 60,
+          w: 36,
+          h: 36,
+          boundsMode: 'rect',
+          vector: function (ctx, w, h) {
+            ctx.fillStyle = touching ? '#66bb6a' : '#4fc3f7';
+            ctx.fillRect(0, 0, w, h);
+          }
+        });
+
+        var touching = false;
+        var collected = false;
+
+        punter.on('update', function () {
+          if (punter.isKeyDown('left',  'a')) player.moveX(-3);
+          if (punter.isKeyDown('right', 'd')) player.moveX(3);
+          if (punter.isKeyDown('up',    'w')) player.moveY(-3);
+          if (punter.isKeyDown('down',  's')) player.moveY(3);
+
+          touching = !collected && player.isCollidingWith(coin);
+
+          // collect the coin on overlap
+          if (touching && !collected) {
+            collected = true;
+            coin.destroy();
+          }
+        });
+
+        punter.on('draw', function (ctx) {
+          ctx.fillStyle = '#aaa';
+          ctx.font = '14px monospace';
+          if (collected) {
+            ctx.fillStyle = '#EFD063';
+            ctx.fillText('Collected!', 12, 24);
+          } else {
+            ctx.fillText('Move into the coin', 12, 24);
+          }
+        });
+      });
+
+      punter.go('main');
+
+    </script>
+  </body>
+</html>
