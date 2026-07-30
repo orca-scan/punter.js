@@ -10,6 +10,7 @@
   <!-- CodeMirror 5 styles -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
 
   <style>
     * {
@@ -45,6 +46,7 @@
       background: var(--app-background-color);
       font-family: var(--font-family-system);
       color: var(--app-text-color-secondary);
+      overflow: hidden;
     }
 
     /* --- layout --- */
@@ -243,6 +245,23 @@
       height: 100%;
     }
 
+    /* hint dropdown — overrides CDN show-hint.css to match dark theme */
+    .CodeMirror-hints {
+      background: var(--app-foreground-color);
+      border: 1px solid var(--app-border-color-primary);
+      border-radius: 6px;
+      font-family: var(--font-family-mono);
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+    }
+    .CodeMirror-hint {
+      color: var(--app-text-color-primary);
+    }
+    li.CodeMirror-hint-active {
+      background: var(--primary-button-background-color);
+      color: #1b2125;
+    }
+
     /* --- output / error area --- */
 
     .pg-output {
@@ -431,6 +450,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/javascript-hint.min.js"></script>
 
   <!-- playground logic (plain ES5) -->
   <script>
@@ -869,6 +890,226 @@
       // auto-save fallback for plain textarea (when CodeMirror is unavailable)
       document.getElementById('pg-textarea').addEventListener('input', scheduleAutoSave);
 
+      // --- autocomplete ---
+
+      // methods carry a params string; properties omit it so they display without ()
+      var PUNTER_DEFS = {
+        setup:         { params: 'config',                    info: 'initialise the engine with images, sounds and canvas' },
+        scene:         { params: 'name, fn',                  info: 'register a named scene handler' },
+        go:            { params: 'name',                      info: 'transition to a named scene' },
+        on:            { params: 'event, fn',                 info: "register a handler — events: 'ready', 'update', 'draw', 'resize', 'go'" },
+        createSprite:  { params: 'opts',                      info: 'create and register a new sprite' },
+        getSprite:     { params: 'id',                        info: 'retrieve a sprite by id, returns null if not found' },
+        isKeyDown:     { params: '...keys',                   info: "true if any key is held — e.g. 'left', 'space', 'shift+a'" },
+        isPointerDown: { params: "'left'|'right'|'middle'",   info: 'true if the pointer button is held' },
+        clearInput:    { params: '',                          info: 'reset all keyboard and pointer state' },
+        playSound:     { params: 'name [, opts]',             info: 'play a loaded sound' },
+        stopSound:     { params: 'name',                      info: 'stop all instances of a named sound' },
+        pause:         { params: '',                          info: 'pause the game loop' },
+        resume:        { params: '',                          info: 'resume a paused game loop' },
+        redraw:        { params: '',                          info: 'repaint the canvas while paused' },
+        canvas:        {                                      info: 'the HTMLCanvasElement', browser: 'HTMLCanvasElement' },
+        width:         {                                      info: 'canvas logical width in pixels' },
+        height:        {                                      info: 'canvas logical height in pixels' },
+        frame:         {                                      info: 'current frame number 0–59, loops each second' },
+        totalFrames:   {                                      info: 'total frames elapsed since the game started' },
+        running:       {                                      info: 'true if the game loop is active' },
+        paused:        {                                      info: 'true if the game loop is paused' },
+        resized:       {                                      info: 'true on the first frame after a resize event' },
+        sprites:       {                                      info: 'array of all active (non-destroyed) sprites' },
+        pointer:       {                                      info: 'pointer state object — x, y, down, clicked' },
+        orientation:   {                                      info: "'portrait' or 'landscape'" },
+        sceneName:     {                                      info: 'name of the currently active scene' },
+        debug:         {                                      info: 'set true to enable the debug overlay' },
+        isMobile:      {                                      info: 'true if running on a mobile device' },
+        isDesktop:     {                                      info: 'true if running on a desktop device' }
+      };
+
+      var POINTER_DEFS = {
+        x:       { info: 'pointer x position in logical pixels' },
+        y:       { info: 'pointer y position in logical pixels' },
+        down:    { info: 'true while the pointer is pressed' },
+        clicked: { info: 'true for one frame after a tap or click' }
+      };
+
+      var SPRITE_DEFS = {
+        animate:         { params: 'delayMs',                      info: 'advance animation frame; call each update tick' },
+        blink:           { params: 'ms [, durationMs]',            info: 'flash on/off every ms; call blink(0) to stop' },
+        bounce:          { params: '[range [, speed]]',            info: 'sinusoidal vertical bounce; call each update tick' },
+        center:          { params: '[offsetX [, offsetY]]',        info: 'center on both axes' },
+        centerX:         { params: '[offsetX]',                    info: 'center horizontally' },
+        centerY:         { params: '[offsetY]',                    info: 'center vertically' },
+        destroy:         { params: '',                             info: 'remove sprite from the engine registry' },
+        getFrameImage:   { params: '',                             info: 'image key for the current animation frame' },
+        isCollidingWith: { params: 'target',                       info: 'true if bounding boxes overlap' },
+        loopScrollX:     { params: 'speed',                        info: 'scroll and wrap seamlessly at screen edge' },
+        moveX:           { params: 'dx',                           info: 'move horizontally by dx pixels' },
+        moveY:           { params: 'dy',                           info: 'move vertically by dy pixels' },
+        parallaxScrollX: { params: 'speed, respawnAfterMs [, offset]', info: 'scroll and respawn after leaving the screen' },
+        parallaxScrollY: { params: 'speed, respawnAfterMs [, offset]', info: 'scroll vertically and respawn' },
+        rotate:          { params: 'amount',                       info: 'add amount (radians) to this.angle' },
+        actualH:         { info: 'draw height accounting for clipHeight' },
+        actualW:         { info: 'draw width as an integer' },
+        angle:           { info: 'current rotation in radians (used by rotate())' },
+        boundsMode:      { info: "'pixel' (default) or 'rect'" },
+        clipHeight:      { info: 'visible height in pixels from the bottom edge' },
+        collidable:      { info: 'false to exclude from collision checks' },
+        destroyed:       { info: 'true after destroy() has been called' },
+        frame:           { info: 'override animation frame index' },
+        h:               { info: 'sprite height in pixels' },
+        id:              { info: 'unique string identifier' },
+        image:           { info: 'image key or array of keys for animation' },
+        initialX:        { info: 'x anchor used by bounce() and centerX()' },
+        initialY:        { info: 'y anchor used by bounce() and centerY()' },
+        outline:         { info: 'CSS colour string for a debug outline' },
+        repeatX:         { info: 'tile the sprite across the full canvas width' },
+        repeatY:         { info: 'tile the sprite across the full canvas height' },
+        seen:            { info: 'true once the sprite has been visible on screen' },
+        vector:          { info: 'draw function called each frame with (ctx, w, h)' },
+        visible:         { info: 'true if the sprite is within the canvas bounds' },
+        w:               { info: 'sprite width in pixels' },
+        x:               { info: 'x position in logical pixels' },
+        y:               { info: 'y position in logical pixels' }
+      };
+
+      // CanvasRenderingContext2D — shown only when cursor is inside a function(ctx) body
+      var CTX_DEFS = {
+        save:                 { params: '' },
+        restore:              { params: '' },
+        translate:            { params: 'x, y' },
+        rotate:               { params: 'angle' },
+        scale:                { params: 'x, y' },
+        transform:            { params: 'a, b, c, d, e, f' },
+        setTransform:         { params: 'a, b, c, d, e, f' },
+        resetTransform:       { params: '' },
+        fillRect:             { params: 'x, y, w, h' },
+        strokeRect:           { params: 'x, y, w, h' },
+        clearRect:            { params: 'x, y, w, h' },
+        fillText:             { params: 'text, x, y' },
+        strokeText:           { params: 'text, x, y' },
+        measureText:          { params: 'text' },
+        beginPath:            { params: '' },
+        closePath:            { params: '' },
+        moveTo:               { params: 'x, y' },
+        lineTo:               { params: 'x, y' },
+        arc:                  { params: 'x, y, radius, startAngle, endAngle' },
+        arcTo:                { params: 'x1, y1, x2, y2, radius' },
+        bezierCurveTo:        { params: 'cp1x, cp1y, cp2x, cp2y, x, y' },
+        quadraticCurveTo:     { params: 'cpx, cpy, x, y' },
+        rect:                 { params: 'x, y, w, h' },
+        fill:                 { params: '' },
+        stroke:               { params: '' },
+        clip:                 { params: '' },
+        drawImage:            { params: 'image, dx, dy [, dw, dh]' },
+        createLinearGradient: { params: 'x1, y1, x2, y2' },
+        createRadialGradient: { params: 'x1, y1, r1, x2, y2, r2' },
+        createPattern:        { params: 'image, repetition' },
+        getImageData:         { params: 'x, y, w, h' },
+        putImageData:         { params: 'imageData, dx, dy' },
+        fillStyle:            {},
+        strokeStyle:          {},
+        lineWidth:            {},
+        lineCap:              {},
+        lineJoin:             {},
+        font:                 {},
+        textAlign:            {},
+        textBaseline:         {},
+        globalAlpha:          {},
+        globalCompositeOperation: {},
+        shadowBlur:           {},
+        shadowColor:          {},
+        shadowOffsetX:        {},
+        shadowOffsetY:        {}
+      };
+
+      var HINT_JS_GLOBALS = [
+        'Array', 'Boolean', 'console', 'Date', 'document', 'Error',
+        'JSON', 'Math', 'Number', 'Object', 'Promise', 'RegExp',
+        'String', 'window'
+      ];
+
+      // builds CodeMirror hint list items; methods show params in displayText
+      function buildHints(defs, partial) {
+        var keys = Object.keys(defs);
+        var i, k, def, displayText, results;
+        if (partial) {
+          var filtered = [];
+          for (i = 0; i < keys.length; i++) {
+            if (keys[i].indexOf(partial) === 0) filtered.push(keys[i]);
+          }
+          keys = filtered;
+        }
+        results = [];
+        for (i = 0; i < keys.length; i++) {
+          k = keys[i];
+          def = defs[k];
+          if (def && typeof def.params !== 'undefined') {
+            displayText = def.params !== '' ? k + '(' + def.params + ')' : k + '()';
+          } else {
+            displayText = k;
+          }
+          results.push({ text: k, displayText: displayText });
+        }
+        return results;
+      }
+
+      // true if the cursor sits inside a function body whose param list includes 'ctx'
+      function isCtxInScope(cm, cur) {
+        var content = cm.getRange({ line: 0, ch: 0 }, cur);
+        var pattern = /function\s*\w*\s*\([^)]*\bctx\b[^)]*\)/g;
+        var match, lastIdx = -1;
+        while ((match = pattern.exec(content)) !== null) {
+          lastIdx = match.index + match[0].length;
+        }
+        if (lastIdx === -1) return false;
+        var body = content.slice(lastIdx);
+        var opens = (body.match(/{/g) || []).length;
+        var closes = (body.match(/}/g) || []).length;
+        return opens > closes;
+      }
+
+      function punterHint(cm, options) {
+        var cur = cm.getCursor();
+        var before = cm.getLine(cur.line).slice(0, cur.ch);
+        var partial, list, dotMatch, preObj, pointerMatch, punterMatch;
+
+        pointerMatch = before.match(/punter\.pointer\.(\w*)$/);
+        if (pointerMatch) {
+          partial = pointerMatch[1];
+          list = buildHints(POINTER_DEFS, partial);
+          return { list: list, from: CodeMirror.Pos(cur.line, cur.ch - partial.length), to: CodeMirror.Pos(cur.line, cur.ch) };
+        }
+
+        punterMatch = before.match(/(?:^|[^\w.])punter\.(\w*)$/);
+        if (punterMatch) {
+          partial = punterMatch[1];
+          list = buildHints(PUNTER_DEFS, partial);
+          return { list: list, from: CodeMirror.Pos(cur.line, cur.ch - partial.length), to: CodeMirror.Pos(cur.line, cur.ch) };
+        }
+
+        dotMatch = before.match(/\.(\w*)$/);
+        if (dotMatch) {
+          preObj = before.slice(0, before.length - dotMatch[0].length).match(/(\w+)$/);
+          if (preObj && preObj[1] === 'ctx' && isCtxInScope(cm, cur)) {
+            partial = dotMatch[1];
+            list = buildHints(CTX_DEFS, partial);
+            return { list: list, from: CodeMirror.Pos(cur.line, cur.ch - partial.length), to: CodeMirror.Pos(cur.line, cur.ch) };
+          }
+          if (!preObj || HINT_JS_GLOBALS.indexOf(preObj[1]) === -1) {
+            partial = dotMatch[1];
+            list = buildHints(SPRITE_DEFS, partial);
+            if (list.length) {
+              return { list: list, from: CodeMirror.Pos(cur.line, cur.ch - partial.length), to: CodeMirror.Pos(cur.line, cur.ch) };
+            }
+          }
+        }
+
+        if (CodeMirror.hint && CodeMirror.hint.javascript) {
+          return CodeMirror.hint.javascript(cm, options);
+        }
+        return null;
+      }
+
       // --- initialise CodeMirror 5 ---
       // The codemirror.min.js script loads before this block so CodeMirror is available globally.
       // fromTextArea replaces the textarea in-place; its current value is used as initial content.
@@ -885,11 +1126,23 @@
             matchBrackets: true,
             autofocus: false,
             extraKeys: {
+              'Ctrl-Space': function (cm) { cm.showHint({ hint: punterHint, completeSingle: false }); },
               Tab: function (cm) { cm.replaceSelection('  '); }
             }
           }
         );
         window.playgroundEditor.on('change', scheduleAutoSave);
+        // auto-show on dot only when cursor is in a JavaScript context
+        window.playgroundEditor.on('inputRead', function (cm, change) {
+          if (change.text[0] === '.') {
+            var cur = cm.getCursor();
+            var inner = cm.getModeAt(cur);
+            var inJs = cm.getOption('mode') === 'javascript' || (inner && inner.name === 'javascript');
+            if (inJs) {
+              cm.showHint({ hint: punterHint, completeSingle: false });
+            }
+          }
+        });
       }
 
       // --- initialise on load ---
