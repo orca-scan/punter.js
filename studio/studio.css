@@ -1,0 +1,368 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- design tokens (match punterjs.org) --- */
+html {
+  --app-background-color: #2C3033;
+  --app-foreground-color: #1b2125;
+  --app-text-color-primary: #f6f6f6;
+  --app-text-color-secondary: #96989C;
+  --app-border-color-primary: #373b3f;
+  --primary-button-background-color: #EFD063;
+  --primary-button-border-color: #EFD063;
+  --primary-button-background-color-hover: #F3CB3C;
+  --secondary-button-background-color: #373B3F;
+  --secondary-button-border-color: #666666;
+  --secondary-button-background-color-hover: #666666;
+  --font-family-system: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-headers: 'Poppins', sans-serif;
+  --font-family-mono: 'Fira Mono', 'Fira Code', 'Cascadia Mono', 'Consolas', 'Menlo', monospace;
+  --error-color: #ff6b6b;
+  --warn-color: #EFD063;
+  --log-color: #96989C;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--app-background-color);
+  font-family: var(--font-family-system);
+  color: var(--app-text-color-secondary);
+  overflow: hidden;
+}
+
+/* --- layout --- */
+
+.st-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--app-border-color-primary);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--app-foreground-color);
+}
+
+.st-title {
+  font-family: var(--font-family-headers);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--app-text-color-primary);
+  white-space: nowrap;
+}
+
+.st-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.st-title a:hover {
+  text-decoration: underline;
+}
+
+.st-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.st-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.st-select-wrap label {
+  font-size: 13px;
+  color: var(--app-text-color-secondary);
+  white-space: nowrap;
+}
+
+select {
+  background: var(--app-background-color);
+  color: var(--app-text-color-primary);
+  border: 1px solid var(--secondary-button-border-color);
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: var(--font-family-system);
+  cursor: pointer;
+}
+
+select:focus-visible {
+  outline: 2px solid var(--primary-button-background-color);
+  outline-offset: 2px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.btn {
+  display: inline-block;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: var(--font-family-system);
+  white-space: nowrap;
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--primary-button-background-color);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: var(--primary-button-background-color);
+  border-color: var(--primary-button-border-color);
+  color: #1b2125;
+}
+
+.btn-primary:hover {
+  background: var(--primary-button-background-color-hover);
+}
+
+.btn-secondary {
+  background: var(--secondary-button-background-color);
+  border-color: var(--secondary-button-border-color);
+  color: var(--app-text-color-primary);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-button-background-color-hover);
+}
+
+/* --- main split layout --- */
+
+.st-body {
+  display: grid;
+  /* desktop: preview | editor side by side */
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  height: calc(100vh - 53px); /* full height minus header */
+}
+
+/* --- preview pane --- */
+
+.st-preview {
+  background: #1b2125;
+  border-right: 1px solid var(--app-border-color-primary);
+  position: relative;
+  overflow: hidden;
+  min-height: 240px;
+}
+
+.st-preview iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+
+.st-preview-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--app-text-color-secondary);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* --- editor pane --- */
+
+.st-editor-pane {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.st-editor-wrap {
+  flex: 1;
+  min-height: 0; /* allow flex children to shrink below content height */
+  overflow: hidden;
+  position: relative;
+}
+
+/* textarea: visible as fallback when CodeMirror is unavailable */
+#st-textarea {
+  width: 100%;
+  height: 100%;
+  background: var(--app-foreground-color);
+  color: var(--app-text-color-primary);
+  border: none;
+  padding: 14px;
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  resize: none;
+  outline: none;
+  tab-size: 2;
+}
+
+#st-textarea:focus-visible {
+  outline: 2px solid var(--primary-button-background-color);
+  outline-offset: -2px;
+}
+
+/* CodeMirror 5 fills the editor pane */
+.CodeMirror {
+  height: 100%;
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--app-foreground-color);
+}
+
+.CodeMirror-scroll {
+  height: 100%;
+}
+
+/* hint dropdown — overrides CDN show-hint.css to match dark theme */
+.CodeMirror-hints {
+  background: var(--app-foreground-color);
+  border: 1px solid var(--app-border-color-primary);
+  border-radius: 6px;
+  font-family: var(--font-family-mono);
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+}
+
+.CodeMirror-hint {
+  color: var(--app-text-color-primary);
+}
+
+li.CodeMirror-hint-active {
+  background: var(--primary-button-background-color);
+  color: #1b2125;
+}
+
+/* --- output / error area --- */
+
+.st-output {
+  background: var(--app-foreground-color);
+  border-top: 1px solid var(--app-border-color-primary);
+  max-height: 140px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.st-output:empty {
+  display: none;
+}
+
+.st-output-line {
+  padding: 4px 14px;
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.st-output-line--error {
+  color: var(--error-color);
+}
+
+.st-output-line--warn {
+  color: var(--warn-color);
+}
+
+.st-output-line--log {
+  color: var(--log-color);
+}
+
+.st-output-line--info {
+  color: var(--app-text-color-secondary);
+  border-top: 1px solid var(--app-border-color-primary);
+  padding-top: 6px;
+  margin-top: 2px;
+}
+
+/* --- footer --- */
+
+.st-footer {
+  display: none; /* shown on narrow layouts */
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--app-text-color-secondary);
+  border-top: 1px solid var(--app-border-color-primary);
+  background: var(--app-foreground-color);
+}
+
+.st-footer a {
+  color: var(--primary-button-background-color);
+  text-decoration: none;
+}
+
+.st-footer a:hover {
+  text-decoration: underline;
+}
+
+/* --- narrow layout (< 768px): preview above, editor below --- */
+
+@media (max-width: 767px) {
+  .st-body {
+    grid-template-columns: 1fr;
+    grid-template-rows: 320px 1fr;
+    height: auto;
+    min-height: calc(100vh - 53px);
+  }
+
+  .st-preview {
+    border-right: none;
+    border-bottom: 1px solid var(--app-border-color-primary);
+    height: 320px;
+  }
+
+  .st-editor-pane {
+    min-height: 300px;
+  }
+
+  .CodeMirror {
+    min-height: 300px;
+  }
+
+  .st-footer {
+    display: block;
+  }
+
+  .st-header {
+    gap: 10px;
+  }
+
+  .btn-group {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 479px) {
+  .st-title {
+    font-size: 14px;
+  }
+}
+
+/* utility: visually hidden but accessible to screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
