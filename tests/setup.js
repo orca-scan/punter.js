@@ -4,13 +4,20 @@ var http = require('http');
 var fs = require('fs');
 var path = require('path');
 var ROOT = path.resolve(__dirname, '..');
-var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.wav': 'audio/wav', '.png': 'image/png', '.svg': 'image/svg+xml' };
+var MIME = { '.html': 'text/html', '.js': 'application/javascript', '.wav': 'audio/wav', '.mp3': 'audio/mpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
 
 var _server, _browser, _baseUrl;
 var _started = null; // promise to ensure single init
 
 function serve(req, res) {
-    var filePath = path.join(ROOT, decodeURIComponent(req.url));
+    var urlPath = decodeURIComponent(req.url.split('?')[0]);
+    var filePath = path.join(ROOT, urlPath);
+
+    // serve index.html for directory requests
+    if (urlPath.slice(-1) === '/') {
+        filePath = path.join(ROOT, urlPath, 'index.html');
+    }
+
     fs.readFile(filePath, function (err, data) {
         if (err) { res.writeHead(404); res.end(); return; }
         res.writeHead(200, { 'Content-Type': MIME[path.extname(filePath)] || 'application/octet-stream' });

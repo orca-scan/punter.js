@@ -1,0 +1,51 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Move a sprite</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; background: #1b2125; overflow: hidden; }
+      canvas { display: block; }
+    </style>
+    <script src="../src/punter.js"></script>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <script>
+
+      // game settings - try changing these numbers
+      var SPEED = 3;
+      var SIZE  = 40;
+
+      punter.setup({ canvas: '#game' });
+
+      punter.scene('main', function () {
+
+        // create a player using a vector (drawn with code, no image file needed)
+        var player = punter.createSprite({
+          x: 100,
+          y: 100,
+          w: SIZE,
+          h: SIZE,
+          vector: function (ctx, w, h) {
+            ctx.fillStyle = '#EFD063';
+            ctx.fillRect(0, 0, w, h);
+          }
+        });
+
+        // runs ~60 times per second
+        punter.on('update', function () {
+          if (punter.isKeyDown('left',  'a')) player.moveX(-SPEED);
+          if (punter.isKeyDown('right', 'd')) player.moveX(SPEED);
+          if (punter.isKeyDown('up',    'w')) player.moveY(-SPEED);
+          if (punter.isKeyDown('down',  's')) player.moveY(SPEED);
+        });
+      });
+
+      punter.go('main');
+
+    </script>
+  </body>
+</html>
