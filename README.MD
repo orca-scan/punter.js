@@ -212,7 +212,7 @@ punter.scene('level1', function () {
     // + combos = AND (all keys must be held)
     if (punter.isKeyDown('shift+a'))    player.moveX(-6); // fast move
 
-    // pointer.clicked is true for one frame after a tap or click (good for menus, shooting)
+    // pointer.clicked is true for one frame after a tap or click (fires on release; not triggered by swipes)
     if (punter.pointer.clicked) {
       player.x = punter.pointer.x;
       player.y = punter.pointer.y;
@@ -223,6 +223,11 @@ punter.scene('level1', function () {
       player.x = punter.pointer.x;
       player.y = punter.pointer.y;
     }
+
+    // swipe detection - fires once on release (good for mobile controls)
+    if (punter.pointer.swipedLeft)  player.moveX(-5);
+    if (punter.pointer.swipedRight) player.moveX(5);
+    if (punter.pointer.swipedUp)    player.moveY(-5);
   });
 });
 ```
@@ -232,7 +237,13 @@ punter.scene('level1', function () {
 | `punter.isKeyDown('left', 'a')`     | `true` while any of the given keys is held; use `+` for combos e.g. `'shift+a'`                     |
 | `punter.pointer.x`                  | Current pointer X in canvas pixels (always up to date)                                               |
 | `punter.pointer.y`                  | Current pointer Y in canvas pixels (always up to date)                                               |
-| `punter.pointer.clicked`            | `true` for one `update` tick after a click or tap                                                    |
+| `punter.pointer.clicked`            | `true` for one `update` tick after a tap or click (fires on release; not set by swipes)              |
+| `punter.pointer.swiped`             | `true` for one `update` tick after a swipe (fires on release)                                        |
+| `punter.pointer.swipedUp`           | `true` for one tick if the swipe direction was up                                                    |
+| `punter.pointer.swipedDown`         | `true` for one tick if the swipe direction was down                                                  |
+| `punter.pointer.swipedLeft`         | `true` for one tick if the swipe direction was left                                                  |
+| `punter.pointer.swipedRight`        | `true` for one tick if the swipe direction was right                                                 |
+| `punter.pointer.swipeDistance`      | Distance of the swipe in canvas pixels (available on the same tick `swiped` is `true`)               |
 | `punter.isPointerDown(button)`      | `true` while the named button is held (`'left'`, `'right'`, `'middle'`; defaults to `'left'`)        |
 | `punter.pointer.down`               | `true` while the primary button or finger is held down                                               |
 | `punter.clearInput()`               | Resets all key and pointer states. Called automatically on `punter.go()`                             |
@@ -321,7 +332,7 @@ You do not need to understand this section to build a game. These are some of th
 
 - **Content-trimmed bounding boxes for collision.** The overlap test itself is a plain AABB (rectangle overlap) check, but the box isn't the full sprite sheet - `getBounds` does a per-pixel alpha scan of each image once, finds the tightest rect containing non-transparent pixels, and caches it per image key. So hitboxes match the visible artwork instead of whatever padding is baked into the source image.
 - **A real fixed-timestep loop.** The loop runs `update` on a 60Hz accumulator, decoupled from `draw`, with a 100ms-per-frame cap to avoid a spiral of death after a tab is backgrounded. Game logic behaves the same on a 60Hz and 144Hz screen - most hand-rolled canvas code skips this and gets frame-rate-dependent movement.
-- **Pointer, touch, and stylus are unified.** One `keys`/`pointer` input model backed by the Pointer Events API (with mouse/touch fallback for older browsers), with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor). Covers mouse, touchscreen, and stylus/pen with no extra game code.
+- **Pointer, touch, and stylus are unified.** One `keys`/`pointer` input model backed by the Pointer Events API (with mouse/touch fallback for older browsers), with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor). Covers mouse, touchscreen, and stylus/pen with no extra game code. Tap vs swipe is classified on release using a distance threshold scaled to canvas width — `pointer.clicked` fires for taps, the `swiped*` properties fire for swipes, and they are mutually exclusive.
 - **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens. All game coordinates - sprite positions, movement, pointer, and custom canvas drawing - use logical pixels; the engine handles the physical scaling internally.
 
 None of this is exotic, it's just the stuff that's easy to get wrong when you write it yourself.

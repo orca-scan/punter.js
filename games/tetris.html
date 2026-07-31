@@ -3,10 +3,10 @@
   <head>
     <title>Tetris</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 100%; height: 100%; background: #0f0f1a; overflow: hidden; }
+      html, body { width: 100%; height: 100%; background: #0f0f1a; overflow: hidden; touch-action: none; }
       canvas { background: #0f0f1a; }
     </style>
     <script src="../src/punter.js"></script>
@@ -127,6 +127,7 @@
           }
 
           handleInput();
+          handleTouchInput();
           handleGravity();
         });
 
@@ -306,6 +307,24 @@
         lastRight = rightNow;
         lastUp    = upNow;
         lastSpace = spaceNow;
+      }
+
+      /**
+       * Reads swipe/tap input for touch devices
+       */
+      function handleTouchInput() {
+        if (punter.pointer.clicked) tryRotate();
+        if (punter.pointer.swipedUp) hardDrop();
+
+        // move by however many cells the swipe covered
+        if (punter.pointer.swipedLeft || punter.pointer.swipedRight || punter.pointer.swipedDown) {
+          var cells = Math.max(1, Math.round(punter.pointer.swipeDistance / cellSize));
+          var dx = punter.pointer.swipedLeft ? -1 : (punter.pointer.swipedRight ? 1 : 0);
+          for (var i = 0; i < cells; i++) {
+            if (dx !== 0) tryMove(dx, 0);
+            else tryMove(0, 1);
+          }
+        }
       }
 
       /**

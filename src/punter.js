@@ -58,8 +58,11 @@
     htmlEl.setAttribute('data-punter-loading', 'true');
 
     var keys = {};
-    var pointer = { x: 0, y: 0, clicked: false, down: false };
+    var pointer = { x: 0, y: 0, clicked: false, down: false, swiped: false, swipedUp: false, swipedDown: false, swipedLeft: false, swipedRight: false, swipeDistance: 0 };
     var _pointerButtons = { left: false, middle: false, right: false };
+    var _swipeStartX = 0;
+    var _swipeStartY = 0;
+    var _swipeActive = false;
 
     // maps friendly key names to browser KeyboardEvent.key values
     var keyAliases = {
@@ -111,15 +114,35 @@
         pointer.y = Math.round((clientY - rect.top) * scaleY);
     }
 
-    /**
-     * Records a click or tap; sets pointer.clicked and updates pointer.x/y
-     * @param {number} clientX - client X coordinate of the input event
-     * @param {number} clientY - client Y coordinate of the input event
-     * @returns {void}
-     */
-    function registerClick(clientX, clientY) {
-        pointer.clicked = true;
+    // records touch/click start position for gesture classification on release
+    function registerPress(clientX, clientY) {
         updatePointerPosition(clientX, clientY);
+        _swipeStartX = pointer.x;
+        _swipeStartY = pointer.y;
+        _swipeActive = true;
+    }
+
+    // classifies a completed touch/click as a tap (clicked) or a swipe with direction
+    function classifyGesture() {
+        if (!_swipeActive) return;
+        var dx = pointer.x - _swipeStartX;
+        var dy = pointer.y - _swipeStartY;
+        var distance = Math.sqrt(dx * dx + dy * dy);
+        var threshold = Math.max(_width * 0.04, 10);
+        if (distance < threshold) {
+            pointer.clicked = true;
+        } else {
+            pointer.swiped = true;
+            pointer.swipeDistance = Math.round(distance);
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx < 0) pointer.swipedLeft = true;
+                else pointer.swipedRight = true;
+            } else {
+                if (dy < 0) pointer.swipedUp = true;
+                else pointer.swipedDown = true;
+            }
+        }
+        _swipeActive = false;
     }
 
     if (window.PointerEvent) {
@@ -129,11 +152,15 @@
             var btn = buttonName(e.button);
             _pointerButtons[btn] = true;
             pointer.down = _pointerButtons.left;
-            if (e.button === 0) registerClick(e.clientX, e.clientY);
+            if (e.button === 0) registerPress(e.clientX, e.clientY);
         });
 
         document.addEventListener('pointerup', function (e) {
             var btn = buttonName(e.button);
+            if (e.button === 0) {
+                updatePointerPosition(e.clientX, e.clientY);
+                classifyGesture();
+            }
             _pointerButtons[btn] = false;
             pointer.down = _pointerButtons.left;
         });
@@ -142,6 +169,7 @@
             var btn = buttonName(e.button);
             _pointerButtons[btn] = false;
             pointer.down = _pointerButtons.left;
+            _swipeActive = false;
         });
 
         document.addEventListener('pointermove', function (e) {
@@ -157,7 +185,7 @@
                 _pointerButtons.left = true;
                 pointer.down = true;
                 var touch = e.touches[0];
-                registerClick(touch.clientX, touch.clientY);
+                registerPress(touch.clientX, touch.clientY);
             }
         }, { capture: true });
 
@@ -168,11 +196,13 @@
         }, { passive: true });
 
         document.addEventListener('touchend', function () {
+            classifyGesture();
             _pointerButtons.left = false;
             pointer.down = false;
         });
 
         document.addEventListener('touchcancel', function () {
+            _swipeActive = false;
             _pointerButtons.left = false;
             pointer.down = false;
         });
@@ -181,11 +211,15 @@
             var btn = buttonName(e.button);
             _pointerButtons[btn] = true;
             pointer.down = _pointerButtons.left;
-            if (e.button === 0) registerClick(e.clientX, e.clientY);
+            if (e.button === 0) registerPress(e.clientX, e.clientY);
         });
 
         document.addEventListener('mouseup', function (e) {
             var btn = buttonName(e.button);
+            if (e.button === 0) {
+                updatePointerPosition(e.clientX, e.clientY);
+                classifyGesture();
+            }
             _pointerButtons[btn] = false;
             pointer.down = _pointerButtons.left;
         });
@@ -1413,6 +1447,12 @@
         while (_loopAccumulator >= _loopStep) {
             eventHandlers.update();
             pointer.clicked = false;
+            pointer.swiped = false;
+            pointer.swipedUp = false;
+            pointer.swipedDown = false;
+            pointer.swipedLeft = false;
+            pointer.swipedRight = false;
+            pointer.swipeDistance = 0;
             _frame++;
             _totalFrames++;
             if (_frame >= 60) {
@@ -1660,9 +1700,16 @@
         }
         pointer.clicked = false;
         pointer.down = false;
+        pointer.swiped = false;
+        pointer.swipedUp = false;
+        pointer.swipedDown = false;
+        pointer.swipedLeft = false;
+        pointer.swipedRight = false;
+        pointer.swipeDistance = 0;
         _pointerButtons.left = false;
         _pointerButtons.middle = false;
         _pointerButtons.right = false;
+        _swipeActive = false;
     };
 
     /**

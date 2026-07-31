@@ -204,19 +204,31 @@ describe('Input', function () {
 
     // --- pointer ---
 
-    it('pointer exposes x, y, clicked and down properties', async function () {
+    it('pointer exposes x, y, clicked, down and swipe properties', async function () {
         var result = await page.evaluate(function () {
             return {
-                hasX: typeof punter.pointer.x === 'number',
-                hasY: typeof punter.pointer.y === 'number',
-                hasClicked: typeof punter.pointer.clicked === 'boolean',
-                hasDown: typeof punter.pointer.down === 'boolean'
+                hasX:             typeof punter.pointer.x === 'number',
+                hasY:             typeof punter.pointer.y === 'number',
+                hasClicked:       typeof punter.pointer.clicked === 'boolean',
+                hasDown:          typeof punter.pointer.down === 'boolean',
+                hasSwiped:        typeof punter.pointer.swiped === 'boolean',
+                hasSwipedUp:      typeof punter.pointer.swipedUp === 'boolean',
+                hasSwipedDown:    typeof punter.pointer.swipedDown === 'boolean',
+                hasSwipedLeft:    typeof punter.pointer.swipedLeft === 'boolean',
+                hasSwipedRight:   typeof punter.pointer.swipedRight === 'boolean',
+                hasSwipeDistance: typeof punter.pointer.swipeDistance === 'number'
             };
         });
         expect(result.hasX).toBe(true);
         expect(result.hasY).toBe(true);
         expect(result.hasClicked).toBe(true);
         expect(result.hasDown).toBe(true);
+        expect(result.hasSwiped).toBe(true);
+        expect(result.hasSwipedUp).toBe(true);
+        expect(result.hasSwipedDown).toBe(true);
+        expect(result.hasSwipedLeft).toBe(true);
+        expect(result.hasSwipedRight).toBe(true);
+        expect(result.hasSwipeDistance).toBe(true);
     });
 
     it('pointer.clicked starts as false', async function () {
@@ -227,7 +239,17 @@ describe('Input', function () {
         expect(result).toBe(false);
     });
 
-    it('mousedown sets pointer.clicked to true', async function () {
+    it('pointer.clicked is false while mouse button is held (fires on release)', async function () {
+        await page.mouse.move(100, 100);
+        await page.mouse.down();
+        var result = await page.evaluate(function () {
+            return punter.pointer.clicked;
+        });
+        await page.mouse.up();
+        expect(result).toBe(false);
+    });
+
+    it('click in place sets pointer.clicked to true on release', async function () {
         await page.mouse.click(100, 100);
         var result = await page.evaluate(function () {
             return punter.pointer.clicked;
@@ -351,5 +373,134 @@ describe('Input', function () {
         });
         await page.mouse.up();
         expect(result).toBe(false);
+    });
+
+    // --- swipe detection ---
+
+    it('pointer.swiped is false after a click in place', async function () {
+        await page.mouse.click(100, 100);
+        var result = await page.evaluate(function () {
+            return punter.pointer.swiped;
+        });
+        expect(result).toBe(false);
+    });
+
+    it('pointer.swiped is true after a horizontal drag', async function () {
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return punter.pointer.swiped;
+        });
+        expect(result).toBe(true);
+    });
+
+    it('pointer.swipedRight is true after a rightward drag', async function () {
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swipedRight: punter.pointer.swipedRight, swipedLeft: punter.pointer.swipedLeft };
+        });
+        expect(result.swipedRight).toBe(true);
+        expect(result.swipedLeft).toBe(false);
+    });
+
+    it('pointer.swipedLeft is true after a leftward drag', async function () {
+        await page.mouse.move(300, 200);
+        await page.mouse.down();
+        await page.mouse.move(100, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swipedLeft: punter.pointer.swipedLeft, swipedRight: punter.pointer.swipedRight };
+        });
+        expect(result.swipedLeft).toBe(true);
+        expect(result.swipedRight).toBe(false);
+    });
+
+    it('pointer.swipedDown is true after a downward drag', async function () {
+        await page.mouse.move(200, 100);
+        await page.mouse.down();
+        await page.mouse.move(200, 300, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swipedDown: punter.pointer.swipedDown, swipedUp: punter.pointer.swipedUp };
+        });
+        expect(result.swipedDown).toBe(true);
+        expect(result.swipedUp).toBe(false);
+    });
+
+    it('pointer.swipedUp is true after an upward drag', async function () {
+        await page.mouse.move(200, 300);
+        await page.mouse.down();
+        await page.mouse.move(200, 100, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swipedUp: punter.pointer.swipedUp, swipedDown: punter.pointer.swipedDown };
+        });
+        expect(result.swipedUp).toBe(true);
+        expect(result.swipedDown).toBe(false);
+    });
+
+    it('pointer.swipeDistance is greater than zero after a swipe', async function () {
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return punter.pointer.swipeDistance;
+        });
+        expect(result).toBeGreaterThan(0);
+    });
+
+    it('swiped and clicked are mutually exclusive', async function () {
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swiped: punter.pointer.swiped, clicked: punter.pointer.clicked };
+        });
+        expect(result.swiped).toBe(true);
+        expect(result.clicked).toBe(false);
+    });
+
+    it('diagonal drag resolves to dominant axis direction', async function () {
+        // more horizontal movement than vertical — should resolve to swipedRight
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 240, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            return { swipedRight: punter.pointer.swipedRight, swipedDown: punter.pointer.swipedDown };
+        });
+        expect(result.swipedRight).toBe(true);
+        expect(result.swipedDown).toBe(false);
+    });
+
+    it('clearInput resets all swipe properties to their default values', async function () {
+        await page.mouse.move(100, 200);
+        await page.mouse.down();
+        await page.mouse.move(300, 200, { steps: 5 });
+        await page.mouse.up();
+        var result = await page.evaluate(function () {
+            punter.clearInput();
+            return {
+                swiped:        punter.pointer.swiped,
+                swipedUp:      punter.pointer.swipedUp,
+                swipedDown:    punter.pointer.swipedDown,
+                swipedLeft:    punter.pointer.swipedLeft,
+                swipedRight:   punter.pointer.swipedRight,
+                swipeDistance: punter.pointer.swipeDistance
+            };
+        });
+        expect(result.swiped).toBe(false);
+        expect(result.swipedUp).toBe(false);
+        expect(result.swipedDown).toBe(false);
+        expect(result.swipedLeft).toBe(false);
+        expect(result.swipedRight).toBe(false);
+        expect(result.swipeDistance).toBe(0);
     });
 });

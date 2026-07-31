@@ -3,10 +3,10 @@
   <head>
     <title>Snake</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { width: 100%; height: 100%; background: #1e2230; overflow: hidden; }
+      html, body { width: 100%; height: 100%; background: #1e2230; overflow: hidden; touch-action: none; }
       canvas { background: #1b2125; }
     </style>
     <script src="../src/punter.js"></script>
@@ -56,11 +56,11 @@
         // game logic - runs ~60 times per second
         punter.on('update', function () {
 
-          // read arrow keys (prevent reversing into yourself)
-          if (punter.isKeyDown('up')    && dir.y === 0) nextDir = { x: 0, y: -1 };
-          if (punter.isKeyDown('down')  && dir.y === 0) nextDir = { x: 0, y: 1 };
-          if (punter.isKeyDown('left')  && dir.x === 0) nextDir = { x: -1, y: 0 };
-          if (punter.isKeyDown('right') && dir.x === 0) nextDir = { x: 1, y: 0 };
+          // read arrow keys or swipe (prevent reversing into yourself)
+          if ((punter.isKeyDown('up')    || punter.pointer.swipedUp)    && dir.y === 0) nextDir = { x: 0, y: -1 };
+          if ((punter.isKeyDown('down')  || punter.pointer.swipedDown)  && dir.y === 0) nextDir = { x: 0, y: 1 };
+          if ((punter.isKeyDown('left')  || punter.pointer.swipedLeft)  && dir.x === 0) nextDir = { x: -1, y: 0 };
+          if ((punter.isKeyDown('right') || punter.pointer.swipedRight) && dir.x === 0) nextDir = { x: 1, y: 0 };
 
           // only move every SPEED frames (this controls how fast the snake moves)
           if (punter.totalFrames % SPEED !== 0) return;
