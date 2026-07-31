@@ -244,6 +244,7 @@
         }
 
         // ensure canvas has correct styles
+        _canvas.style.display = 'block';
         _canvas.style.position = 'absolute';
         _canvas.style.top = '50%';
         _canvas.style.left = '50%';
