@@ -3,7 +3,7 @@
   <head>
     <title>Asteroids</title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
     <style>
       * {
         margin: 0;
@@ -16,6 +16,7 @@
         height: 100%;
         background: #000010;
         overflow: hidden;
+        touch-action: none;
       }
     </style>
     <script src="../src/punter.js"></script>
@@ -114,6 +115,21 @@
           if (ship.thrusting) {
             ship.vx += Math.cos(ship.angle) * SHIP_THRUST;
             ship.vy += Math.sin(ship.angle) * SHIP_THRUST;
+          }
+
+          // ---- touch controls: top zone = thrust, left/right zones = rotate ----
+          if (punter.isPointerDown()) {
+            var tx = punter.pointer.x;
+            var ty = punter.pointer.y;
+            if (ty < h * 0.35) {
+              ship.thrusting = true;
+              ship.vx += Math.cos(ship.angle) * SHIP_THRUST;
+              ship.vy += Math.sin(ship.angle) * SHIP_THRUST;
+            } else if (tx < w * 0.4) {
+              ship.angle -= SHIP_TURN;
+            } else if (tx > w * 0.6) {
+              ship.angle += SHIP_TURN;
+            }
           }
           ship.vx *= SHIP_FRICTION;
           ship.vy *= SHIP_FRICTION;
@@ -518,7 +534,10 @@
         ctx.font         = '12px monospace';
         ctx.textAlign    = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText('ARROWS / WASD  \u00b7  SPACE to fire', w / 2, h - 10);
+        var hint = punter.isMobile
+          ? 'Top: thrust  \u00b7  L/R: rotate  \u00b7  Tap: fire'
+          : 'ARROWS / WASD  \u00b7  SPACE to fire';
+        ctx.fillText(hint, w / 2, h - 10);
 
         ctx.fillStyle    = COLOR_DIM;
         ctx.font         = '12px monospace';
