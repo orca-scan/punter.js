@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="hullGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b71c1c"/>
+      <stop offset="50%" stop-color="#ef5350"/>
+      <stop offset="100%" stop-color="#b71c1c"/>
+    </linearGradient>
+  </defs>
+  <!-- engine flame at top -->
+  <ellipse cx="24" cy="4" rx="5" ry="4" fill="#ff9800" opacity="0.8"/>
+  <ellipse cx="24" cy="5" rx="3" ry="3" fill="#fff176"/>
+  <!-- main hull - nose points down -->
+  <polygon points="24,46 38,10 24,17 10,10" fill="url(#hullGrad)"/>
+  <!-- hull highlight -->
+  <polygon points="24,46 32,18 24,23 16,18" fill="#ff8a80" opacity="0.4"/>
+  <!-- left wing -->
+  <polygon points="10,10 1,2 18,7" fill="#7f0000"/>
+  <!-- right wing -->
+  <polygon points="38,10 47,2 30,7" fill="#7f0000"/>
+  <!-- cockpit -->
+  <ellipse cx="24" cy="30" rx="5" ry="8" fill="#ffcdd2"/>
+  <ellipse cx="23" cy="32" rx="2" ry="3" fill="#ffebee" opacity="0.8"/>
+</svg>

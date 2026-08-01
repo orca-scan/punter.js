@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 28" width="44" height="28">
+  <!-- left wing -->
+  <path d="M22,14 L2,3 L6,16 L10,21 L20,16 Z" fill="#212121"/>
+  <!-- right wing -->
+  <path d="M22,14 L42,3 L38,16 L34,21 L24,16 Z" fill="#212121"/>
+  <!-- wing vein lines -->
+  <line x1="22" y1="14" x2="2" y2="3" stroke="#37474f" stroke-width="1.2"/>
+  <line x1="22" y1="14" x2="8" y2="17" stroke="#37474f" stroke-width="1"/>
+  <line x1="22" y1="14" x2="42" y2="3" stroke="#37474f" stroke-width="1.2"/>
+  <line x1="22" y1="14" x2="36" y2="17" stroke="#37474f" stroke-width="1"/>
+  <!-- body -->
+  <ellipse cx="22" cy="17" rx="5" ry="7" fill="#1a1a1a"/>
+  <!-- head -->
+  <circle cx="22" cy="10" r="5.5" fill="#212121"/>
+  <!-- ears -->
+  <polygon points="16,9 13,2 19,6" fill="#1a1a1a"/>
+  <polygon points="28,9 31,2 25,6" fill="#1a1a1a"/>
+  <!-- eyes -->
+  <circle cx="19.5" cy="9" r="1.8" fill="#f44336"/>
+  <circle cx="24.5" cy="9" r="1.8" fill="#f44336"/>
+  <!-- eye glow -->
+  <circle cx="19.5" cy="9" r="0.8" fill="#ff8a80"/>
+  <circle cx="24.5" cy="9" r="0.8" fill="#ff8a80"/>
+</svg>

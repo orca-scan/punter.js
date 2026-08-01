@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 36" width="32" height="36">
+  <defs>
+    <radialGradient id="bombGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#424242"/>
+      <stop offset="100%" stop-color="#1a1a1a"/>
+    </radialGradient>
+  </defs>
+  <!-- fuse cord -->
+  <path d="M16,5 Q22,2 24,0" stroke="#795548" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- fuse spark -->
+  <circle cx="24" cy="0" r="3.5" fill="#ff6f00" opacity="0.8"/>
+  <circle cx="24" cy="0" r="2" fill="#ffee58"/>
+  <!-- bomb body -->
+  <circle cx="16" cy="21" r="14" fill="url(#bombGrad)"/>
+  <!-- shine highlight -->
+  <ellipse cx="10" cy="13" rx="4" ry="3" fill="#fff" opacity="0.12" transform="rotate(-30 10 13)"/>
+  <!-- subtle rim -->
+  <circle cx="16" cy="21" r="14" fill="none" stroke="#333" stroke-width="1"/>
+</svg>

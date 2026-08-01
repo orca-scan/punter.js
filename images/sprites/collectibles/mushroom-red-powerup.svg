@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 34" width="32" height="34">
+  <defs>
+    <radialGradient id="capGrad" cx="40%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ef5350"/>
+      <stop offset="100%" stop-color="#b71c1c"/>
+    </radialGradient>
+  </defs>
+  <!-- stem -->
+  <rect x="9" y="22" width="14" height="12" rx="4" fill="#f5f5f5"/>
+  <!-- stem shading -->
+  <rect x="11" y="22" width="5" height="12" rx="3" fill="#eeeeee"/>
+  <!-- cap underside rim -->
+  <ellipse cx="16" cy="22" rx="15" ry="5" fill="#c62828"/>
+  <!-- cap dome -->
+  <path d="M1,22 Q1,4 16,4 Q31,4 31,22 Z" fill="url(#capGrad)"/>
+  <!-- spots -->
+  <circle cx="10" cy="13" r="4" fill="#fff" opacity="0.9"/>
+  <circle cx="22" cy="13" r="4" fill="#fff" opacity="0.9"/>
+  <circle cx="16" cy="8" r="3" fill="#fff" opacity="0.9"/>
+  <circle cx="7" cy="19" r="2.5" fill="#fff" opacity="0.85"/>
+  <circle cx="25" cy="19" r="2.5" fill="#fff" opacity="0.85"/>
+  <!-- cap shine -->
+  <ellipse cx="10" cy="10" rx="3" ry="2" fill="#fff" opacity="0.35" transform="rotate(-20 10 10)"/>
+</svg>

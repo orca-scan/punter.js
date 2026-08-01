@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 32" width="56" height="32">
+  <defs>
+    <radialGradient id="domeGrad" cx="45%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#b2dfdb"/>
+      <stop offset="100%" stop-color="#4db6ac" stop-opacity="0.7"/>
+    </radialGradient>
+  </defs>
+  <!-- underside glow -->
+  <ellipse cx="28" cy="26" rx="24" ry="6" fill="#1b5e20" opacity="0.4"/>
+  <!-- saucer hull lower rim -->
+  <ellipse cx="28" cy="22" rx="26" ry="8" fill="#2e7d32"/>
+  <!-- saucer hull main disc -->
+  <ellipse cx="28" cy="18" rx="26" ry="10" fill="#43a047"/>
+  <!-- dome -->
+  <ellipse cx="28" cy="12" rx="14" ry="12" fill="#66bb6a"/>
+  <!-- dome glass -->
+  <ellipse cx="28" cy="11" rx="11" ry="9" fill="url(#domeGrad)"/>
+  <!-- alien silhouette inside dome -->
+  <ellipse cx="28" cy="12" rx="4" ry="5" fill="#a5d6a7" opacity="0.5"/>
+  <circle cx="26" cy="10" r="1.5" fill="#1b5e20"/>
+  <circle cx="30" cy="10" r="1.5" fill="#1b5e20"/>
+  <!-- underside lights -->
+  <circle cx="14" cy="21" r="2.5" fill="#ffee58"/>
+  <circle cx="22" cy="24" r="2.5" fill="#ff7043"/>
+  <circle cx="28" cy="25" r="2.5" fill="#ffee58"/>
+  <circle cx="34" cy="24" r="2.5" fill="#ff7043"/>
+  <circle cx="42" cy="21" r="2.5" fill="#ffee58"/>
+</svg>

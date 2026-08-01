@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 28" width="24" height="28">
+  <!-- top left facet -->
+  <polygon points="12,2 2,10 12,14" fill="#1e88e5"/>
+  <!-- top right facet -->
+  <polygon points="12,2 22,10 12,14" fill="#42a5f5"/>
+  <!-- bottom left facet -->
+  <polygon points="2,10 12,28 12,14" fill="#1565c0"/>
+  <!-- bottom right facet -->
+  <polygon points="22,10 12,28 12,14" fill="#0d47a1"/>
+  <!-- top horizontal edge highlight -->
+  <polygon points="4,10 12,2 20,10" fill="#64b5f6" opacity="0.5"/>
+  <!-- outline -->
+  <polygon points="12,2 22,10 12,28 2,10" fill="none" stroke="#0d47a1" stroke-width="0.5"/>
+  <!-- shine -->
+  <circle cx="10" cy="8" r="2" fill="#fff" opacity="0.5"/>
+</svg>

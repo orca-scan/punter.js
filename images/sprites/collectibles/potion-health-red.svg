@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 34" width="20" height="34">
+  <defs>
+    <linearGradient id="potionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef9a9a"/>
+      <stop offset="100%" stop-color="#c62828"/>
+    </linearGradient>
+  </defs>
+  <!-- cork -->
+  <rect x="7" y="0" width="6" height="5" rx="1.5" fill="#8d6e63"/>
+  <rect x="8" y="1" width="2" height="3" rx="1" fill="#a1887f" opacity="0.6"/>
+  <!-- bottle neck -->
+  <rect x="7" y="5" width="6" height="5" rx="1" fill="#e57373" opacity="0.9"/>
+  <!-- bottle body -->
+  <path d="M3,14 Q2,30 10,32 Q18,30 17,14 L14,10 L6,10 Z" fill="url(#potionGrad)"/>
+  <!-- liquid highlight -->
+  <path d="M5,16 Q4,28 8,30 L6,22 Z" fill="#ff8a80" opacity="0.5"/>
+  <!-- bottle glass shine -->
+  <ellipse cx="8" cy="20" rx="2" ry="5" fill="#fff" opacity="0.25"/>
+  <!-- label cross (health symbol) -->
+  <rect x="7" y="19" width="6" height="2" fill="#fff" opacity="0.8"/>
+  <rect x="9" y="17" width="2" height="6" fill="#fff" opacity="0.8"/>
+</svg>

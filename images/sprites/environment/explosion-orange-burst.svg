@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <!-- outer spiky burst - 8 outer + 8 inner alternating points -->
+  <polygon points="24,1 27,17 38,7 29,21 47,22 31,27 40,40 26,31 25,47 23,31 8,40 17,27 1,22 19,21 10,7 21,17" fill="#e65100"/>
+  <!-- secondary burst layer -->
+  <polygon points="24,5 26,16 34,10 28,19 43,22 29,25 37,37 25,28 24,43 23,28 11,37 19,25 5,22 20,19 14,10 22,16" fill="#ff6f00"/>
+  <!-- inner glow -->
+  <circle cx="24" cy="24" r="12" fill="#ff9800"/>
+  <!-- bright centre -->
+  <circle cx="24" cy="24" r="7" fill="#ffd600"/>
+  <!-- hot white core -->
+  <circle cx="24" cy="24" r="4" fill="#fff9c4"/>
+</svg>

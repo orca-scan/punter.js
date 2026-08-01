@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="32" height="40">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e88e5"/>
+      <stop offset="100%" stop-color="#0d47a1"/>
+    </linearGradient>
+  </defs>
+  <!-- shield body -->
+  <path d="M16,2 L30,8 L30,22 Q30,36 16,39 Q2,36 2,22 L2,8 Z" fill="url(#shieldGrad)"/>
+  <!-- shield border -->
+  <path d="M16,2 L30,8 L30,22 Q30,36 16,39 Q2,36 2,22 L2,8 Z" fill="none" stroke="#0d47a1" stroke-width="2"/>
+  <!-- cross emblem -->
+  <rect x="14" y="8" width="4" height="22" rx="2" fill="#ffd600"/>
+  <rect x="6" y="16" width="20" height="4" rx="2" fill="#ffd600"/>
+  <!-- shine -->
+  <path d="M6,8 L16,4 L26,8 L24,20 Q20,14 16,12 Q12,14 8,20 Z" fill="#fff" opacity="0.12"/>
+</svg>

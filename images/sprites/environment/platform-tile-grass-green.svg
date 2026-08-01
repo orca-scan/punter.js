@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- dirt base -->
+  <rect x="0" y="10" width="32" height="22" fill="#6d4c41"/>
+  <!-- dirt texture -->
+  <rect x="3" y="14" width="7" height="1.5" rx="0.5" fill="#5d4037" opacity="0.6"/>
+  <rect x="14" y="19" width="8" height="1.5" rx="0.5" fill="#5d4037" opacity="0.6"/>
+  <rect x="22" y="14" width="7" height="1.5" rx="0.5" fill="#5d4037" opacity="0.6"/>
+  <rect x="5" y="23" width="8" height="1.5" rx="0.5" fill="#5d4037" opacity="0.6"/>
+  <!-- grass surface -->
+  <rect x="0" y="8" width="32" height="6" fill="#4caf50"/>
+  <!-- grass top highlight -->
+  <rect x="0" y="8" width="32" height="2" fill="#66bb6a"/>
+  <!-- grass blades -->
+  <polygon points="3,8 5,2 7,8" fill="#388e3c"/>
+  <polygon points="9,8 11,3 13,8" fill="#2e7d32"/>
+  <polygon points="17,8 19,1 21,8" fill="#388e3c"/>
+  <polygon points="24,8 26,4 28,8" fill="#2e7d32"/>
+</svg>

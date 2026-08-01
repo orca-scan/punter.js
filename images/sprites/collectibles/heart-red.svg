@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 26" width="28" height="26">
+  <defs>
+    <radialGradient id="heartGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#ff8a80"/>
+      <stop offset="100%" stop-color="#d32f2f"/>
+    </radialGradient>
+  </defs>
+  <!-- shadow -->
+  <path d="M14,23 C14,23 2,14 2,8 C2,3 5,1 8.5,1 C11,1 13,3 14,5 C15,3 17,1 19.5,1 C23,1 26,3 26,8 C26,14 14,23 14,23 Z" fill="#b71c1c" opacity="0.3" transform="translate(1 1)"/>
+  <!-- heart body -->
+  <path d="M14,22 C14,22 2,13 2,7 C2,2 5,0 8.5,0 C11,0 13,2 14,4 C15,2 17,0 19.5,0 C23,0 26,2 26,7 C26,13 14,22 14,22 Z" fill="url(#heartGrad)"/>
+  <!-- shine -->
+  <path d="M8,1 C10,1 12,3 13,5 C11,3 9,2 7,3 C5,4 4,6 4,8 C3,6 3,3 5,2 Z" fill="#ff8a80" opacity="0.7"/>
+</svg>

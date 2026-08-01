@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 30" width="44" height="30">
+  <!-- legs left side -->
+  <line x1="22" y1="14" x2="2" y2="3" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="0" y2="14" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="2" y2="25" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="8" y2="29" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <!-- legs right side -->
+  <line x1="22" y1="14" x2="42" y2="3" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="44" y2="14" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="42" y2="25" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <line x1="22" y1="14" x2="36" y2="29" stroke="#212121" stroke-width="2" stroke-linecap="round"/>
+  <!-- abdomen -->
+  <ellipse cx="22" cy="19" rx="8" ry="9" fill="#1a1a1a"/>
+  <!-- red hourglass marking -->
+  <path d="M20,17 L22,20 L20,23 L24,23 L22,20 L24,17 Z" fill="#f44336" opacity="0.7"/>
+  <!-- head -->
+  <circle cx="22" cy="10" r="6" fill="#212121"/>
+  <!-- multiple eyes -->
+  <circle cx="19" cy="8" r="1.5" fill="#69f0ae"/>
+  <circle cx="22" cy="8" r="1.5" fill="#69f0ae"/>
+  <circle cx="25" cy="8" r="1.5" fill="#69f0ae"/>
+  <!-- fangs -->
+  <polygon points="20,14 21,17 22,14" fill="#f5f5f5"/>
+  <polygon points="22,14 23,17 24,14" fill="#f5f5f5"/>
+</svg>

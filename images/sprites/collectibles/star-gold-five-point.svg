@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <radialGradient id="starGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#fff176"/>
+      <stop offset="100%" stop-color="#f9a825"/>
+    </radialGradient>
+  </defs>
+  <!-- shadow -->
+  <polygon points="16,3 19.5,12 30,12 21.5,18.5 24.5,29 16,23 7.5,29 10.5,18.5 2,12 12.5,12" fill="#e65100" opacity="0.25" transform="translate(1 1)"/>
+  <!-- star body -->
+  <polygon points="16,2 19.5,11 30,11 21.5,17.5 24.5,28 16,22 7.5,28 10.5,17.5 2,11 12.5,11" fill="url(#starGrad)"/>
+  <!-- star outline -->
+  <polygon points="16,2 19.5,11 30,11 21.5,17.5 24.5,28 16,22 7.5,28 10.5,17.5 2,11 12.5,11" fill="none" stroke="#f57f17" stroke-width="0.5"/>
+  <!-- shine -->
+  <polygon points="16,2 19,9 16,12 13,9" fill="#fff9c4" opacity="0.6"/>
+</svg>

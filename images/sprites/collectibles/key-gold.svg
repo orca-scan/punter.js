@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 40" width="20" height="40">
+  <defs>
+    <radialGradient id="keyGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff176"/>
+      <stop offset="100%" stop-color="#f57f17"/>
+    </radialGradient>
+  </defs>
+  <!-- key ring -->
+  <circle cx="10" cy="9" r="8" fill="#f57f17"/>
+  <circle cx="10" cy="9" r="6" fill="url(#keyGrad)"/>
+  <circle cx="10" cy="9" r="3" fill="#e65100"/>
+  <circle cx="10" cy="9" r="1.5" fill="#fff176"/>
+  <!-- shaft -->
+  <rect x="9" y="16" width="3" height="20" rx="1.5" fill="#f57f17"/>
+  <!-- teeth -->
+  <rect x="12" y="21" width="5" height="3" rx="1" fill="#f57f17"/>
+  <rect x="12" y="28" width="4" height="3" rx="1" fill="#f57f17"/>
+  <!-- shine on ring -->
+  <circle cx="8" cy="7" r="2" fill="#fff9c4" opacity="0.6"/>
+</svg>

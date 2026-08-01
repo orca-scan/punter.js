@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <defs>
+    <radialGradient id="coinGrad" cx="35%" cy="30%" r="65%">
+      <stop offset="0%" stop-color="#fff176"/>
+      <stop offset="60%" stop-color="#fbc02d"/>
+      <stop offset="100%" stop-color="#e65100"/>
+    </radialGradient>
+  </defs>
+  <!-- coin shadow -->
+  <circle cx="13" cy="13" r="10" fill="#e65100" opacity="0.3"/>
+  <!-- coin body -->
+  <circle cx="12" cy="12" r="10" fill="url(#coinGrad)"/>
+  <!-- coin rim -->
+  <circle cx="12" cy="12" r="10" fill="none" stroke="#f57f17" stroke-width="1.5"/>
+  <!-- coin inner circle -->
+  <circle cx="12" cy="12" r="6.5" fill="none" stroke="#f57f17" stroke-width="1"/>
+  <!-- shine highlight -->
+  <ellipse cx="9" cy="8" rx="3" ry="2" fill="#fff9c4" opacity="0.7" transform="rotate(-30 9 8)"/>
+</svg>
