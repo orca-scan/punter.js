@@ -570,10 +570,11 @@
      * @param {number} dy - y position of the sprite
      * @param {number} dw - draw width of the sprite
      * @param {number} dh - draw height of the sprite
+     * @param {number} canvasW - width of the canvas
      * @param {number} canvasH - height of the canvas
      * @returns {void}
      */
-    function drawSpriteLabels(ctx, dx, dy, dw, dh, canvasH) {
+    function drawSpriteLabels(ctx, dx, dy, dw, dh, canvasW, canvasH) {
 
         var label = [
             'x=' + Math.floor(dx) + ' ',
@@ -582,6 +583,7 @@
         ].join('');
 
         ctx.font = _debugFont;
+        ctx.textAlign = 'left';
         var metrics = ctx.measureText(label);
         var textWidth = metrics.width;
 
@@ -589,19 +591,21 @@
         var descent = metrics.actualBoundingBoxDescent || 4;
         var textHeight = ascent + descent;
 
+        // center over the sprite, then clamp so the label stays within the canvas
         var textX = Math.floor(dx + (dw - textWidth) / 2);
+        textX = Math.max(2, Math.min(textX, canvasW - Math.ceil(textWidth) - 4));
         var textY;
 
-        if (dy + dh + textHeight + 2 < canvasH) {
-            textY = dy + dh + textHeight;
+        if (dy + dh + textHeight + 6 < canvasH) {
+            textY = dy + dh + ascent + 4;   // baseline 4px below sprite bottom
         }
         else {
-            textY = dy - 4;
+            textY = dy - descent - 4;       // baseline 4px above sprite top
         }
 
-        // draw background box
+        // draw background box — 2px padding around the actual glyph bounds
         ctx.fillStyle = _debugBackgroundColor;
-        ctx.fillRect(textX - 2, textY - textHeight + 2, textWidth + 4, textHeight);
+        ctx.fillRect(textX - 2, textY - ascent - 2, textWidth + 4, textHeight + 4);
 
         // draw text
         ctx.fillStyle = _debugTextColor;
@@ -625,6 +629,7 @@
         var label = 'Frame: ' + frame + '  |  FPS: ' + fps + '  |  Canvas: ' + canvasW + 'x' + canvasH + ' | ' + engine.orientation;
 
         ctx.font = _debugFont;
+        ctx.textAlign = 'left';
 
         var metrics = ctx.measureText(label);
         var textW = metrics.width;
@@ -812,7 +817,7 @@
             ctx.restore();
 
             if (_debuggingEnabled) {
-                drawSpriteLabels(ctx, vx, vy, vw, vh, engine.height);
+                drawSpriteLabels(ctx, vx, vy, vw, vh, engine.width, engine.height);
             }
 
             // keep rect bounds up to date so isCollidingWith works
@@ -902,7 +907,7 @@
         }
 
         if (_debuggingEnabled) {
-            drawSpriteLabels(ctx, dx, dy, dw, dh, canvasH);
+            drawSpriteLabels(ctx, dx, dy, dw, dh, canvasW, canvasH);
         }
 
         if (this.collidable) {
@@ -2104,7 +2109,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         _debugBackgroundColor = getCssVar('punter-debug-background', 'rgba(255,255,255,0.7)');
         _debugTextColor = getCssVar('punter-debug-text', 'red');
-        _debugFont = getCssVar('punter-debug-font', '12px monospace');
+        _debugFont = getCssVar('punter-debug-font', '10px monospace');
 
         setDevVars();
     });
