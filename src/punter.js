@@ -1014,6 +1014,12 @@
             this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
             this._boundsX = this.x;
             this._boundsY = this.y;
+
+            if (_debuggingEnabled) {
+                _canvasCtx.strokeStyle = 'red';
+                _canvasCtx.lineWidth = 1;
+                _canvasCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h);
+            }
             return;
         }
 
