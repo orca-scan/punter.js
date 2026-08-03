@@ -1658,6 +1658,8 @@
 
         var w = img.naturalWidth;
         var h = img.naturalHeight;
+        if (!w || !h) return { x: 0, y: 0, w: 0, h: 0, gridSize: _collisionMaskSize, maskRows: [] };
+
         _boundsCanvas.width = w;
         _boundsCanvas.height = h;
         _boundsCtx.clearRect(0, 0, w, h);
