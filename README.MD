@@ -10,8 +10,6 @@ A teaching-focused JavaScript game engine for the browser.
 
 Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/game) and was designed to help students and new developers learn JavaScript by making games. Its deliberately simple design keeps the important parts visible instead of hiding them behind frameworks and abstractions.
 
-**New to game programming?** [Build your first game](first-game.md) in under 15 minutes with the step-by-step guide⁠.
-
 ## Game programming terms
 - **Canvas** - an HTML element you draw on with JavaScript. Every punter.js game lives inside one `<canvas>`
 - **Sprite** - a game object (player, enemy, coin). It has a position, can move, animate and collide
