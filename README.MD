@@ -18,7 +18,7 @@ Created by the Orca Scan team, Punter.js powers [OrcaCam](https://orcascan.com/g
 
 ## Examples
 
-This project includes a few example games to help you get started. Download and run the examples locally using:
+This project includes a few example games which you can play and edit in the browser at https://punterjs.org. Or, you can download and run the examples locally using:
 
 ```bash
 git clone https://github.com/orca-scan/punter.js.git
