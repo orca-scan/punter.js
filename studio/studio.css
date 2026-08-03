@@ -54,6 +54,10 @@ html, body {
   white-space: nowrap;
 }
 
+.st-title span {
+  color: var(--primary-button-border-color);
+}
+
 .st-title a {
   color: inherit;
   text-decoration: none;
