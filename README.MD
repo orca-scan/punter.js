@@ -272,22 +272,10 @@ Event name | When it fires
 `go`       | Whenever `punter.go()` switches scenes
 
 ```js
+// these can be registered anywhere - they are not scene-specific
 punter.on('ready', function () {
   // all images and sounds are loaded - safe to start
   punter.go('level1');
-});
-
-punter.on('update', function () {
-  // runs ~60 times/sec - move things, read input, check collisions
-  if (punter.isKeyDown('right')) player.moveX(3);
-  if (player.isCollidingWith(enemy)) punter.go('gameOver');
-});
-
-punter.on('draw', function (ctx) {
-  // runs after sprites draw - ctx is the canvas 2D context
-  // use for score text, HUD, overlays; sprites draw themselves automatically
-  ctx.fillStyle = 'white';
-  ctx.fillText('Score: ' + score, 10, 20);
 });
 
 punter.on('resize', function () {
@@ -297,6 +285,27 @@ punter.on('resize', function () {
 
 punter.on('go', function (sceneName) {
   // fires after every scene switch - useful for analytics or shared teardown
+});
+
+// update and draw must go inside a scene
+punter.scene('level1', function () {
+
+  var player = punter.createSprite({ image: 'player', x: 50, y: 50 });
+  var enemy = punter.createSprite({ image: 'enemy', x: 200, y: 100 });
+  var score = 0;
+
+  punter.on('update', function () {
+    // runs ~60 times/sec - move things, read input, check collisions
+    if (punter.isKeyDown('right')) player.moveX(3);
+    if (player.isCollidingWith(enemy)) punter.go('gameOver');
+  });
+
+  punter.on('draw', function (ctx) {
+    // runs after sprites draw - ctx is the canvas 2D context
+    // use for score text, HUD, overlays; sprites draw themselves automatically
+    ctx.fillStyle = 'white';
+    ctx.fillText('Score: ' + score, 10, 20);
+  });
 });
 ```
 
