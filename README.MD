@@ -219,6 +219,8 @@ Name                               | Key
 `'space'`                          | Spacebar
 `'enter'`                          | Enter
 `'escape'` / `'esc'`               | Escape
+`'tab'`                            | Tab
+`'backspace'`                      | Backspace
 `'shift'` `'ctrl'` `'alt'`         | Modifier keys
 `'a'` – `'z'`                      | Letter keys (case-insensitive)
 
@@ -259,7 +261,7 @@ punter.stopSound('jump');
 
 ## 6. Events
 
-`punter.on(eventName, fn)` Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment.
+`punter.on(eventName, fn)` Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment. Register `update` and `draw` inside a scene function so they're set up fresh each time the scene starts. The `ready`, `resize`, and `go` events can be registered anywhere.
 
 Event name | When it fires
 :----------|:------------------------------------------------------------------------
@@ -348,8 +350,9 @@ The backing buffer is additionally scaled by devicePixelRatio (capped at 2x) for
 Set `debug: true` in `setup()` (or `punter.debug = true` later) to see:
 
 - FPS, frame count, canvas size, and orientation (bottom-right overlay)
-- Red collision-box outlines on every collidable sprite
 - Position/size labels under each sprite
+
+To see collision outlines on a specific sprite, set `outline: 'red'` in its options — this works independently of debug mode and is useful for checking why collisions aren't firing.
 
 This is genuinely useful while learning - turning it on lets you *see* the invisible collision boxes and frame rate, which makes it much easier to understand why something isn't colliding the way you expect.
 
