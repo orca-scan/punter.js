@@ -335,15 +335,6 @@ You do not need to understand this section to build a game. These are some of th
 
 None of this is exotic, it's just the stuff that's easy to get wrong when you write it yourself.
 
-## What it doesn't do
-
-- **No physics.** No gravity, velocity, acceleration model - `isCollidingWith` tells you two sprites overlap; what happens next (bounce back, stop, lose a life) is up to you.
-- **No tilemaps.** No Tiled import, no level-editor pipeline.
-- **No plugin system, no modules.** Single file, ~1800 lines, vanilla ES5-style JS, one global (`punter`).
-- **No WebGL.** Canvas 2D only.
-
-If you need physics or tilemaps, look at Phaser or Kaboom/Kaplay instead.
-
 ## Responsive Canvas
 
 The canvas always matches the real screen's aspect ratio - landscape screens get a landscape canvas, portrait screens get a portrait canvas. There's no portrait lock and no letterboxing (black bars).
