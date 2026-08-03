@@ -157,7 +157,7 @@ When both `image` and `vector` are set, the image draws first and the vector fun
 ### sprite methods
 
 Method                                     | Description
-:------------------------------------------|:--------------------------------------------------------------------
+:------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------
 `sprite.moveX(dx)`                         | Move right (`+dx`) or left (`-dx`) by pixels
 `sprite.moveY(dy)`                         | Move down (`+dy`) or up (`-dy`) by pixels
 `sprite.center(offsetX?, offsetY?)`        | Centre on canvas; use `centerX()` / `centerY()` for one axis
@@ -182,69 +182,69 @@ Property         | Description
 
 ## 4. Input
 
-Call `punter.isKeyDown()` inside your `update` handler each frame. Pass one or more friendly key names - returns `true` if any of them are held (OR logic). Use `+` for combos that require all keys at once (AND logic).
-
-| Name | Key |
-|------|-----|
-| `'left'` `'right'` `'up'` `'down'` | Arrow keys |
-| `'space'` | Spacebar |
-| `'enter'` | Enter |
-| `'escape'` / `'esc'` | Escape |
-| `'shift'` `'ctrl'` `'alt'` | Modifier keys |
-| `'a'` – `'z'` | Letter keys (case-insensitive) |
+Input is how your game reads the keyboard and mouse/touch. Use `punter.isKeyDown()` inside your `update` handler to check which keys are held, and `punter.pointer` to read mouse/touch position and taps.
 
 ```js
-punter.scene('level1', function () {
+punter.on('update', function () {
 
-  var player = punter.createSprite({ id: 'player', image: 'player', x: 100, y: 100 });
+  // keyboard - pass one or more key names (true if any are held)
+  if (punter.isKeyDown('left', 'a'))  player.moveX(-3);
+  if (punter.isKeyDown('right', 'd')) player.moveX(3);
+  if (punter.isKeyDown('up', 'w'))    player.moveY(-3);
+  if (punter.isKeyDown('down', 's'))  player.moveY(3);
+  if (punter.isKeyDown('space'))      punter.playSound('jump');
 
-  punter.on('update', function () {
+  // use + for combos where all keys must be held at once
+  if (punter.isKeyDown('shift+a'))    player.moveX(-6);
 
-    // arrow keys or WASD - multiple args = OR (true if any held)
-    if (punter.isKeyDown('left', 'a'))  player.moveX(-3);
-    if (punter.isKeyDown('right', 'd')) player.moveX(3);
-    if (punter.isKeyDown('up', 'w'))    player.moveY(-3);
-    if (punter.isKeyDown('down', 's'))  player.moveY(3);
-    if (punter.isKeyDown('space'))      punter.playSound('jump');
+  // mouse/touch - clicked is true for one frame after a tap or click
+  if (punter.pointer.clicked) {
+    player.x = punter.pointer.x;
+    player.y = punter.pointer.y;
+  }
 
-    // + combos = AND (all keys must be held)
-    if (punter.isKeyDown('shift+a'))    player.moveX(-6); // fast move
-
-    // pointer.clicked is true for one frame after a tap or click (fires on release; not triggered by swipes)
-    if (punter.pointer.clicked) {
-      player.x = punter.pointer.x;
-      player.y = punter.pointer.y;
-    }
-
-    // isPointerDown() is true while a finger or button is held (good for movement, steering)
-    if (punter.isPointerDown()) {
-      player.x = punter.pointer.x;
-      player.y = punter.pointer.y;
-    }
-
-    // swipe detection - fires once on release (good for mobile controls)
-    if (punter.pointer.swipedLeft)  player.moveX(-5);
-    if (punter.pointer.swipedRight) player.moveX(5);
-    if (punter.pointer.swipedUp)    player.moveY(-5);
-  });
+  // swipe detection - fires once on release (good for mobile)
+  if (punter.pointer.swipedLeft)  player.moveX(-5);
+  if (punter.pointer.swipedRight) player.moveX(5);
 });
 ```
 
-| Property/Method                     | Description                                                                                          |
-|-------------------------------------|------------------------------------------------------------------------------------------------------|
-| `punter.isKeyDown('left', 'a')`     | `true` while any of the given keys is held; use `+` for combos e.g. `'shift+a'`                     |
-| `punter.pointer.x`                  | Current pointer X in canvas pixels (always up to date)                                               |
-| `punter.pointer.y`                  | Current pointer Y in canvas pixels (always up to date)                                               |
-| `punter.pointer.clicked`            | `true` for one `update` tick after a tap or click (fires on release; not set by swipes)              |
-| `punter.pointer.swiped`             | `true` for one `update` tick after a swipe (fires on release)                                        |
-| `punter.pointer.swipedUp`           | `true` for one tick if the swipe direction was up                                                    |
-| `punter.pointer.swipedDown`         | `true` for one tick if the swipe direction was down                                                  |
-| `punter.pointer.swipedLeft`         | `true` for one tick if the swipe direction was left                                                  |
-| `punter.pointer.swipedRight`        | `true` for one tick if the swipe direction was right                                                 |
-| `punter.pointer.swipeDistance`      | Distance of the swipe in canvas pixels (available on the same tick `swiped` is `true`)               |
-| `punter.isPointerDown(button)`      | `true` while the named button is held (`'left'`, `'right'`, `'middle'`; defaults to `'left'`)        |
-| `punter.pointer.down`               | `true` while the primary button or finger is held down                                               |
-| `punter.clearInput()`               | Resets all key and pointer states. Called automatically on `punter.go()`                             |
+`isKeyDown()` takes friendly key names like `'left'`, `'space'`, `'a'` etc. Pass multiple names to check if *any* of them are held (OR logic), or join names with `+` for combos that require *all* keys at once (AND logic). The pointer properties work on both desktop (mouse) and mobile (touch) automatically.
+
+### key names
+
+Name                               | Key
+:----------------------------------|:------------------------------
+`'left'` `'right'` `'up'` `'down'` | Arrow keys
+`'space'`                          | Spacebar
+`'enter'`                          | Enter
+`'escape'` / `'esc'`               | Escape
+`'shift'` `'ctrl'` `'alt'`         | Modifier keys
+`'a'` – `'z'`                      | Letter keys (case-insensitive)
+
+### keyboard
+
+Property/Method                 | Description
+:-------------------------------|:------------------------------------------------------------------
+`punter.isKeyDown('left', 'a')` | `true` while any of the given keys is held
+`punter.isKeyDown('shift+a')`   | `true` while all keys in the combo are held
+`punter.clearInput()`           | Resets all key and pointer states (called automatically on `go()`)
+
+### pointer (mouse & touch)
+
+Property                       | Description
+:------------------------------|:---------------------------------------------------------------
+`punter.isPointerDown(button)` | `true` while a button is held (`'left'`, `'right'`, `'middle'`)
+`punter.pointer.x`             | Current pointer X in canvas pixels
+`punter.pointer.y`             | Current pointer Y in canvas pixels
+`punter.pointer.clicked`       | `true` for one frame after a tap or click (not set by swipes)
+`punter.pointer.down`          | `true` while the primary button or finger is held
+`punter.pointer.swiped`        | `true` for one frame after a swipe
+`punter.pointer.swipedUp`      | `true` if the swipe direction was up
+`punter.pointer.swipedDown`    | `true` if the swipe direction was down
+`punter.pointer.swipedLeft`    | `true` if the swipe direction was left
+`punter.pointer.swipedRight`   | `true` if the swipe direction was right
+`punter.pointer.swipeDistance` | Distance of the swipe in canvas pixels
 
 ## 5. Sound
 
@@ -262,7 +262,7 @@ punter.stopSound('jump');
 `punter.on(eventName, fn)` Events are how you plug your own code into the engine's game loop - you give it a function, and the engine calls that function at the right moment.
 
 Event name | When it fires
-:----------|:-----------------------------------------------------------------------------------------------------------------------------------------------------
+:----------|:------------------------------------------------------------------------
 `ready`    | Once, after all assets are loaded. Not needed just to call `go()`
 `update`   | ~60 times/sec (fixed timestep) - put game logic here
 `draw`     | Once per animation frame, after sprites auto-draw - use for HUD/overlays
@@ -359,23 +359,23 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 
 `punter` exposes a handful of read-only properties and helpers beyond what's covered above:
 
-Property                  | Description
-:-------------------------|:-------------------------------------------------------
-`punter.sceneName`        | name of the currently active scene
-`punter.sprites`          | array of all currently registered sprites
-`punter.getSprite(id)`    | get a sprite by id, `null` if not found
-`punter.width`            | logical pixel width of the canvas
-`punter.height`           | logical pixel height of the canvas
-`punter.frame`            | current frame counter (0–59, resets each second)
-`punter.totalFrames`      | total frames since the loop started (never resets)
-`punter.canvas`           | the `<canvas>` element
-`punter.ctx`              | the canvas 2D rendering context
-`punter.running`          | `true` if the game loop is running
-`punter.paused`           | `true` if the loop is paused
-`punter.resized`          | `true` for the frame in which a resize occurred
-`punter.isMobile`         | `true` on mobile devices
-`punter.isDesktop`        | `true` on non-mobile devices
-`punter.orientation`      | `'portrait'` or `'landscape'`
+Property               | Description
+:----------------------|:--------------------------------------------------
+`punter.sceneName`     | name of the currently active scene
+`punter.sprites`       | array of all currently registered sprites
+`punter.getSprite(id)` | get a sprite by id, `null` if not found
+`punter.width`         | logical pixel width of the canvas
+`punter.height`        | logical pixel height of the canvas
+`punter.frame`         | current frame counter (0–59, resets each second)
+`punter.totalFrames`   | total frames since the loop started (never resets)
+`punter.canvas`        | the `<canvas>` element
+`punter.ctx`           | the canvas 2D rendering context
+`punter.running`       | `true` if the game loop is running
+`punter.paused`        | `true` if the loop is paused
+`punter.resized`       | `true` for the frame in which a resize occurred
+`punter.isMobile`      | `true` on mobile devices
+`punter.isDesktop`     | `true` on non-mobile devices
+`punter.orientation`   | `'portrait'` or `'landscape'`
 
 ## License
 
