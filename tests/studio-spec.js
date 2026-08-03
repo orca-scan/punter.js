@@ -157,12 +157,19 @@ describe('Studio', function () {
         }, savedCode);
 
         await page.click('#st-run-btn');
-        await sleep(1500); // wait for the 1s auto-save debounce timer to fire
+        // run triggers an immediate save — poll until localStorage confirms it
+        await page.waitForFunction(function (code) {
+            try {
+                var raw = localStorage.getItem('punter-studio-v1');
+                if (!raw) return false;
+                var data = JSON.parse(raw);
+                return data.code === code;
+            } catch (e) { return false; }
+        }, { timeout: 3000 }, savedCode);
 
         // reload
         await page.reload({ waitUntil: 'domcontentloaded' });
         await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
-        await sleep(300);
 
         var restored = await page.evaluate(function () {
             if (window.studioEditor) return window.studioEditor.getValue();
@@ -204,13 +211,33 @@ describe('Studio', function () {
         // intercept the Blob download by overriding URL.createObjectURL and the anchor click
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
-                // override createObjectURL to capture the blob content
+                var done = false;
                 var orig = URL.createObjectURL;
+                var timeoutId = setTimeout(function () {
+                    if (done) return;
+                    done = true;
+                    URL.createObjectURL = orig;
+                    resolve('');
+                }, 2000);
+
+                // override createObjectURL to capture the blob content
                 URL.createObjectURL = function (blob) {
                     var reader = new FileReader();
-                    reader.onload = function () { resolve(reader.result); };
+                    reader.onload = function () {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timeoutId);
+                        URL.createObjectURL = orig;
+                        resolve(reader.result);
+                    };
+                    reader.onerror = function () {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timeoutId);
+                        URL.createObjectURL = orig;
+                        resolve('');
+                    };
                     reader.readAsText(blob);
-                    URL.createObjectURL = orig;
                     return '#'; // dummy URL
                 };
                 document.getElementById('st-download-btn').click();

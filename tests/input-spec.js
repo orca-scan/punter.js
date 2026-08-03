@@ -11,7 +11,9 @@ describe('Input', function () {
     });
 
     afterAll(async function () {
-        await page.close();
+        if (page) {
+            await page.close();
+        }
     });
 
     afterEach(async function () {

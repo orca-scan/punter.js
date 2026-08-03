@@ -383,7 +383,20 @@
             }
 
             /**
-             * Fetches an SVG, validates it has viewBox/width/height, then loads it as an image
+             * Parses a numeric value from an SVG attribute, ignoring non-px units
+             * @param {string|null} val - attribute value
+             * @returns {number} parsed number or NaN if unusable
+             */
+            function parseSvgDimension(val) {
+                if (!val) return NaN;
+                var trimmed = val.trim();
+                // reject non-px units (%, em, cm, in, pt, etc.)
+                if (/[^0-9.\-]/.test(trimmed.replace(/px$/i, ''))) return NaN;
+                return parseFloat(trimmed);
+            }
+
+            /**
+             * Fetches an SVG, infers missing viewBox/width/height, then loads it as an image
              * @param {string} key - image key
              * @param {string} url - SVG file URL
              */
@@ -394,14 +407,43 @@
                     var doc = new DOMParser().parseFromString(text, 'image/svg+xml');
                     var svg = doc.querySelector('svg');
 
-                    if (!svg || !svg.hasAttribute('viewBox') || !svg.hasAttribute('width') || !svg.hasAttribute('height')) {
+                    if (!svg) {
                         if (failed) return;
                         failed = true;
-                        reject(new Error('SVG "' + key + '" must have viewBox, width and height attributes'));
+                        reject(new Error('SVG "' + key + '" is not a valid SVG document'));
                         return;
                     }
 
-                    var blob = new Blob([text], { type: 'image/svg+xml' });
+                    var vb = svg.getAttribute('viewBox');
+                    var w = parseSvgDimension(svg.getAttribute('width'));
+                    var h = parseSvgDimension(svg.getAttribute('height'));
+
+                    // extract dimensions from viewBox if present
+                    var vbW = NaN;
+                    var vbH = NaN;
+                    if (vb) {
+                        var parts = vb.trim().split(/[\s,]+/);
+                        if (parts.length === 4) {
+                            vbW = parseFloat(parts[2]);
+                            vbH = parseFloat(parts[3]);
+                        }
+                    }
+
+                    // infer missing attributes from what we have
+                    if (!isNaN(vbW) && !isNaN(vbH)) {
+                        if (isNaN(w)) { w = vbW; svg.setAttribute('width', String(w)); }
+                        if (isNaN(h)) { h = vbH; svg.setAttribute('height', String(h)); }
+                    } else if (!isNaN(w) && !isNaN(h)) {
+                        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+                    } else {
+                        if (failed) return;
+                        failed = true;
+                        reject(new Error('SVG "' + key + '" must have either a viewBox or numeric width and height attributes'));
+                        return;
+                    }
+
+                    var svgText = new XMLSerializer().serializeToString(svg);
+                    var blob = new Blob([svgText], { type: 'image/svg+xml' });
                     var img = new Image();
                     img.key = key;
                     img.onload = handleLoad.bind(img, key);
