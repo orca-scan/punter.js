@@ -44,6 +44,8 @@
     var _loopFps = 0;
     var _loopFpsCounter = 0;
     var _loopFpsTimer = 0;
+    var _collisionMaskSize = 12;
+    var _collisionSampleMax = 12;
     var _sprites = {}; // key: id, value: sprite
     var _spriteCounter = 0; // auto-increments when no id is supplied to createSprite
     var eventHandlers = {
@@ -734,8 +736,10 @@
         this.vector = typeof opts.vector === 'function' ? opts.vector : null;
         this.preserveAspect = (opts.preserveAspect !== false);
         this.collidable = (opts.collidable !== false);
-        // vector-only sprites default to rect bounds since there is no image to pixel-scan
-        this.boundsMode = (opts.boundsMode === 'rect' || (!opts.image && this.vector)) ? 'rect' : 'pixel';
+        // default: vectors use 'rect', images use 'pixel'; explicit boundsMode overrides
+        this.boundsMode = opts.boundsMode === 'rect' ? 'rect'
+            : opts.boundsMode === 'pixel' ? 'pixel'
+            : (!opts.image && this.vector) ? 'rect' : 'pixel';
         this.outline = (typeof opts.outline === 'string') ? opts.outline : null;
         this.frame = null; // optional override by game logic
         this.repeatX = (opts.repeatX === true);
@@ -787,13 +791,30 @@
 
             // pre-cache relBounds so isCollidingWith works from frame 1
             if (this.collidable && this.boundsMode === 'pixel') {
-                this.relBounds = boundingCache.get(initialDrawKey) || { x: 0, y: 0, w: img.naturalWidth, h: img.naturalHeight };
+                this.relBounds = boundingCache.get(initialDrawKey);
+                if (!this.relBounds) {
+                    this.relBounds = getBounds(img, 1);
+                    boundingCache.set(initialDrawKey, this.relBounds);
+                }
                 this._lastBoundsKey = initialDrawKey;
+                this._baseMaskAngle = 0;
+                this._srcW = img.naturalWidth;
+                this._srcH = img.naturalHeight;
             }
         } else {
             // vector-only sprite — w and h were validated above, no image to measure
             this.aspectRatio = 1;
+
+            // rasterise vector function to build pixel mask when requested
+            if (this.collidable && this.boundsMode === 'pixel') {
+                this.relBounds = getVectorBounds(this, this.w, this.h);
+                this._baseMaskAngle = this.angle || 0;
+                this._srcW = this.w;
+                this._srcH = this.h;
+            }
         }
+
+        if (this.collidable) this._refreshBounds();
 
         // cache sprite in memory
         _sprites[this.id] = this;
@@ -861,13 +882,6 @@
             if (_debuggingEnabled) {
                 drawSpriteLabels(ctx, vx, vy, vw, vh, engine.width, engine.height);
             }
-
-            // keep rect bounds up to date so isCollidingWith works
-            if (this.collidable) {
-                this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
-                this._boundsX = this.x;
-                this._boundsY = this.y;
-            }
             return;
         }
 
@@ -882,6 +896,38 @@
 
         var canvasW = engine.width;    // canvas width
         var canvasH = engine.height;   // canvas height
+
+        // rotated images skip manual clipping and let the canvas clip naturally
+        if (this.angle) {
+            // expanded offscreen check for rotated sprite
+            var halfDiag = Math.ceil(Math.sqrt(dw * dw + dh * dh) / 2);
+            var centerX = dx + dw / 2;
+            var centerY = dy + dh / 2;
+            if (centerX + halfDiag <= 0 || centerX - halfDiag >= canvasW ||
+                centerY + halfDiag <= 0 || centerY - halfDiag >= canvasH) return;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(this.angle);
+            ctx.drawImage(img, -dw / 2, -dh / 2, dw, dh);
+
+            if (this.vector) {
+                ctx.translate(-dw / 2, -dh / 2);
+                this.vector(ctx, dw, dh);
+            }
+
+            if (this.outline) {
+                ctx.strokeStyle = this.outline;
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-dw / 2, -dh / 2, dw, dh);
+            }
+            ctx.restore();
+
+            if (_debuggingEnabled) {
+                drawSpriteLabels(ctx, dx, dy, dw, dh, canvasW, canvasH);
+            }
+            return;
+        }
 
         // skip draw if fully offscreen
         if (dx + dw <= 0 || dy + dh <= 0 || dx >= canvasW || dy >= canvasH) return;
@@ -950,12 +996,6 @@
 
         if (_debuggingEnabled) {
             drawSpriteLabels(ctx, dx, dy, dw, dh, canvasW, canvasH);
-        }
-
-        if (this.collidable) {
-            this._drawWidth = dw;
-            this._drawHeight = dh;
-            this.computeBounds(img);
         }
     };
     /**
@@ -1037,64 +1077,12 @@
         });
 
         if (this.collidable && !this.repeatX && !this.repeatY) {
-            this.computeBounds(img);
+            this._refreshBounds();
         }
 
         // now update canvas ref so future resize is from here
         this.originalCanvasW = engine.width;
         this.originalCanvasH = engine.height;
-    };
-    /**
-     * Computes bounding box from image and caches relative bounds
-     * @param {HTMLImageElement} img - Sprite image
-     * @returns {void}
-     */
-    Sprite.prototype.computeBounds = function (img) {
-
-        // rect mode skips pixel analysis entirely
-        if (this.boundsMode === 'rect') {
-            this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
-            this._boundsX = this.x;
-            this._boundsY = this.y;
-
-            if (_debuggingEnabled) {
-                _canvasCtx.strokeStyle = 'red';
-                _canvasCtx.lineWidth = 1;
-                _canvasCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h);
-            }
-            return;
-        }
-
-        var frameKey = this.getFrameImage();
-
-        if (!this.relBounds || this._lastBoundsKey !== frameKey) {
-            this.relBounds = boundingCache.get(frameKey);
-            if (!this.relBounds) {
-                this.relBounds = getBounds(img, 1);
-                boundingCache.set(frameKey, this.relBounds);
-            }
-            this._lastBoundsKey = frameKey;
-        }
-
-        // scale relBounds from image space into sprite draw space
-        var scaleX = (this._drawWidth || this.w) / img.naturalWidth;
-        var scaleY = (this._drawHeight || this.h) / img.naturalHeight;
-
-        this.bounds = {
-            x: this.x + this.relBounds.x * scaleX,
-            y: this.y + this.relBounds.y * scaleY,
-            w: this.relBounds.w * scaleX,
-            h: this.relBounds.h * scaleY
-        };
-
-        this._boundsX = this.x;
-        this._boundsY = this.y;
-
-        if (_debuggingEnabled) {
-            _canvasCtx.strokeStyle = 'red';
-            _canvasCtx.lineWidth = 1;
-            _canvasCtx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h);
-        }
     };
     /**
      * Draws the sprite tiled horizontally across the full canvas width; used for repeating backgrounds
@@ -1338,8 +1326,9 @@
     Sprite.prototype.isCollidingWith = function (target) {
         if (!this.collidable) return false;
 
-        // refresh this sprite's bounds when position has changed (dirty check)
-        if (!this.bounds || this.x !== this._boundsX || this.y !== this._boundsY) {
+        // refresh bounds when position or angle has changed
+        var thisQA = quantizeAngle(this.angle || 0);
+        if (!this.bounds || this.x !== this._boundsX || this.y !== this._boundsY || thisQA !== this._boundsQAngle) {
             this._refreshBounds();
         }
 
@@ -1349,22 +1338,39 @@
         // target can be a sprite or a plain { x, y, w, h } bounding rect
         if (typeof target._refreshBounds === 'function') {
             if (!target.collidable) return false;
-            if (!target.bounds || target.x !== target._boundsX || target.y !== target._boundsY) {
+            var targetQA = quantizeAngle(target.angle || 0);
+            if (!target.bounds || target.x !== target._boundsX || target.y !== target._boundsY || targetQA !== target._boundsQAngle) {
                 target._refreshBounds();
             }
             bb = target.bounds;
         } else {
-            // plain rect: { x, y, w, h } — no collidable check needed
             bb = target;
         }
 
         // aabb test: if separated on any single axis, the boxes cannot overlap
-        return !(
+        var overlaps = !(
             ab.x + ab.w <= bb.x ||
             ab.x >= bb.x + bb.w ||
             ab.y + ab.h <= bb.y ||
             ab.y >= bb.y + bb.h
         );
+
+        if (!overlaps) return false;
+
+        // only run edge-aware checks for sprites using pixel bounds mode
+        var thisMask = getSpriteCollisionData(this);
+
+        if (typeof target._refreshBounds === 'function') {
+            var targetMask = getSpriteCollisionData(target);
+            if (thisMask && targetMask) return hasMaskOverlap(thisMask, ab, targetMask, bb);
+            if (thisMask) return hasMaskOverlap(thisMask, ab, null, bb);
+            if (targetMask) return hasMaskOverlap(targetMask, bb, null, ab);
+            return true;
+        }
+
+        if (thisMask) return hasMaskOverlap(thisMask, ab, null, bb);
+
+        return true;
     };
     /**
      * Recomputes bounds from current position. For 'rect' mode uses full sprite
@@ -1372,29 +1378,174 @@
      * @returns {void}
      */
     Sprite.prototype._refreshBounds = function () {
-        if (this.boundsMode === 'rect' || !this.relBounds) {
-            this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h };
+        var b = this.bounds || (this.bounds = {});
+        var data = (this.boundsMode === 'pixel') ? getSpriteCollisionData(this) : null;
+
+        if (data) {
+            var scaleX = this.w / this._srcW;
+            var scaleY = this.h / this._srcH;
+            b.x = this.x + data.x * scaleX;
+            b.y = this.y + data.y * scaleY;
+            b.w = data.w * scaleX;
+            b.h = data.h * scaleY;
         } else {
-            var imgKey = this.getFrameImage();
-            var img = images[imgKey];
-            if (!img) { this.bounds = { x: this.x, y: this.y, w: this.w, h: this.h }; }
-            else {
-                var scaleX = this.w / img.naturalWidth;
-                var scaleY = this.h / img.naturalHeight;
-                this.bounds = {
-                    x: this.x + this.relBounds.x * scaleX,
-                    y: this.y + this.relBounds.y * scaleY,
-                    w: this.relBounds.w * scaleX,
-                    h: this.relBounds.h * scaleY
-                };
-            }
+            b.x = this.x;
+            b.y = this.y;
+            b.w = this.w;
+            b.h = this.h;
         }
+
         this._boundsX = this.x;
         this._boundsY = this.y;
+        this._boundsQAngle = quantizeAngle(this.angle || 0);
     };
     /**
-     * Rotates the sprite by adding the given angle in radians to this.angle.
-     * Vector functions can use this.angle directly for rendering.
+     * Gets cached collision data for a sprite frame and computes it only when missing
+     * @param {Object} sprite - sprite to resolve collision data for
+     * @returns {Object|null} collision data with bounds and mask, or null when unavailable
+     */
+    function getSpriteCollisionData(sprite) {
+        if (!sprite || sprite.boundsMode !== 'pixel') return null;
+
+        // ensure base mask is loaded (image sprites may change frame)
+        if (sprite.image) {
+            var frameKey = sprite.getFrameImage();
+            if (!sprite.relBounds || sprite._lastBoundsKey !== frameKey) {
+                sprite.relBounds = boundingCache.get(frameKey);
+                if (!sprite.relBounds) {
+                    var frameImg = images[frameKey];
+                    if (!frameImg || !frameImg.complete || !frameImg.naturalWidth) return null;
+                    sprite.relBounds = getBounds(frameImg, 1);
+                    boundingCache.set(frameKey, sprite.relBounds);
+                }
+                sprite._lastBoundsKey = frameKey;
+                sprite._baseMaskAngle = 0;
+                sprite._srcW = images[frameKey].naturalWidth;
+                sprite._srcH = images[frameKey].naturalHeight;
+                sprite._rotationCache = null;
+            }
+        }
+
+        var baseBounds = sprite.relBounds;
+        if (!baseBounds) return null;
+
+        // no rotation — return base mask directly
+        var deltaAngle = (sprite.angle || 0) - (sprite._baseMaskAngle || 0);
+        var qIdx = quantizeAngle(deltaAngle);
+        if (qIdx === 0) return baseBounds;
+
+        // check rotation cache
+        if (!sprite._rotationCache) sprite._rotationCache = {};
+        var cached = sprite._rotationCache[qIdx];
+        if (cached) return cached;
+
+        // compute rotated mask and bounds
+        var gridSize = baseBounds.gridSize || _collisionMaskSize;
+        var rotated = rotateRelBounds(baseBounds, sprite._srcW, sprite._srcH, deltaAngle);
+        rotated.gridSize = gridSize;
+        rotated.maskRows = rotateMask(baseBounds.maskRows, gridSize, deltaAngle);
+
+        sprite._rotationCache[qIdx] = rotated;
+        return rotated;
+    }
+
+    /**
+     * Computes overlap rectangle for two world-space bounds
+     * @param {Object} a - first bounds rectangle
+     * @param {Object} b - second bounds rectangle
+     * @returns {Object|null} overlap rectangle, or null when none exists
+     */
+    function getOverlapRect(a, b) {
+        var left = Math.max(a.x, b.x);
+        var top = Math.max(a.y, b.y);
+        var right = Math.min(a.x + a.w, b.x + b.w);
+        var bottom = Math.min(a.y + a.h, b.y + b.h);
+
+        if (right <= left || bottom <= top) return null;
+
+        return {
+            x: left,
+            y: top,
+            w: right - left,
+            h: bottom - top
+        };
+    }
+
+    /**
+     * Samples overlap region using one or two masks; maskB is nullable
+     * @param {Object} maskA - collision data for sprite A
+     * @param {Object} boundsA - world-space bounds for sprite A
+     * @param {Object|null} maskB - collision data for sprite B (null for plain rect)
+     * @param {Object} boundsB - world-space bounds for sprite B or plain rect
+     * @returns {boolean} true when overlap includes solid samples in both
+     */
+    function hasMaskOverlap(maskA, boundsA, maskB, boundsB) {
+        var overlap = getOverlapRect(boundsA, boundsB);
+        if (!overlap) return false;
+
+        var gridA = maskA.gridSize || _collisionMaskSize;
+        var cellW = boundsA.w / gridA;
+        var cellH = boundsA.h / gridA;
+
+        if (maskB) {
+            var gridB = maskB.gridSize || _collisionMaskSize;
+            var cellWB = boundsB.w / gridB;
+            var cellHB = boundsB.h / gridB;
+            if (cellWB < cellW) cellW = cellWB;
+            if (cellHB < cellH) cellH = cellHB;
+        }
+
+        var sampleCols = Math.ceil(overlap.w / cellW);
+        var sampleRows = Math.ceil(overlap.h / cellH);
+        if (sampleCols < 1) sampleCols = 1;
+        if (sampleRows < 1) sampleRows = 1;
+        if (sampleCols > _collisionSampleMax) sampleCols = _collisionSampleMax;
+        if (sampleRows > _collisionSampleMax) sampleRows = _collisionSampleMax;
+
+        var stepX = overlap.w / sampleCols;
+        var stepY = overlap.h / sampleRows;
+
+        // precompute scale factors to map world-space to grid cells
+        var aScaleX = gridA / boundsA.w;
+        var aScaleY = gridA / boundsA.h;
+        var bScaleX = maskB ? ((maskB.gridSize || _collisionMaskSize) / boundsB.w) : 0;
+        var bScaleY = maskB ? ((maskB.gridSize || _collisionMaskSize) / boundsB.h) : 0;
+        var bGrid = maskB ? (maskB.gridSize || _collisionMaskSize) : 0;
+
+        for (var row = 0; row < sampleRows; row++) {
+            var sampleY = overlap.y + (row + 0.5) * stepY;
+            var aRow = ((sampleY - boundsA.y) * aScaleY) | 0;
+            if (aRow < 0) aRow = 0;
+            if (aRow >= gridA) aRow = gridA - 1;
+            var aRowMask = maskA.maskRows[aRow] || 0;
+            if (!aRowMask) continue;
+
+            for (var col = 0; col < sampleCols; col++) {
+                var sampleX = overlap.x + (col + 0.5) * stepX;
+                var aCol = ((sampleX - boundsA.x) * aScaleX) | 0;
+                if (aCol < 0) aCol = 0;
+                if (aCol >= gridA) aCol = gridA - 1;
+                if (!(aRowMask & (1 << aCol))) continue;
+
+                if (!maskB) return true;
+
+                var bRow = ((sampleY - boundsB.y) * bScaleY) | 0;
+                if (bRow < 0) bRow = 0;
+                if (bRow >= bGrid) bRow = bGrid - 1;
+                var bRowMask = maskB.maskRows[bRow] || 0;
+                if (!bRowMask) continue;
+
+                var bCol = ((sampleX - boundsB.x) * bScaleX) | 0;
+                if (bCol < 0) bCol = 0;
+                if (bCol >= bGrid) bCol = bGrid - 1;
+                if (bRowMask & (1 << bCol)) return true;
+            }
+        }
+
+        return false;
+    }
+    /**
+     * Rotates the sprite by adding the given angle in radians to this.angle
      * @param {number} amount - radians to add
      * @returns {void}
      */
@@ -1441,31 +1592,19 @@
     });
 
     /**
-     * Computes the tight bounding box around solid (alpha ≥ threshold) pixels
-     * @param {HTMLImageElement} img - Image to analyze
-     * @param {number} [threshold=1] - Minimum alpha value to consider a pixel solid
-     * @returns {object} { x:number, y:number, w:number, h:number }
+     * Scans pixel alpha data and builds tight bounds + occupancy mask
+     * @param {Uint8ClampedArray} data - raw RGBA pixel data
+     * @param {number} w - image width
+     * @param {number} h - image height
+     * @param {number} threshold - minimum alpha to consider solid
+     * @returns {Object} bounds + mask
      */
-    function getBounds(img, threshold) {
-
-        log('getBounds('+img.key+','+threshold+')');
-
-        var w = img.naturalWidth;
-        var h = img.naturalHeight;
-
-        _boundsCanvas.width = w;
-        _boundsCanvas.height = h;
-        _boundsCtx.clearRect(0, 0, w, h);
-        _boundsCtx.drawImage(img, 0, 0, w, h);
-
-        var data = _boundsCtx.getImageData(0, 0, w, h).data;
-
+    function scanPixels(data, w, h, threshold) {
         var minX = w, minY = h, maxX = -1, maxY = -1;
 
         for (var y = 0; y < h; y++) {
             for (var x = 0; x < w; x++) {
-                var alpha = data[(y * w + x) * 4 + 3];
-                if (alpha >= threshold) {
+                if (data[(y * w + x) * 4 + 3] >= threshold) {
                     if (x < minX) minX = x;
                     if (y < minY) minY = y;
                     if (x > maxX) maxX = x;
@@ -1475,15 +1614,154 @@
         }
 
         if (maxX < minX || maxY < minY) {
-            return { x: 0, y: 0, w: 0, h: 0 };
+            return { x: 0, y: 0, w: 0, h: 0, gridSize: _collisionMaskSize, maskRows: [] };
         }
 
-        return {
-            x: minX,
-            y: minY,
-            w: maxX - minX + 1,
-            h: maxY - minY + 1
-        };
+        var boundsW = maxX - minX + 1;
+        var boundsH = maxY - minY + 1;
+        var maskRows = [];
+        for (var m = 0; m < _collisionMaskSize; m++) maskRows[m] = 0;
+
+        for (var py = minY; py <= maxY; py++) {
+            for (var px = minX; px <= maxX; px++) {
+                if (data[(py * w + px) * 4 + 3] < threshold) continue;
+                var localX = px - minX;
+                var localY = py - minY;
+
+                // a pixel may span multiple grid cells when image is smaller than the grid
+                var gxStart = Math.floor((localX * _collisionMaskSize) / boundsW);
+                var gxEnd = Math.floor((((localX + 1) * _collisionMaskSize) - 1) / boundsW);
+                var gyStart = Math.floor((localY * _collisionMaskSize) / boundsH);
+                var gyEnd = Math.floor((((localY + 1) * _collisionMaskSize) - 1) / boundsH);
+                if (gxEnd >= _collisionMaskSize) gxEnd = _collisionMaskSize - 1;
+                if (gyEnd >= _collisionMaskSize) gyEnd = _collisionMaskSize - 1;
+
+                for (var gy = gyStart; gy <= gyEnd; gy++) {
+                    for (var gx = gxStart; gx <= gxEnd; gx++) {
+                        maskRows[gy] = maskRows[gy] | (1 << gx);
+                    }
+                }
+            }
+        }
+
+        return { x: minX, y: minY, w: boundsW, h: boundsH, gridSize: _collisionMaskSize, maskRows: maskRows };
+    }
+
+    /**
+     * Computes tight bounds and mask for an image sprite
+     * @param {HTMLImageElement} img - image to analyze
+     * @param {number} [threshold=1] - minimum alpha to consider solid
+     * @returns {Object} bounds + mask
+     */
+    function getBounds(img, threshold) {
+        log('getBounds('+img.key+','+threshold+')');
+
+        var w = img.naturalWidth;
+        var h = img.naturalHeight;
+        if (!w || !h) return { x: 0, y: 0, w: 0, h: 0, gridSize: _collisionMaskSize, maskRows: [] };
+
+        _boundsCanvas.width = w;
+        _boundsCanvas.height = h;
+        _boundsCtx.clearRect(0, 0, w, h);
+        _boundsCtx.drawImage(img, 0, 0, w, h);
+
+        return scanPixels(_boundsCtx.getImageData(0, 0, w, h).data, w, h, threshold);
+    }
+
+    /**
+     * Rasterises a vector sprite and builds bounds + mask
+     * @param {Object} sprite - the vector sprite
+     * @param {number} w - render width
+     * @param {number} h - render height
+     * @returns {Object} bounds + mask
+     */
+    function getVectorBounds(sprite, w, h) {
+        var rw = Math.ceil(w);
+        var rh = Math.ceil(h);
+        if (rw < 1 || rh < 1) return { x: 0, y: 0, w: 0, h: 0, gridSize: _collisionMaskSize, maskRows: [] };
+
+        _boundsCanvas.width = rw;
+        _boundsCanvas.height = rh;
+        _boundsCtx.clearRect(0, 0, rw, rh);
+        _boundsCtx.save();
+        sprite.vector.call(sprite, _boundsCtx, rw, rh);
+        _boundsCtx.restore();
+
+        return scanPixels(_boundsCtx.getImageData(0, 0, rw, rh).data, rw, rh, 1);
+    }
+
+    /**
+     * Quantizes an angle to a bucket index for rotation cache lookups
+     * @param {number} angle - angle in radians
+     * @returns {number} integer bucket index (0–59)
+     */
+    function quantizeAngle(angle) {
+        var step = Math.PI / 30;
+        var idx = Math.round(angle / step) % 60;
+        return idx < 0 ? idx + 60 : idx;
+    }
+
+    /**
+     * Rotates a bitmask grid mathematically via inverse-rotation sampling
+     * @param {number[]} maskRows - source mask row bitmasks
+     * @param {number} gridSize - grid dimension
+     * @param {number} deltaAngle - rotation angle in radians
+     * @returns {number[]} new rotated maskRows array
+     */
+    function rotateMask(maskRows, gridSize, deltaAngle) {
+        var cos = Math.cos(-deltaAngle);
+        var sin = Math.sin(-deltaAngle);
+        var cx = (gridSize - 1) / 2;
+        var cy = (gridSize - 1) / 2;
+        var result = [];
+
+        for (var row = 0; row < gridSize; row++) {
+            result[row] = 0;
+            for (var col = 0; col < gridSize; col++) {
+                var dx = col - cx;
+                var dy = row - cy;
+                var srcCol = Math.round(dx * cos - dy * sin + cx);
+                var srcRow = Math.round(dx * sin + dy * cos + cy);
+                if (srcCol < 0 || srcRow < 0 || srcCol >= gridSize || srcRow >= gridSize) continue;
+                if ((maskRows[srcRow] & (1 << srcCol)) !== 0) {
+                    result[row] = result[row] | (1 << col);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Computes the AABB of a rotated tight-bounds rectangle
+     * @param {Object} rel - unrotated relative bounds {x, y, w, h}
+     * @param {number} imgW - full image/sprite width
+     * @param {number} imgH - full image/sprite height
+     * @param {number} deltaAngle - rotation angle in radians
+     * @returns {Object} rotated AABB relative bounds {x, y, w, h}
+     */
+    function rotateRelBounds(rel, imgW, imgH, deltaAngle) {
+        var cx = imgW / 2;
+        var cy = imgH / 2;
+        var cos = Math.cos(deltaAngle);
+        var sin = Math.sin(deltaAngle);
+
+        var cornersX = [rel.x, rel.x + rel.w, rel.x + rel.w, rel.x];
+        var cornersY = [rel.y, rel.y, rel.y + rel.h, rel.y + rel.h];
+
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (var i = 0; i < 4; i++) {
+            var dx = cornersX[i] - cx;
+            var dy = cornersY[i] - cy;
+            var rx = dx * cos - dy * sin + cx;
+            var ry = dx * sin + dy * cos + cy;
+            if (rx < minX) minX = rx;
+            if (ry < minY) minY = ry;
+            if (rx > maxX) maxX = rx;
+            if (ry > maxY) maxY = ry;
+        }
+
+        return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
     }
 
     /**

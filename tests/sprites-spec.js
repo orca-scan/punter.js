@@ -288,6 +288,36 @@ describe('Sprites', function () {
         expect(result.after).toBe(true);
     });
 
+    it('pixel boundsMode ignores transparent corner overlap for round sprites', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', image: 'circle', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel' });
+            var s2 = punter.createSprite({ id: 's2', image: 'circle', x: 29, y: 29, w: 40, h: 40, boundsMode: 'pixel' });
+            var cornerOnly = s1.isCollidingWith(s2);
+            s2.moveX(-8);
+            s2.moveY(-8);
+            var directOverlap = s1.isCollidingWith(s2);
+            return { cornerOnly: cornerOnly, directOverlap: directOverlap };
+        });
+
+        expect(result.cornerOnly).toBe(false);
+        expect(result.directOverlap).toBe(true);
+    });
+
+    it('pixel boundsMode vs rect only collides when solid mask area overlaps', async function () {
+        var result = await page.evaluate(function () {
+            var s1 = punter.createSprite({ id: 's1', image: 'circle', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel' });
+            var cornerRect = { x: 31, y: 31, w: 6, h: 6 };
+            var centerRect = { x: 15, y: 15, w: 6, h: 6 };
+            return {
+                corner: s1.isCollidingWith(cornerRect),
+                center: s1.isCollidingWith(centerRect)
+            };
+        });
+
+        expect(result.corner).toBe(false);
+        expect(result.center).toBe(true);
+    });
+
     it('isCollidingWith accepts a plain { x, y, w, h } rect object', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 10, y: 10, w: 20, h: 20, boundsMode: 'rect' });
@@ -648,5 +678,96 @@ describe('Sprites', function () {
         });
         expect(result.xFinite).toBe(true);
         expect(result.yFinite).toBe(true);
+    });
+
+    // --- vector pixel bounds ---
+
+    it('vector sprite with boundsMode pixel rejects transparent corner overlap', async function () {
+        var result = await page.evaluate(function () {
+            // draw a circle inside the sprite bounds — corners are transparent
+            var s1 = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel',
+                vector: function (ctx, w, h) {
+                    ctx.beginPath();
+                    ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                }
+            });
+            // place second circle so only transparent corners overlap (well past grid tolerance)
+            var s2 = punter.createSprite({
+                id: 's2', x: 34, y: 34, w: 40, h: 40, boundsMode: 'pixel',
+                vector: function (ctx, w, h) {
+                    ctx.beginPath();
+                    ctx.arc(w / 2, h / 2, w / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fff';
+                    ctx.fill();
+                }
+            });
+            var corner = s1.isCollidingWith(s2);
+            s2.x = 15; s2.y = 15;
+            var center = s1.isCollidingWith(s2);
+            return { corner: corner, center: center };
+        });
+        expect(result.corner).toBe(false);
+        expect(result.center).toBe(true);
+    });
+
+    // --- rotation ---
+
+    it('rotate() updates angle on image sprites and bounds track rotation', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'circle', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel' });
+            var before = { x: s.bounds.x, y: s.bounds.y, w: s.bounds.w, h: s.bounds.h };
+            s.rotate(Math.PI / 4);
+            // force bounds refresh
+            s.isCollidingWith({ x: -1000, y: -1000, w: 1, h: 1 });
+            var after = { x: s.bounds.x, y: s.bounds.y, w: s.bounds.w, h: s.bounds.h };
+            return { angle: s.angle, boundsChanged: (before.w !== after.w || before.h !== after.h || before.x !== after.x) };
+        });
+        expect(result.angle).toBeCloseTo(Math.PI / 4, 5);
+        expect(result.boundsChanged).toBe(true);
+    });
+
+    it('rotated vector sprite collision uses updated mask', async function () {
+        var result = await page.evaluate(function () {
+            // narrow horizontal bar: only fills middle row when unrotated
+            var s1 = punter.createSprite({
+                id: 's1', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel',
+                vector: function (ctx, w, h) {
+                    ctx.translate(w / 2, h / 2);
+                    ctx.rotate(this.angle || 0);
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(-w / 2, -2, w, 4);
+                }
+            });
+            // target sitting just above center — should not collide with horizontal bar
+            var target = { x: 10, y: 0, w: 20, h: 8 };
+            var beforeRotate = s1.isCollidingWith(target);
+            // rotate bar 90° so it becomes vertical — should now collide with top area
+            s1.angle = Math.PI / 2;
+            s1.relBounds = null;
+            s1._rotationCache = null;
+            var afterRotate = s1.isCollidingWith(target);
+            return { before: beforeRotate, after: afterRotate };
+        });
+        expect(result.before).toBe(false);
+        expect(result.after).toBe(true);
+    });
+
+    it('rotation cache reuses data for the same quantized angle', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'circle', x: 0, y: 0, w: 40, h: 40, boundsMode: 'pixel' });
+            s.rotate(Math.PI / 4);
+            s.isCollidingWith({ x: -1000, y: -1000, w: 1, h: 1 });
+            var cacheSize1 = Object.keys(s._rotationCache || {}).length;
+            // tiny angle change within same quantized bucket
+            s.angle += 0.001;
+            s.isCollidingWith({ x: -1000, y: -1000, w: 1, h: 1 });
+            var cacheSize2 = Object.keys(s._rotationCache || {}).length;
+            return { cacheSize1: cacheSize1, cacheSize2: cacheSize2 };
+        });
+        expect(result.cacheSize1).toBe(1);
+        expect(result.cacheSize2).toBe(1);
     });
 });
