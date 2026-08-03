@@ -211,13 +211,33 @@ describe('Studio', function () {
         // intercept the Blob download by overriding URL.createObjectURL and the anchor click
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
-                // override createObjectURL to capture the blob content
+                var done = false;
                 var orig = URL.createObjectURL;
+                var timeoutId = setTimeout(function () {
+                    if (done) return;
+                    done = true;
+                    URL.createObjectURL = orig;
+                    resolve('');
+                }, 2000);
+
+                // override createObjectURL to capture the blob content
                 URL.createObjectURL = function (blob) {
                     var reader = new FileReader();
-                    reader.onload = function () { resolve(reader.result); };
+                    reader.onload = function () {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timeoutId);
+                        URL.createObjectURL = orig;
+                        resolve(reader.result);
+                    };
+                    reader.onerror = function () {
+                        if (done) return;
+                        done = true;
+                        clearTimeout(timeoutId);
+                        URL.createObjectURL = orig;
+                        resolve('');
+                    };
                     reader.readAsText(blob);
-                    URL.createObjectURL = orig;
                     return '#'; // dummy URL
                 };
                 document.getElementById('st-download-btn').click();
