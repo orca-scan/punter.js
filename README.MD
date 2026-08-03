@@ -118,7 +118,7 @@ var enemy = punter.createSprite({
   w: 32, h: 32,            // optional size (auto-detected from image if omitted; required for vector-only)
   preserveAspect: true,    // maintain image aspect ratio (default: true)
   collidable: true,        // computes bounding box for collisions (default: true)
-  boundsMode: 'pixel',     // 'pixel' = tight box around opaque pixels, 'rect' = full sprite w/h
+  boundsMode: 'pixel',     // 'pixel' = edge-aware collisions from opaque pixels, 'rect' = full sprite w/h
   repeatX: false,          // tile horizontally across the canvas (default: false)
   repeatY: false,          // tile vertically across the canvas (default: false)
   clipHeight: null,        // clip sprite to this height in pixels (null = no clip)
@@ -168,7 +168,7 @@ Method                                     | Description
 `sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
 `sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
 `sprite.rotate(amount)`                    | Add `amount` (radians) to `sprite.angle`; vector functions can read `this.angle` directly
-`sprite.isCollidingWith(other)`            | `true` if bounding boxes overlap; `other` can be a sprite or a plain `{ x, y, w, h }` rect
+`sprite.isCollidingWith(other)`            | `true` if collision areas overlap; in `pixel` mode transparent corners are ignored, `other` can be a sprite or a plain `{ x, y, w, h }` rect
 `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored
 
 ### sprite properties
@@ -328,7 +328,7 @@ Use `punter.pause()` and `punter.resume()` to freeze and unfreeze the loop - goo
 
 You do not need to understand this section to build a game. These are some of the details Punter.js handles for you:
 
-- **Content-trimmed bounding boxes for collision.** The overlap test itself is a plain AABB (rectangle overlap) check, but the box isn't the full sprite sheet - `getBounds` does a per-pixel alpha scan of each image once, finds the tightest rect containing non-transparent pixels, and caches it per image key. So hitboxes match the visible artwork instead of whatever padding is baked into the source image.
+- **Content-trimmed + edge-aware collision data.** `getBounds` does a per-pixel alpha scan once per image key, then caches both a tight content box and a compact occupancy mask. Runtime collision still starts with a fast AABB overlap, but `pixel` mode adds a lightweight edge-aware check so transparent corners are less likely to register as hits.
 - **A real fixed-timestep loop.** The loop runs `update` on a 60Hz accumulator, decoupled from `draw`, with a 100ms-per-frame cap to avoid a spiral of death after a tab is backgrounded. Game logic behaves the same on a 60Hz and 144Hz screen - most hand-rolled canvas code skips this and gets frame-rate-dependent movement.
 - **Pointer, touch, and stylus are unified.** One `keys`/`pointer` input model backed by the Pointer Events API (with mouse/touch fallback for older browsers), with coordinate mapping that accounts for canvas CSS scaling (`getBoundingClientRect` + scale factor). Covers mouse, touchscreen, and stylus/pen with no extra game code. Tap vs swipe is classified on release using a distance threshold scaled to canvas width — `pointer.clicked` fires for taps, the `swiped*` properties fire for swipes, and they are mutually exclusive.
 - **DPR-aware canvas buffer.** The canvas backing buffer is sized at `internalResolution × devicePixelRatio` (capped at 2x) so art stays sharp on retina screens. All game coordinates - sprite positions, movement, pointer, and custom canvas drawing - use logical pixels; the engine handles the physical scaling internally.

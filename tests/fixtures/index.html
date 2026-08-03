@@ -13,6 +13,7 @@
 <script>
     // 1x1 red pixel PNG as data URL (valid image for sprite loading)
     var heroImg = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
+    var circleImg = '/tests/fixtures/collision-circle.svg';
 
     window.__ready = false;
 
@@ -22,7 +23,7 @@
 
     punter.setup({
         canvas: '#game',
-        images: { hero: heroImg },
+        images: { hero: heroImg, circle: circleImg },
         sounds: { beep: '/tests/fixtures/silence.wav' }
     });
 </script>

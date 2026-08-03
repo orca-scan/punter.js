@@ -216,8 +216,7 @@
           x: 40,
           y: groundY - PLAYER_H,
           h: PLAYER_H,
-          preserveAspect: true,
-          boundsMode: 'rect'
+          preserveAspect: true
         });
 
         // goal flag on the top ledge
@@ -289,8 +288,7 @@
         var s = punter.createSprite({
           image: 'slime',
           x: x, y: y,
-          w: 24, h: 24,
-          boundsMode: 'rect'
+          w: 24, h: 24
         });
         s.minX = minX;
         s.maxX = maxX;
@@ -432,6 +430,8 @@
           die();
         }
       }
+
+
 
       // collectibles
 
