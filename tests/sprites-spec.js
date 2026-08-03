@@ -324,8 +324,8 @@ describe('Sprites', function () {
 
     // --- svg loading ---
 
-    it('errors when an SVG is missing viewBox, width or height', async function () {
-        var svgPage = await setup.newPageAt('/tests/fixtures/svg-invalid.html');
+    it('errors when an SVG has no usable dimension attributes', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-loader.html?svg=svg-no-attrs.svg');
         await svgPage.waitForFunction(
             'document.documentElement.hasAttribute("data-punter-error") || window.__ready === true',
             { timeout: 5000 }
@@ -337,7 +337,24 @@ describe('Sprites', function () {
             };
         });
         expect(result.ready).toBe(false);
-        expect(result.error).toContain('must have viewBox, width and height');
+        expect(result.error).toContain('must have either a viewBox or numeric width and height');
+        await svgPage.close();
+    });
+
+    it('errors when an SVG has percentage units and no viewBox', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-loader.html?svg=svg-pct-units.svg');
+        await svgPage.waitForFunction(
+            'document.documentElement.hasAttribute("data-punter-error") || window.__ready === true',
+            { timeout: 5000 }
+        );
+        var result = await svgPage.evaluate(function () {
+            return {
+                ready: window.__ready,
+                error: document.documentElement.getAttribute('data-punter-error')
+            };
+        });
+        expect(result.ready).toBe(false);
+        expect(result.error).toContain('must have either a viewBox or numeric width and height');
         await svgPage.close();
     });
 
@@ -348,6 +365,30 @@ describe('Sprites', function () {
             return window.__ready;
         });
         expect(result).toBe(true);
+        await svgPage.close();
+    });
+
+    it('loads an SVG with only viewBox and infers width/height', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-loader.html?svg=svg-viewbox-only.svg');
+        await svgPage.waitForFunction('window.__ready === true', { timeout: 5000 });
+        var result = await svgPage.evaluate(function () {
+            var s = punter.createSprite({ id: 'vbOnly', image: 'icon', x: 0, y: 0 });
+            return { w: s.w, h: s.h };
+        });
+        expect(result.w).toBe(120);
+        expect(result.h).toBe(80);
+        await svgPage.close();
+    });
+
+    it('loads an SVG with only width/height and infers viewBox', async function () {
+        var svgPage = await setup.newPageAt('/tests/fixtures/svg-loader.html?svg=svg-wh-only.svg');
+        await svgPage.waitForFunction('window.__ready === true', { timeout: 5000 });
+        var result = await svgPage.evaluate(function () {
+            var s = punter.createSprite({ id: 'whOnly', image: 'icon', x: 0, y: 0 });
+            return { w: s.w, h: s.h };
+        });
+        expect(result.w).toBe(90);
+        expect(result.h).toBe(60);
         await svgPage.close();
     });
 

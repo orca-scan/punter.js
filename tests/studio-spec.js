@@ -157,12 +157,19 @@ describe('Studio', function () {
         }, savedCode);
 
         await page.click('#st-run-btn');
-        await sleep(1500); // wait for the 1s auto-save debounce timer to fire
+        // run triggers an immediate save — poll until localStorage confirms it
+        await page.waitForFunction(function (code) {
+            try {
+                var raw = localStorage.getItem('punter-studio-v1');
+                if (!raw) return false;
+                var data = JSON.parse(raw);
+                return data.code === code;
+            } catch (e) { return false; }
+        }, { timeout: 3000 }, savedCode);
 
         // reload
         await page.reload({ waitUntil: 'domcontentloaded' });
         await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
-        await sleep(300);
 
         var restored = await page.evaluate(function () {
             if (window.studioEditor) return window.studioEditor.getValue();
