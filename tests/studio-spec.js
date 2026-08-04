@@ -75,6 +75,10 @@ describe('Studio', function () {
         var page = await setup.newPageAt('/studio/');
         await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
 
+        // switch to learn mode so the bridge script captures errors
+        await page.select('#st-example-select', 'move');
+        await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
+
         // inject code that will throw a ReferenceError
         await page.evaluate(function () {
             if (window.studioEditor) {
@@ -143,6 +147,10 @@ describe('Studio', function () {
 
     it('restores saved code on page reload', async function () {
         var page = await setup.newPageAt('/studio/');
+        await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
+
+        // switch to learn mode so saves work (game mode skips localStorage)
+        await page.select('#st-example-select', 'move');
         await page.waitForSelector('.st-preview iframe', { timeout: 5000 });
 
         var savedCode = '// saved code test ' + Date.now();
