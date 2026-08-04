@@ -26,12 +26,22 @@
 
     <div class="st-controls">
       <div class="st-select-wrap">
-        <label for="st-example-select">Example:</label>
-        <select id="st-example-select" aria-label="Select an example">
-          <option value="move">Move a sprite</option>
-          <option value="keyboard">Keyboard input</option>
-          <option value="collision">Collision</option>
-          <option value="pointer">Pointer input</option>
+        <label for="st-example-select">Load:</label>
+        <select id="st-example-select" aria-label="Select an example or game">
+          <optgroup label="Games">
+            <option value="game:pong">Pong</option>
+            <option value="game:snake">Snake</option>
+            <option value="game:breakout">Breakout</option>
+            <option value="game:platform">Platform</option>
+            <option value="game:asteroids">Asteroids</option>
+            <option value="game:tetris">Tetris</option>
+          </optgroup>
+          <optgroup label="Learning">
+            <option value="move">Move a sprite</option>
+            <option value="keyboard">Keyboard input</option>
+            <option value="collision">Collision</option>
+            <option value="pointer">Pointer input</option>
+          </optgroup>
         </select>
       </div>
 

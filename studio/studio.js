@@ -577,7 +577,15 @@
   });
 
   selectEl.addEventListener('change', function () {
-    selectExample(selectEl.value, false);
+    var val = selectEl.value;
+    if (val.indexOf('game:') === 0) {
+      var gameName = val.slice(5);
+      if (KNOWN_GAMES.indexOf(gameName) !== -1) {
+        loadGameIntoEditor(gameName);
+      }
+    } else {
+      selectExample(val, false);
+    }
   });
 
   // auto-save on editor changes (debounced 1s)
@@ -1013,6 +1021,7 @@
 
     if (gameParam) {
       // ?game= param loads a full game HTML file into the editor
+      selectEl.value = 'game:' + gameParam;
       loadGameIntoEditor(gameParam);
     } else if (learnParam) {
       // URL param takes priority over localStorage

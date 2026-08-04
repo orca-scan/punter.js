@@ -88,11 +88,16 @@ html, body {
 }
 
 select {
+  appearance: none;
+  -webkit-appearance: none;
   background: var(--app-background-color);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23aaa'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
   color: var(--app-text-color-primary);
   border: 1px solid var(--secondary-button-border-color);
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 6px 28px 6px 10px;
   font-size: 13px;
   font-family: var(--font-family-system);
   cursor: pointer;
