@@ -26,14 +26,19 @@
     "game-loop",
     "no-dependencies",
     "lightweight",
-    "vanilla-javascript"
+    "vanilla-javascript",
+    "javascript-beginners",
+    "learn-javascript",
+    "teaching",
+    "education",
+    "coding-for-beginners"
   ],
   "author": "Orca Scan <support@orcascan.com> (https://orcascan.com)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/orca-scan/punter.js/issues"
   },
-  "homepage": "https://github.com/orca-scan/punter.js#readme",
+  "homepage": "https://punterjs.org",
   "engines": {
     "node": ">=18"
   },
