@@ -1049,7 +1049,8 @@
         runGame();
       });
     } else {
-      selectExample(DEFAULT_EXAMPLE, true);
+      selectEl.value = 'game:pong';
+      loadGameIntoEditor('pong');
     }
   }
 
