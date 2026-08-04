@@ -1,0 +1,101 @@
+# Punter.js
+
+> A tiny JavaScript game engine for learning to code by building browser games
+
+Punter.js is a zero-dependency, vanilla ES5 game engine designed for students, teachers, and new developers learning JavaScript by making 2D canvas games. It runs entirely in the browser with no build tools.
+
+## Best for
+
+- Learning JavaScript through game development
+- Teaching beginner programming with browser games
+- Small 2D games without frameworks or build tools
+- Students who want to edit working games and immediately see what changes
+
+- Website: https://punterjs.org
+- Interactive editor: https://punterjs.org/studio/
+- Source: https://github.com/orca-scan/punter.js
+- License: MIT
+- Built by: Orca Scan (https://orcascan.com)
+
+## Docs
+
+- [Full API reference (README)](https://github.com/orca-scan/punter.js/blob/master/README.MD): Setup, scenes, sprites, input, sound, events, debug mode, and engine properties
+
+## Tutorials
+
+- [Build your first game](https://github.com/orca-scan/punter.js/blob/master/first-game.md): Step-by-step introduction to building a game with Punter.js
+- [Move a sprite](https://punterjs.org/learn/move): Arrow keys / WASD movement
+- [Keyboard input](https://punterjs.org/learn/keyboard): Key detection, modifiers, fast movement
+- [Pointer input](https://punterjs.org/learn/pointer): Mouse and touch follow, click-to-move
+- [Collision detection](https://punterjs.org/learn/collision): Sprite overlap and collection
+
+## Example games
+
+- [Pong](https://punterjs.org/games/pong)
+- [Snake](https://punterjs.org/games/snake)
+- [Breakout](https://punterjs.org/games/breakout)
+- [Platform](https://punterjs.org/games/platform)
+- [Asteroids](https://punterjs.org/games/asteroids)
+- [Tetris](https://punterjs.org/games/tetris)
+
+## Core concepts
+
+- **Canvas**: An HTML `<canvas>` element every game lives inside
+- **Sprite**: A game object with position, movement, animation, and collision (`punter.createSprite`)
+- **Scene**: A named screen of your game (menu, level, game-over) registered with `punter.scene` and started with `punter.go`
+- **Game loop**: Fixed 60Hz timestep loop — `update` for logic, `draw` for HUD/overlays
+- **Input**: Unified keyboard (`punter.isKeyDown`) and pointer/touch (`punter.pointer`) input
+- **Sound**: Preloaded audio via `punter.playSound` / `punter.stopSound`
+- **Vector sprites**: Draw with canvas code instead of image files via the `vector` option
+- **Collision**: Pixel-aware or rect-based via `sprite.isCollidingWith`
+
+## Quick start
+
+```html
+<canvas id="game"></canvas>
+<script src="punter.js"></script>
+<script>
+  punter.setup({ canvas: '#game' });
+
+  punter.scene('main', function () {
+    var player = punter.createSprite({
+      image: 'player', x: 50, y: 50
+    });
+
+    punter.on('update', function () {
+      if (punter.isKeyDown('right')) player.moveX(3);
+    });
+  });
+
+  punter.go('main');
+</script>
+```
+
+## Key API
+
+- `punter.setup(config)` — load assets, bind canvas (call once)
+- `punter.scene(name, fn)` — register a scene
+- `punter.go(name)` — switch to a scene (tears down previous)
+- `punter.createSprite(options)` — create a game object
+- `punter.on(event, fn)` — register event handler (update, draw, ready, resize, go)
+- `punter.isKeyDown(keys...)` — check if keys are held (OR logic, use + for AND combos)
+- `punter.pointer` — mouse/touch position and state (x, y, clicked, down, swiped*)
+- `punter.playSound(name, options)` — play a preloaded sound
+- `punter.pause()` / `punter.resume()` — freeze/unfreeze the game loop
+- `sprite.moveX(dx)` / `sprite.moveY(dy)` — move a sprite
+- `sprite.isCollidingWith(other)` — collision check (pixel or rect mode)
+- `sprite.destroy()` — remove a sprite
+- `sprite.animate(delayMs)` — advance animation frame
+- `sprite.center()` — centre on canvas
+
+## Technical notes
+
+- Plain ES5 JavaScript
+- No dependencies
+- No build step
+- Runs directly in the browser
+- HTML5 Canvas rendering
+- Frame-rate independent game loop (fixed 60Hz timestep)
+- Keyboard, mouse and touch input
+- Pixel-level and rectangle collision detection
+- Responsive canvas matches screen aspect ratio automatically
