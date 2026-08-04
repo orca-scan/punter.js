@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://punterjs.org/</loc></url>
+  <url><loc>https://punterjs.org/studio/</loc></url>
+  <url><loc>https://punterjs.org/games/pong</loc></url>
+  <url><loc>https://punterjs.org/games/snake</loc></url>
+  <url><loc>https://punterjs.org/games/breakout</loc></url>
+  <url><loc>https://punterjs.org/games/platform</loc></url>
+  <url><loc>https://punterjs.org/games/asteroids</loc></url>
+  <url><loc>https://punterjs.org/games/tetris</loc></url>
+  <url><loc>https://punterjs.org/learn/collision</loc></url>
+  <url><loc>https://punterjs.org/learn/keyboard</loc></url>
+  <url><loc>https://punterjs.org/learn/move</loc></url>
+  <url><loc>https://punterjs.org/learn/pointer</loc></url>
+</urlset>
