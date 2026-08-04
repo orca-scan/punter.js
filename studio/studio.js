@@ -586,6 +586,14 @@
     } else {
       selectExample(val, false);
     }
+    // return focus to the preview pane
+    setTimeout(function () {
+      if (previewFrame) {
+        previewFrame.focus();
+        previewEl.classList.add('is-focused');
+        editorPaneEl.classList.remove('is-focused');
+      }
+    }, 100);
   });
 
   // auto-save on editor changes (debounced 1s)
