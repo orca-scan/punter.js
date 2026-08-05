@@ -164,9 +164,7 @@ Method                                     | Description
 `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array
 `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position
 `sprite.blink(ms?, durationMs?)`           | Flash on/off every `ms` ms (default 130); auto-stops after `durationMs` if given, otherwise blinks indefinitely; call `blink(0)` to stop early
-`sprite.parallaxScrollX(speed, respawnMs)` | Scroll horizontally and respawn from the opposite edge after a delay
-`sprite.parallaxScrollY(speed, respawnMs)` | Scroll vertically and respawn from the opposite edge after a delay
-`sprite.loopScrollX(speed)`                | Scroll horizontally and wrap immediately (seamless background loops)
+`sprite.scroll(speedX, speedY, options?)`  | Scroll and optionally loop (`{ loop: true }`) or respawn (`{ respawnAfter: ms, offset: n }`); use one axis at a time
 `sprite.rotate(amount)`                    | Add `amount` (radians) to `sprite.angle`; vector functions can read `this.angle` directly
 `sprite.isCollidingWith(other)`            | `true` if collision areas overlap; in `pixel` mode transparent corners are ignored, `other` can be a sprite or a plain `{ x, y, w, h }` rect
 `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored

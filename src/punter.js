@@ -1231,90 +1231,59 @@
         this._blinkStart    = Date.now();
     };
     /**
-     * Scrolls a sprite in the X direction and respawns after delay if offscreen
-     * @param {number} speed - horizontal speed in pixels per frame
-     * @param {number} respawnAfterMs - delay in ms before respawning
-     * @param {number} [offset=50] - extra offset beyond screen edge for respawn
+     * Scrolls a sprite and optionally loops or respawns when offscreen
+     * @param {number} speedX - horizontal speed (use one axis at a time)
+     * @param {number} speedY - vertical speed
+     * @param {object} [options]
+     * @param {boolean} [options.loop] - wrap by sprite size for seamless tiling
+     * @param {number} [options.respawnAfter] - ms to wait before respawning
+     * @param {number} [options.offset=0] - max random distance beyond edge on respawn
      * @returns {void}
      */
-    Sprite.prototype.parallaxScrollX = function(speed, respawnAfterMs, offset) {
+    Sprite.prototype.scroll = function(speedX, speedY, options) {
         if (this.destroyed) return;
 
+        options = options || {};
+
         var now = performance.now();
-        var extra = (typeof offset === 'number') ? offset : 50;
+        var shouldLoop = options.loop === true;
+        var delay = options.respawnAfter || 0;
+        var offset = (typeof options.offset === 'number') ? options.offset : 0;
 
-        // if waiting to respawn
+        // waiting to respawn after delay
         if (this.respawnAt) {
-            if (now >= this.respawnAt) {
-                this.x = (speed < 0)
-                    ? engine.width + extra + Math.floor(Math.random() * 100)
-                    : -this.w - extra - Math.floor(Math.random() * 100);
+            if (now < this.respawnAt) return;
 
-                this.respawnAt = null;
-            }
+            if (speedX < 0) this.x = engine.width + Math.floor(Math.random() * (offset + 1));
+            if (speedX > 0) this.x = -this.w - Math.floor(Math.random() * (offset + 1));
+            if (speedY < 0) this.y = engine.height + Math.floor(Math.random() * (offset + 1));
+            if (speedY > 0) this.y = -this.h - Math.floor(Math.random() * (offset + 1));
 
+            this.respawnAt = null;
             return;
         }
 
-        // move sprite
-        this.moveX(speed);
+        if (speedX) this.moveX(speedX);
+        if (speedY) this.moveY(speedY);
 
-        // start respawn timer if offscreen in current direction
-        if ((speed < 0 && this.x + this.w < 0) || (speed > 0 && this.x > engine.width)) {
-            this.respawnAt = now + respawnAfterMs;
-        }
-    };
-    /**
-     * Scrolls a sprite in the Y direction and respawns after delay if offscreen
-     * @param {number} speed - vertical speed in pixels per frame (negative = up, positive = down)
-     * @param {number} respawnAfterMs - delay in ms before respawning
-     * @param {number} [offset=50] - extra offset beyond screen edge for respawn
-     * @returns {void}
-     */
-    Sprite.prototype.parallaxScrollY = function(speed, respawnAfterMs, offset) {
-        if (this.destroyed) return;
+        var offscreen =
+            (speedX < 0 && this.x + this.w < 0) ||
+            (speedX > 0 && this.x > engine.width) ||
+            (speedY < 0 && this.y + this.h < 0) ||
+            (speedY > 0 && this.y > engine.height);
 
-        var now = performance.now();
-        var extra = (typeof offset === 'number') ? offset : 50;
+        if (!offscreen) return;
 
-        // if waiting to respawn
-        if (this.respawnAt) {
-            if (now >= this.respawnAt) {
-                this.y = (speed < 0)
-                    ? engine.height + extra + Math.floor(Math.random() * 100)
-                    : -this.h - extra - Math.floor(Math.random() * 100);
-
-                this.respawnAt = null;
-            }
-
+        if (shouldLoop) {
+            if (speedX < 0) this.x += this.w;
+            if (speedX > 0) this.x -= this.w;
+            if (speedY < 0) this.y += this.h;
+            if (speedY > 0) this.y -= this.h;
             return;
         }
 
-        // move sprite
-        this.moveY(speed);
-
-        // start respawn timer if offscreen in current direction
-        if ((speed < 0 && this.y + this.h < 0) || (speed > 0 && this.y > engine.height)) {
-            this.respawnAt = now + respawnAfterMs;
-        }
-    };
-    /**
-     * Scrolls sprite in X direction and loops immediately after leaving screen
-     * @param {number} speed - horizontal speed in pixels per frame
-     * @returns {void}
-     */
-    Sprite.prototype.loopScrollX = function(speed) {
-        if (this.destroyed) return;
-
-        this.moveX(speed);
-
-        // wrap by exactly one tile width so the sprite loops seamlessly
-        if (speed < 0 && this.x + this.w < 0) {
-            this.x += this.w;
-        }
-
-        if (speed > 0 && this.x > engine.width) {
-            this.x -= this.w;
+        if (delay) {
+            this.respawnAt = now + delay;
         }
     };
     /**

@@ -311,7 +311,7 @@
       }
 
       /**
-       * Creates a cloud sprite that drifts using parallaxScrollX
+       * Creates a cloud sprite that drifts using scroll
        */
       function addCloud(x, y, w, h) {
         return punter.createSprite({
@@ -328,7 +328,7 @@
       function moveClouds() {
         for (var i = 0; i < clouds.length; i++) {
           var speed = 0.3 + (i * 0.15);
-          clouds[i].parallaxScrollX(-speed, 2000);
+          clouds[i].scroll(-speed, 0, { respawnAfter: 2000, offset: 100 });
         }
       }
 
