@@ -71,22 +71,38 @@ Punter.js is a zero-dependency, vanilla ES5 game engine designed for students, t
 </script>
 ```
 
-## Key API
+## API
+
+### engine
 
 - `punter.setup(config)` — load assets, bind canvas (call once)
 - `punter.scene(name, fn)` — register a scene
 - `punter.go(name)` — switch to a scene (tears down previous)
 - `punter.createSprite(options)` — create a game object
+- `punter.getSprite(id)` — look up a sprite by id
 - `punter.on(event, fn)` — register event handler (update, draw, ready, resize, go)
 - `punter.isKeyDown(keys...)` — check if keys are held (OR logic, use + for AND combos)
+- `punter.isPointerDown(button)` — check if mouse/touch button is held
 - `punter.pointer` — mouse/touch position and state (x, y, clicked, down, swiped*)
 - `punter.playSound(name, options)` — play a preloaded sound
+- `punter.stopSound(name)` — stop a playing sound
+- `punter.clearInput()` — reset all key and pointer states
 - `punter.pause()` / `punter.resume()` — freeze/unfreeze the game loop
-- `sprite.moveX(dx)` / `sprite.moveY(dy)` — move a sprite
+- `punter.redraw()` — redraw without running game logic (useful when paused)
+
+### sprite methods
+
+- `sprite.moveX(dx)` / `sprite.moveY(dy)` — move by pixels
+- `sprite.center(offsetX?, offsetY?)` — centre on canvas
+- `sprite.centerX(offsetX?)` / `sprite.centerY(offsetY?)` — centre on one axis
+- `sprite.animate(delayMs)` — advance animation frame (image must be an array)
+- `sprite.bounce(range, speed)` — smooth up-and-down float anchored to creation position
+- `sprite.blink(ms?, durationMs?)` — flash on/off; call blink(0) to stop
+- `sprite.scroll(speedX, speedY, options?)` — scroll and optionally loop or respawn when offscreen
+- `sprite.rotate(amount)` — add radians to sprite.angle
 - `sprite.isCollidingWith(other)` — collision check (pixel or rect mode)
-- `sprite.destroy()` — remove a sprite
-- `sprite.animate(delayMs)` — advance animation frame
-- `sprite.center()` — centre on canvas
+- `sprite.destroy()` — remove from engine
+- `sprite.draw()` — manually draw (called automatically each frame)
 
 ## Technical notes
 
