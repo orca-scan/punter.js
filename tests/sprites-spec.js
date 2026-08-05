@@ -770,4 +770,98 @@ describe('Sprites', function () {
         expect(result.cacheSize1).toBe(1);
         expect(result.cacheSize2).toBe(1);
     });
+
+    // --- scroll ---
+
+    it('scroll moves sprite horizontally', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 100, y: 0, w: 20, h: 20 });
+            s.scroll(-3, 0);
+            return s.x;
+        });
+        expect(result).toBe(97);
+    });
+
+    it('scroll moves sprite vertically', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 100, w: 20, h: 20 });
+            s.scroll(0, 2);
+            return s.y;
+        });
+        expect(result).toBe(102);
+    });
+
+    it('scroll with loop wraps by sprite width', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
+            // move offscreen left manually
+            s.x = -20;
+            s.scroll(-2, 0, { loop: true });
+            return s.x;
+        });
+        // x was -22, wraps by +w(20) → -2
+        expect(result).toBe(-2);
+    });
+
+    it('scroll with loop wraps vertically by sprite height', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
+            s.y = -20;
+            s.scroll(0, -2, { loop: true });
+            return s.y;
+        });
+        // y was -22, wraps by +h(20) → -2
+        expect(result).toBe(-2);
+    });
+
+    it('scroll with respawnAfter sets respawnAt when offscreen', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: punter.width + 1, y: 0, w: 20, h: 20 });
+            s.scroll(2, 0, { respawnAfter: 1000 });
+            return typeof s.respawnAt === 'number' && s.respawnAt > 0;
+        });
+        expect(result).toBe(true);
+    });
+
+    it('scroll respawns after delay elapses', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
+            // manually set respawnAt in the past to simulate elapsed delay
+            s.respawnAt = performance.now() - 1;
+            s.scroll(-2, 0, { respawnAfter: 1000 });
+            // should have respawned to right edge
+            return s.x >= punter.width;
+        });
+        expect(result).toBe(true);
+    });
+
+    it('scroll respawn uses random offset up to options.offset', async function () {
+        var result = await page.evaluate(function () {
+            var results = [];
+            for (var i = 0; i < 20; i++) {
+                var s = punter.createSprite({ id: 's' + i, image: 'hero', x: 0, y: 0, w: 20, h: 20 });
+                s.respawnAt = performance.now() - 1;
+                s.scroll(-2, 0, { respawnAfter: 0, offset: 100 });
+                results.push(s.x);
+                s.destroy();
+            }
+            var min = Math.min.apply(null, results);
+            var max = Math.max.apply(null, results);
+            return { min: min, max: max, width: punter.width };
+        });
+        // all respawn positions should be >= canvas width and <= canvas width + 100
+        expect(result.min).toBeGreaterThanOrEqual(result.width);
+        expect(result.max).toBeLessThanOrEqual(result.width + 100);
+    });
+
+    it('scroll does nothing when sprite is destroyed', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: 50, y: 50, w: 20, h: 20 });
+            s.destroy();
+            s.scroll(-5, 0);
+            return { x: s.x, y: s.y };
+        });
+        expect(result.x).toBe(50);
+        expect(result.y).toBe(50);
+    });
 });
