@@ -1275,10 +1275,10 @@
         if (!offscreen) return;
 
         if (shouldLoop) {
-            if (speedX < 0) this.x += this.w;
-            if (speedX > 0) this.x -= this.w;
-            if (speedY < 0) this.y += this.h;
-            if (speedY > 0) this.y -= this.h;
+            if (speedX < 0) this.x += engine.width + this.w;
+            if (speedX > 0) this.x -= engine.width + this.w;
+            if (speedY < 0) this.y += engine.height + this.h;
+            if (speedY > 0) this.y -= engine.height + this.h;
             return;
         }
 
@@ -1522,11 +1522,11 @@
         this.angle = (this.angle || 0) + amount;
     };
     /**
-     * Marks the sprite as destroyed and removes it from the engine's sprite registry; any held references become inert
+     * Marks the sprite as destroyed and removes it from the engine's sprite registry
      * @returns {void}
      */
     Sprite.prototype.destroy = function () {
-        this.destroyed = true; // let anyone with a reference to this know its dead
+        this.destroyed = true;
         delete _sprites[this.id];
     };
     Object.defineProperties(Sprite.prototype, {
