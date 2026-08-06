@@ -791,27 +791,41 @@ describe('Sprites', function () {
         expect(result).toBe(102);
     });
 
-    it('scroll with loop wraps by sprite width', async function () {
+    it('scroll with loop wraps horizontally to opposite edge', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
             // move offscreen left manually
             s.x = -20;
             s.scroll(-2, 0, { loop: true });
-            return s.x;
+            return { x: s.x, width: punter.width };
         });
-        // x was -22, wraps by +w(20) → -2
-        expect(result).toBe(-2);
+        // x was -22, wraps by +(width + w) to near the right edge
+        expect(result.x).toBe(result.width - 2);
     });
 
-    it('scroll with loop wraps vertically by sprite height', async function () {
+    it('scroll with loop wraps vertically to opposite edge', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
             s.y = -20;
             s.scroll(0, -2, { loop: true });
-            return s.y;
+            return { y: s.y, height: punter.height };
         });
-        // y was -22, wraps by +h(20) → -2
-        expect(result).toBe(-2);
+        // y was -22, wraps by +(height + h) to near the bottom edge
+        expect(result.y).toBe(result.height - 2);
+    });
+
+    it('scroll with loop wraps a small sprite correctly regardless of canvas size', async function () {
+        var result = await page.evaluate(function () {
+            var s = punter.createSprite({ id: 's1', image: 'hero', x: punter.width + 1, y: 0, w: 32, h: 32 });
+            s.scroll(3, 0, { loop: true });
+            // sprite was at width+1, moved to width+4, triggers wrap
+            var xAfter = s.x;
+            // wrapped x should be off the left edge (negative) entering from left
+            return { x: xAfter, width: punter.width };
+        });
+        // sprite should wrap to -(width + w) offset from its position
+        expect(result.x).toBe(result.width + 4 - result.width - 32);
+        expect(result.x).toBeLessThan(0);
     });
 
     it('scroll with respawnAfter sets respawnAt when offscreen', async function () {
