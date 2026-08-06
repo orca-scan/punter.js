@@ -372,7 +372,6 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 Property               | Description
 :----------------------|:--------------------------------------------------
 `punter.sceneName`     | name of the currently active scene
-`punter.sprites`       | array of all currently registered sprites
 `punter.getSprite(id)` | get a sprite by id, `null` if not found
 `punter.width`         | logical pixel width of the canvas
 `punter.height`        | logical pixel height of the canvas

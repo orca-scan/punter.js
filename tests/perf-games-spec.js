@@ -19,8 +19,7 @@ async function sampleUpdateRate(page, frameCount) {
                 resolve({
                     elapsed: elapsed,
                     frames: frames,
-                    fps: elapsed > 0 ? (frames * 1000 / elapsed) : 0,
-                    spriteCount: punter.sprites.length
+                    fps: elapsed > 0 ? (frames * 1000 / elapsed) : 0
                 });
             }
 
@@ -64,8 +63,7 @@ async function measureStableRate(page) {
     return {
         minFps: min.fps,
         minFrames: min.frames,
-        elapsed: min.elapsed,
-        spriteCount: min.spriteCount
+        elapsed: min.elapsed
     };
 }
 
@@ -127,13 +125,12 @@ describe('Game performance', function () {
                 asteroidList.push(asteroid);
             }
 
-            return punter.sprites.length;
+            return window.asteroids.length;
         });
 
         var result = await measureStableRate(page);
 
         expect(spriteCount).toBeGreaterThanOrEqual(300);
-        expect(result.spriteCount).toBeGreaterThanOrEqual(300);
         expect(result.minFps).toBeGreaterThanOrEqual(getTargetFps());
     });
 
@@ -158,8 +155,9 @@ describe('Game performance', function () {
             window.won = false;
             window.totalGems = 999999;
 
-            while (punter.sprites.length < target) {
-                i = punter.sprites.length;
+            var created = 0;
+            while (created < target) {
+                i = created;
                 punter.createSprite({
                     image: 'cloud',
                     x: startX + (i % cols) * gapX,
@@ -169,15 +167,15 @@ describe('Game performance', function () {
                     preserveAspect: false,
                     collidable: false
                 });
+                created++;
             }
 
-            return punter.sprites.length;
+            return created;
         });
 
         var result = await measureStableRate(page);
 
         expect(spriteCount).toBeGreaterThanOrEqual(300);
-        expect(result.spriteCount).toBeGreaterThanOrEqual(300);
         expect(result.minFps).toBeGreaterThanOrEqual(getTargetFps());
     });
 });

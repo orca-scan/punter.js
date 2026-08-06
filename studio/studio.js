@@ -633,7 +633,6 @@
     height:        {                                     info: 'canvas logical height in pixels' },
     frame:         {                                     info: 'total frames elapsed since the game started' },
     paused:        {                                     info: 'true if the game loop is paused' },
-    sprites:       {                                     info: 'array of all active (non-destroyed) sprites' },
     pointer:       {                                     info: 'pointer state object — x, y, down, clicked' },
     orientation:   {                                     info: "'portrait' or 'landscape'" },
     sceneName:     {                                     info: 'name of the currently active scene' },

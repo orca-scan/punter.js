@@ -16,7 +16,8 @@ describe('Sprites', function () {
 
     afterEach(async function () {
         await page.evaluate(function () {
-            punter.sprites.forEach(function (s) { s.destroy(); });
+            punter.scene('_cleanup', function () {});
+            punter.go('_cleanup');
         });
     });
 

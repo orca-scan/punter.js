@@ -111,12 +111,12 @@ describe('Scenes', function () {
             });
             punter.scene('emptyScene', function () {});
             punter.go('sceneWithSprite');
-            var before = punter.sprites.length;
+            var existsBefore = punter.getSprite('scene-sprite') !== null;
             punter.go('emptyScene');
-            return { before: before, after: punter.sprites.length };
+            return { existsBefore: existsBefore, existsAfter: punter.getSprite('scene-sprite') !== null };
         });
-        expect(result.before).toBe(1);
-        expect(result.after).toBe(0);
+        expect(result.existsBefore).toBe(true);
+        expect(result.existsAfter).toBe(false);
     });
 
     it('go() does not destroy sprites created in the new scene', async function () {
@@ -131,13 +131,11 @@ describe('Scenes', function () {
             punter.go('dstScene');
             return {
                 srcExists: punter.getSprite('src-sprite') !== null,
-                dstExists: punter.getSprite('dst-sprite') !== null,
-                count: punter.sprites.length
+                dstExists: punter.getSprite('dst-sprite') !== null
             };
         });
         expect(result.srcExists).toBe(false);
         expect(result.dstExists).toBe(true);
-        expect(result.count).toBe(1);
     });
 
     // --- pause / resume ---

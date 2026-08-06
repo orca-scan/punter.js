@@ -2373,16 +2373,6 @@
             },
             enumerable: true
         },
-        sprites: {
-            get: function () {
-                var arr = [];
-                for (var key in _sprites) {
-                    if (_sprites[key]) arr.push(_sprites[key]);
-                }
-                return arr;
-            },
-            enumerable: true
-        },
         isMobile: {
             get: function() {
                 return _isMobile;

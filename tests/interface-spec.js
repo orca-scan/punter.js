@@ -70,13 +70,6 @@ describe('Interface', function () {
         expect(result).toBeGreaterThanOrEqual(0);
     });
 
-    it('sprites returns an array', async function () {
-        var result = await page.evaluate(function () {
-            return Array.isArray(punter.sprites);
-        });
-        expect(result).toBe(true);
-    });
-
     it('orientation is "portrait" or "landscape"', async function () {
         var result = await page.evaluate(function () {
             return punter.orientation;
