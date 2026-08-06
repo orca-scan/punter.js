@@ -70,14 +70,6 @@ describe('Interface', function () {
         expect(result).toBeGreaterThanOrEqual(0);
     });
 
-    it('totalFrames is a non-negative number', async function () {
-        var result = await page.evaluate(function () {
-            return punter.totalFrames;
-        });
-        expect(typeof result).toBe('number');
-        expect(result).toBeGreaterThanOrEqual(0);
-    });
-
     it('sprites returns an array', async function () {
         var result = await page.evaluate(function () {
             return Array.isArray(punter.sprites);
@@ -250,29 +242,24 @@ describe('Interface', function () {
 
     // --- frame counter ---
 
-    it('frame cycles through exactly 60 values (0-59)', async function () {
+    it('frame increments each update tick', async function () {
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
-                var seen = {};
+                var initial;
+                var count = 0;
                 punter.scene('frameScene', function () {
                     punter.on('update', function () {
-                        seen[punter.frame] = true;
-                        if (Object.keys(seen).length >= 60) {
-                            var values = Object.keys(seen).map(Number);
-                            resolve({
-                                count: values.length,
-                                min: Math.min.apply(null, values),
-                                max: Math.max.apply(null, values)
-                            });
+                        if (count === 0) initial = punter.frame;
+                        count++;
+                        if (count >= 10) {
+                            resolve({ initial: initial, after: punter.frame });
                         }
                     });
                 });
                 punter.go('frameScene');
             });
         });
-        expect(result.count).toBe(60);
-        expect(result.min).toBe(0);
-        expect(result.max).toBe(59);
+        expect(result.after).toBeGreaterThan(result.initial);
     });
 
     // --- bounds cache ---

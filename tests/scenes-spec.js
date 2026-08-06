@@ -142,19 +142,19 @@ describe('Scenes', function () {
 
     // --- pause / resume ---
 
-    it('resume() does not reset totalFrames', async function () {
+    it('resume() does not reset frame', async function () {
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
                 punter.scene('pauseResumeScene', function () {});
                 punter.go('pauseResumeScene');
                 // wait for a few frames to accumulate
                 var check = setInterval(function () {
-                    if (punter.totalFrames > 5) {
+                    if (punter.frame > 5) {
                         clearInterval(check);
-                        var before = punter.totalFrames;
+                        var before = punter.frame;
                         punter.pause();
                         punter.resume();
-                        resolve({ before: before, after: punter.totalFrames });
+                        resolve({ before: before, after: punter.frame });
                     }
                 }, 16);
             });

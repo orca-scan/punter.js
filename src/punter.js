@@ -66,7 +66,6 @@
     var _running = false;
     var _paused = false;
     var _frame = 0;
-    var _totalFrames = 0;
     var _resized = false;
     var _loopId = null;
     var _loopLast = 0;
@@ -1780,10 +1779,6 @@
             pointer.swipedRight = false;
             pointer.swipeDistance = 0;
             _frame++;
-            _totalFrames++;
-            if (_frame >= 60) {
-                _frame = 0; // 0-59 counter; use (frame % n === 0) for interval-based logic
-            }
             _loopAccumulator -= _loopStep;
         }
 
@@ -2378,12 +2373,6 @@
         frame: {
             get: function () {
                 return _frame;
-            },
-            enumerable: true
-        },
-        totalFrames: {
-            get: function () {
-                return _totalFrames;
             },
             enumerable: true
         },

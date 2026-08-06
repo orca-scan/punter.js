@@ -11,11 +11,11 @@ var setup = require('./setup');
 async function sampleUpdateRate(page, frameCount) {
     return page.evaluate(function (targetFrames) {
         return new Promise(function (resolve) {
-            var startFrames = punter.totalFrames;
+            var startFrames = punter.frame;
             var start = performance.now();
             function finish() {
                 var elapsed = performance.now() - start;
-                var frames = punter.totalFrames - startFrames;
+                var frames = punter.frame - startFrames;
                 resolve({
                     elapsed: elapsed,
                     frames: frames,
@@ -25,7 +25,7 @@ async function sampleUpdateRate(page, frameCount) {
             }
 
             function check() {
-                if (punter.totalFrames - startFrames >= targetFrames) {
+                if (punter.frame - startFrames >= targetFrames) {
                     finish();
                     return;
                 }

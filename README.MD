@@ -376,8 +376,7 @@ Property               | Description
 `punter.getSprite(id)` | get a sprite by id, `null` if not found
 `punter.width`         | logical pixel width of the canvas
 `punter.height`        | logical pixel height of the canvas
-`punter.frame`         | current frame counter (0–59, resets each second)
-`punter.totalFrames`   | total frames since the loop started (never resets)
+`punter.frame`         | total frames since the loop started (never resets)
 `punter.canvas`        | the `<canvas>` element
 `punter.ctx`           | the canvas 2D rendering context
 `punter.running`       | `true` if the game loop is running
