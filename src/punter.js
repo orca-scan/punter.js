@@ -63,11 +63,8 @@
     var _scenes = {};
     var _currentScene = null;
     var _pendingGo = null;  // scene name queued before init completes
-    var _running = false;
     var _paused = false;
     var _frame = 0;
-    var _totalFrames = 0;
-    var _resized = false;
     var _loopId = null;
     var _loopLast = 0;
     var _loopAccumulator = 0;
@@ -862,11 +859,6 @@
         return this.image[index % this.image.length];
     };
     /**
-     * Per-frame update hook; override on a sprite instance to run custom game logic each tick
-     * @returns {void}
-     */
-    Sprite.prototype.update = function () {};
-    /**
      * Draws the sprite onto the canvas, handling clipping, offscreen culling, outlines, and debug overlays
      * @param {CanvasRenderingContext2D} [ctx] - canvas context to draw into; defaults to the main game canvas
      * @returns {void}
@@ -1263,19 +1255,21 @@
     };
     /**
      * Scrolls a sprite and optionally loops or respawns when offscreen
-     * @param {number} speedX - horizontal speed (use one axis at a time)
-     * @param {number} speedY - vertical speed
-     * @param {object} [options]
+     * @param {object} options
+     * @param {number} [options.speedX=0] - horizontal speed
+     * @param {number} [options.speedY=0] - vertical speed
      * @param {boolean} [options.loop] - wrap by sprite size for seamless tiling
      * @param {number} [options.respawnAfter] - ms to wait before respawning
      * @param {number} [options.offset=0] - max random distance beyond edge on respawn
      * @returns {void}
      */
-    Sprite.prototype.scroll = function(speedX, speedY, options) {
+    Sprite.prototype.scroll = function(options) {
         if (this.destroyed) return;
 
         options = options || {};
 
+        var speedX = options.speedX || 0;
+        var speedY = options.speedY || 0;
         var now = performance.now();
         var shouldLoop = options.loop === true;
         var delay = options.respawnAfter || 0;
@@ -1785,10 +1779,6 @@
             pointer.swipedRight = false;
             pointer.swipeDistance = 0;
             _frame++;
-            _totalFrames++;
-            if (_frame >= 60) {
-                _frame = 0; // 0-59 counter; use (frame % n === 0) for interval-based logic
-            }
             _loopAccumulator -= _loopStep;
         }
 
@@ -1807,9 +1797,6 @@
         if (eventHandlers.draw) {
             eventHandlers.draw.call(_canvasCtx, _canvasCtx);
         }
-
-        // reset the flag after draw
-        _resized = false;
 
         _loopFpsCounter++;
 
@@ -1848,7 +1835,6 @@
 
         _paused = false;
         _loopId = requestAnimationFrame(loop);
-        _running = true;
     }
 
     /**
@@ -1865,7 +1851,6 @@
         }
 
         _paused = true;
-        _running = false;
     }
 
     /**
@@ -1876,7 +1861,6 @@
         _loopLast = performance.now();
         _paused = false;
         _loopId = requestAnimationFrame(loop);
-        _running = true;
     }
 
     /**
@@ -2092,8 +2076,8 @@
         setAttribute(htmlEl, 'data-punter-orientation', engine.orientation);
 
         // only set scene if we have a value (dev might hard code start scene)
-        if (engine.sceneName) {
-            setAttribute(htmlEl, 'data-punter-scene', engine.sceneName);
+        if (engine.currentScene) {
+            setAttribute(htmlEl, 'data-punter-scene', engine.currentScene);
         }
 
         // force a CSS reflow
@@ -2177,7 +2161,6 @@
         _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';  // scale to fill the viewport
 
         setDevVars();
-        _resized = true;
 
         for (var id in _sprites) {
             if (Object.prototype.hasOwnProperty.call(_sprites, id)) {
@@ -2284,15 +2267,15 @@
          * @returns {void}
          */
         redraw: function () {
-            if (!this.canvas || !this.ctx) return;
+            if (!_canvas || !_canvasCtx) return;
 
-            this.ctx.clearRect(0, 0, this.width, this.height);
+            _canvasCtx.clearRect(0, 0, _width, _height);
 
             for (var id in _sprites) {
                 if (Object.prototype.hasOwnProperty.call(_sprites, id)) {
                     var sprite = _sprites[id];
                     if (!sprite.destroyed) {
-                        sprite.draw(this.ctx);
+                        sprite.draw(_canvasCtx);
                     }
                 }
             }
@@ -2341,7 +2324,7 @@
     };
 
     Object.defineProperties(api, {
-        sceneName: {
+        currentScene: {
             get: function () {
                 return _currentScene || '';
             },
@@ -2359,12 +2342,6 @@
         canvas: {
             get: function () {
                 return _canvas;
-            },
-            enumerable: true
-        },
-        ctx: {
-            get: function () {
-                return _canvasCtx ? _canvasCtx : null;
             },
             enumerable: true
         },
@@ -2386,48 +2363,15 @@
             },
             enumerable: true
         },
-        totalFrames: {
-            get: function () {
-                return _totalFrames;
-            },
-            enumerable: true
-        },
-        running: {
-            get: function () {
-                return _running;
-            },
-            enumerable: true
-        },
         paused: {
             get: function () {
                 return _paused;
             },
             enumerable: true
         },
-        resized: {
-            get: function () {
-                return _resized;
-            },
-            enumerable: true
-        },
-        sprites: {
-            get: function () {
-                var arr = [];
-                for (var key in _sprites) {
-                    if (_sprites[key]) arr.push(_sprites[key]);
-                }
-                return arr;
-            },
-            enumerable: true
-        },
         isMobile: {
             get: function() {
                 return _isMobile;
-            }
-        },
-        isDesktop: {
-            get: function() {
-                return !_isMobile;
             }
         },
         orientation: {

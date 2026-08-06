@@ -11,21 +11,20 @@ var setup = require('./setup');
 async function sampleUpdateRate(page, frameCount) {
     return page.evaluate(function (targetFrames) {
         return new Promise(function (resolve) {
-            var startFrames = punter.totalFrames;
+            var startFrames = punter.frame;
             var start = performance.now();
             function finish() {
                 var elapsed = performance.now() - start;
-                var frames = punter.totalFrames - startFrames;
+                var frames = punter.frame - startFrames;
                 resolve({
                     elapsed: elapsed,
                     frames: frames,
-                    fps: elapsed > 0 ? (frames * 1000 / elapsed) : 0,
-                    spriteCount: punter.sprites.length
+                    fps: elapsed > 0 ? (frames * 1000 / elapsed) : 0
                 });
             }
 
             function check() {
-                if (punter.totalFrames - startFrames >= targetFrames) {
+                if (punter.frame - startFrames >= targetFrames) {
                     finish();
                     return;
                 }
@@ -64,8 +63,7 @@ async function measureStableRate(page) {
     return {
         minFps: min.fps,
         minFrames: min.frames,
-        elapsed: min.elapsed,
-        spriteCount: min.spriteCount
+        elapsed: min.elapsed
     };
 }
 
@@ -93,7 +91,7 @@ describe('Game performance', function () {
     it('asteroids sustains 60 fps with at least 300 active sprites', async function () {
         page = await setup.newPageAt('/games/asteroids.html');
 
-        await page.waitForFunction('window.punter && punter.running === true && punter.sceneName === "play"', { timeout: 20000 });
+        await page.waitForFunction('window.punter && !punter.paused && punter.currentScene === "play"', { timeout: 20000 });
         await page.waitForFunction('Array.isArray(window.asteroids) && typeof window.makeAsteroid === "function" && window.ship', { timeout: 20000 });
 
         var spriteCount = await page.evaluate(function () {
@@ -127,20 +125,19 @@ describe('Game performance', function () {
                 asteroidList.push(asteroid);
             }
 
-            return punter.sprites.length;
+            return window.asteroids.length;
         });
 
         var result = await measureStableRate(page);
 
         expect(spriteCount).toBeGreaterThanOrEqual(300);
-        expect(result.spriteCount).toBeGreaterThanOrEqual(300);
         expect(result.minFps).toBeGreaterThanOrEqual(getTargetFps());
     });
 
     it('platform sustains 60 fps with at least 300 active sprites', async function () {
         page = await setup.newPageAt('/games/platform.html');
 
-        await page.waitForFunction('window.punter && punter.running === true && punter.sceneName === "play"', { timeout: 20000 });
+        await page.waitForFunction('window.punter && !punter.paused && punter.currentScene === "play"', { timeout: 20000 });
         await page.waitForFunction('window.player && window.flag && Array.isArray(window.clouds)', { timeout: 20000 });
 
         var spriteCount = await page.evaluate(function () {
@@ -158,8 +155,9 @@ describe('Game performance', function () {
             window.won = false;
             window.totalGems = 999999;
 
-            while (punter.sprites.length < target) {
-                i = punter.sprites.length;
+            var created = 0;
+            while (created < target) {
+                i = created;
                 punter.createSprite({
                     image: 'cloud',
                     x: startX + (i % cols) * gapX,
@@ -169,15 +167,15 @@ describe('Game performance', function () {
                     preserveAspect: false,
                     collidable: false
                 });
+                created++;
             }
 
-            return punter.sprites.length;
+            return created;
         });
 
         var result = await measureStableRate(page);
 
         expect(spriteCount).toBeGreaterThanOrEqual(300);
-        expect(result.spriteCount).toBeGreaterThanOrEqual(300);
         expect(result.minFps).toBeGreaterThanOrEqual(getTargetFps());
     });
 });

@@ -70,21 +70,6 @@ describe('Interface', function () {
         expect(result).toBeGreaterThanOrEqual(0);
     });
 
-    it('totalFrames is a non-negative number', async function () {
-        var result = await page.evaluate(function () {
-            return punter.totalFrames;
-        });
-        expect(typeof result).toBe('number');
-        expect(result).toBeGreaterThanOrEqual(0);
-    });
-
-    it('sprites returns an array', async function () {
-        var result = await page.evaluate(function () {
-            return Array.isArray(punter.sprites);
-        });
-        expect(result).toBe(true);
-    });
-
     it('orientation is "portrait" or "landscape"', async function () {
         var result = await page.evaluate(function () {
             return punter.orientation;
@@ -92,18 +77,16 @@ describe('Interface', function () {
         expect(['portrait', 'landscape']).toContain(result);
     });
 
-    it('isMobile and isDesktop are booleans and mutually exclusive', async function () {
+    it('isMobile is a boolean', async function () {
         var result = await page.evaluate(function () {
-            return { isMobile: punter.isMobile, isDesktop: punter.isDesktop };
+            return punter.isMobile;
         });
-        expect(typeof result.isMobile).toBe('boolean');
-        expect(typeof result.isDesktop).toBe('boolean');
-        expect(result.isMobile).not.toBe(result.isDesktop);
+        expect(typeof result).toBe('boolean');
     });
 
-    it('sceneName is a string', async function () {
+    it('currentScene is a string', async function () {
         var result = await page.evaluate(function () {
-            return typeof punter.sceneName;
+            return typeof punter.currentScene;
         });
         expect(result).toBe('string');
     });
@@ -157,27 +140,25 @@ describe('Interface', function () {
 
     // --- pause / resume ---
 
-    it('pause() sets paused to true and running to false', async function () {
+    it('pause() sets paused to true', async function () {
         var result = await page.evaluate(function () {
             punter.scene('pauseScene', function () {});
             punter.go('pauseScene');
             punter.pause();
-            return { paused: punter.paused, running: punter.running };
+            return punter.paused;
         });
-        expect(result.paused).toBe(true);
-        expect(result.running).toBe(false);
+        expect(result).toBe(true);
     });
 
-    it('resume() sets running to true and paused to false', async function () {
+    it('resume() sets paused to false', async function () {
         var result = await page.evaluate(function () {
             punter.scene('resumeScene', function () {});
             punter.go('resumeScene');
             punter.pause();
             punter.resume();
-            return { paused: punter.paused, running: punter.running };
+            return punter.paused;
         });
-        expect(result.running).toBe(true);
-        expect(result.paused).toBe(false);
+        expect(result).toBe(false);
     });
 
     // --- redraw ---
@@ -250,29 +231,24 @@ describe('Interface', function () {
 
     // --- frame counter ---
 
-    it('frame cycles through exactly 60 values (0-59)', async function () {
+    it('frame increments each update tick', async function () {
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
-                var seen = {};
+                var initial;
+                var count = 0;
                 punter.scene('frameScene', function () {
                     punter.on('update', function () {
-                        seen[punter.frame] = true;
-                        if (Object.keys(seen).length >= 60) {
-                            var values = Object.keys(seen).map(Number);
-                            resolve({
-                                count: values.length,
-                                min: Math.min.apply(null, values),
-                                max: Math.max.apply(null, values)
-                            });
+                        if (count === 0) initial = punter.frame;
+                        count++;
+                        if (count >= 10) {
+                            resolve({ initial: initial, after: punter.frame });
                         }
                     });
                 });
                 punter.go('frameScene');
             });
         });
-        expect(result.count).toBe(60);
-        expect(result.min).toBe(0);
-        expect(result.max).toBe(59);
+        expect(result.after).toBeGreaterThan(result.initial);
     });
 
     // --- bounds cache ---

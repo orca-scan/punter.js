@@ -328,7 +328,7 @@
       function moveClouds() {
         for (var i = 0; i < clouds.length; i++) {
           var speed = 0.3 + (i * 0.15);
-          clouds[i].scroll(-speed, 0, { respawnAfter: 2000, offset: 100 });
+          clouds[i].scroll({ speedX: -speed, respawnAfter: 2000, offset: 100 });
         }
       }
 
@@ -500,7 +500,7 @@
       // rebuild the level on resize so everything stays proportional
 
       punter.on('resize', function () {
-        if (punter.sceneName === 'play') {
+        if (punter.currentScene === 'play') {
           punter.go('play');
         }
       });

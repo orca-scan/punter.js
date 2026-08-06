@@ -164,7 +164,7 @@ Method                                     | Description
 `sprite.animate(delayMs)`                  | Advance animation frame; requires `image` to be an array
 `sprite.bounce(range, speed)`              | Smooth up-and-down float anchored to creation position
 `sprite.blink(ms?, durationMs?)`           | Flash on/off every `ms` ms (default 130); auto-stops after `durationMs` if given, otherwise blinks indefinitely; call `blink(0)` to stop early
-`sprite.scroll(speedX, speedY, options?)`  | Scroll and optionally loop (`{ loop: true }`) or respawn (`{ respawnAfter: ms, offset: n }`); use one axis at a time
+`sprite.scroll(options)`                   | Scroll and optionally loop (`{ speedX, loop: true }`) or respawn (`{ speedX, respawnAfter: ms, offset: n }`)
 `sprite.rotate(amount)`                    | Add `amount` (radians) to `sprite.angle`; vector functions can read `this.angle` directly
 `sprite.isCollidingWith(other)`            | `true` if collision areas overlap; in `pixel` mode transparent corners are ignored, `other` can be a sprite or a plain `{ x, y, w, h }` rect
 `sprite.destroy()`                         | Remove from engine; further `draw()` calls are silently ignored
@@ -371,20 +371,14 @@ Debug mode, device type, and orientation are also reflected as `data-punter-*` a
 
 Property               | Description
 :----------------------|:--------------------------------------------------
-`punter.sceneName`     | name of the currently active scene
-`punter.sprites`       | array of all currently registered sprites
+`punter.currentScene`  | name of the currently active scene
 `punter.getSprite(id)` | get a sprite by id, `null` if not found
 `punter.width`         | logical pixel width of the canvas
 `punter.height`        | logical pixel height of the canvas
-`punter.frame`         | current frame counter (0–59, resets each second)
-`punter.totalFrames`   | total frames since the loop started (never resets)
+`punter.frame`         | total frames since the loop started (never resets)
 `punter.canvas`        | the `<canvas>` element
-`punter.ctx`           | the canvas 2D rendering context
-`punter.running`       | `true` if the game loop is running
 `punter.paused`        | `true` if the loop is paused
-`punter.resized`       | `true` for the frame in which a resize occurred
 `punter.isMobile`      | `true` on mobile devices
-`punter.isDesktop`     | `true` on non-mobile devices
 `punter.orientation`   | `'portrait'` or `'landscape'`
 
 ## License

@@ -123,7 +123,7 @@ punter.scene('play', function () {
   gems          = [];
   flashFrames   = 0;
   lowTimeWarned = false;
-  startFrame    = punter.totalFrames; // snapshot the current frame count
+  startFrame    = punter.frame; // snapshot the current frame count
   highScore     = parseInt(localStorage.getItem('crystalHigh') || '0', 10);
 
   player = punter.createSprite({
@@ -141,7 +141,7 @@ punter.scene('play', function () {
 });
 ```
 
-`punter.totalFrames` has been ticking up since the engine started. Saving the current number here lets you calculate how many seconds have passed since *this round* began - that's your countdown.
+`punter.frame` has been ticking up since the engine started. Saving the current number here lets you calculate how many seconds have passed since *this round* began - that's your countdown.
 
 `localStorage` is a built-in browser feature that saves small bits of data permanently on your computer. Even if you close the tab and come back tomorrow, the high score will still be there.
 
@@ -179,7 +179,7 @@ Still inside the `update` code block, add the timer. Every 60 frames is one seco
 
 ```js
 // work out how many seconds are left in this round
-timeLeft = Math.max(0, TIME_LIMIT - Math.floor((punter.totalFrames - startFrame) / 60));
+timeLeft = Math.max(0, TIME_LIMIT - Math.floor((punter.frame - startFrame) / 60));
 
 // play a warning beep when 10 seconds remain
 if (timeLeft <= 10 && !lowTimeWarned) {

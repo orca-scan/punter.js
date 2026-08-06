@@ -631,18 +631,13 @@
     canvas:        {                                     info: 'the HTMLCanvasElement', browser: 'HTMLCanvasElement' },
     width:         {                                     info: 'canvas logical width in pixels' },
     height:        {                                     info: 'canvas logical height in pixels' },
-    frame:         {                                     info: 'current frame number 0-59, loops each second' },
-    totalFrames:   {                                     info: 'total frames elapsed since the game started' },
-    running:       {                                     info: 'true if the game loop is active' },
+    frame:         {                                     info: 'total frames elapsed since the game started' },
     paused:        {                                     info: 'true if the game loop is paused' },
-    resized:       {                                     info: 'true on the first frame after a resize event' },
-    sprites:       {                                     info: 'array of all active (non-destroyed) sprites' },
     pointer:       {                                     info: 'pointer state object — x, y, down, clicked' },
     orientation:   {                                     info: "'portrait' or 'landscape'" },
-    sceneName:     {                                     info: 'name of the currently active scene' },
+    currentScene:  {                                     info: 'name of the currently active scene' },
     debug:         {                                     info: 'set true to enable the debug overlay' },
-    isMobile:      {                                     info: 'true if running on a mobile device' },
-    isDesktop:     {                                     info: 'true if running on a desktop device' }
+    isMobile:      {                                     info: 'true if running on a mobile device' }
   };
 
   var POINTER_DEFS = {
@@ -664,7 +659,7 @@
     isCollidingWith: { params: 'target',                           info: 'true if bounding boxes overlap' },
     moveX:           { params: 'dx',                               info: 'move horizontally by dx pixels' },
     moveY:           { params: 'dy',                               info: 'move vertically by dy pixels' },
-    scroll:          { params: 'speedX, speedY [, options]',      info: 'scroll and optionally loop or respawn when offscreen' },
+    scroll:          { params: 'options',                          info: 'scroll and optionally loop or respawn when offscreen; options: speedX, speedY, loop, respawnAfter, offset' },
     rotate:          { params: 'amount',                           info: 'add amount (radians) to this.angle' },
     actualH:         { info: 'draw height accounting for clipHeight' },
     actualW:         { info: 'draw width as an integer' },

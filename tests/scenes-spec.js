@@ -32,11 +32,11 @@ describe('Scenes', function () {
         expect(result).toBe(true);
     });
 
-    it('sceneName reflects the active scene after go()', async function () {
+    it('currentScene reflects the active scene after go()', async function () {
         var result = await page.evaluate(function () {
             punter.scene('levelA', function () {});
             punter.go('levelA');
-            return punter.sceneName;
+            return punter.currentScene;
         });
         expect(result).toBe('levelA');
     });
@@ -46,9 +46,9 @@ describe('Scenes', function () {
             punter.scene('sceneOne', function () {});
             punter.scene('sceneTwo', function () {});
             punter.go('sceneOne');
-            var first = punter.sceneName;
+            var first = punter.currentScene;
             punter.go('sceneTwo');
-            return { first: first, second: punter.sceneName };
+            return { first: first, second: punter.currentScene };
         });
         expect(result.first).toBe('sceneOne');
         expect(result.second).toBe('sceneTwo');
@@ -111,12 +111,12 @@ describe('Scenes', function () {
             });
             punter.scene('emptyScene', function () {});
             punter.go('sceneWithSprite');
-            var before = punter.sprites.length;
+            var existsBefore = punter.getSprite('scene-sprite') !== null;
             punter.go('emptyScene');
-            return { before: before, after: punter.sprites.length };
+            return { existsBefore: existsBefore, existsAfter: punter.getSprite('scene-sprite') !== null };
         });
-        expect(result.before).toBe(1);
-        expect(result.after).toBe(0);
+        expect(result.existsBefore).toBe(true);
+        expect(result.existsAfter).toBe(false);
     });
 
     it('go() does not destroy sprites created in the new scene', async function () {
@@ -131,30 +131,28 @@ describe('Scenes', function () {
             punter.go('dstScene');
             return {
                 srcExists: punter.getSprite('src-sprite') !== null,
-                dstExists: punter.getSprite('dst-sprite') !== null,
-                count: punter.sprites.length
+                dstExists: punter.getSprite('dst-sprite') !== null
             };
         });
         expect(result.srcExists).toBe(false);
         expect(result.dstExists).toBe(true);
-        expect(result.count).toBe(1);
     });
 
     // --- pause / resume ---
 
-    it('resume() does not reset totalFrames', async function () {
+    it('resume() does not reset frame', async function () {
         var result = await page.evaluate(function () {
             return new Promise(function (resolve) {
                 punter.scene('pauseResumeScene', function () {});
                 punter.go('pauseResumeScene');
                 // wait for a few frames to accumulate
                 var check = setInterval(function () {
-                    if (punter.totalFrames > 5) {
+                    if (punter.frame > 5) {
                         clearInterval(check);
-                        var before = punter.totalFrames;
+                        var before = punter.frame;
                         punter.pause();
                         punter.resume();
-                        resolve({ before: before, after: punter.totalFrames });
+                        resolve({ before: before, after: punter.frame });
                     }
                 }, 16);
             });
