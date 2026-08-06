@@ -80,4 +80,55 @@ describe('Sounds', function () {
         });
         expect(threw).toBe(false);
     });
+
+    it('playing the same sound multiple times does not throw', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.stopSound('beep');
+                punter.playSound('beep');
+                punter.playSound('beep');
+                punter.playSound('beep');
+                punter.playSound('beep'); // 4th triggers internal cap eviction
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(false);
+    });
+
+    it('playSound with loop:true does not throw when called twice', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.stopSound('beep');
+                punter.playSound('beep', { loop: true });
+                punter.playSound('beep', { loop: true });
+                punter.stopSound('beep');
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(false);
+    });
+
+    it('playSound with restart:true does not throw', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.stopSound('beep');
+                punter.playSound('beep');
+                punter.playSound('beep', { restart: true });
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(false);
+    });
+
+    it('stopSound after multiple plays does not throw', async function () {
+        var threw = await page.evaluate(function () {
+            try {
+                punter.playSound('beep');
+                punter.playSound('beep');
+                punter.stopSound('beep');
+                return false;
+            } catch (e) { return true; }
+        });
+        expect(threw).toBe(false);
+    });
 });

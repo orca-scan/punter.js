@@ -255,7 +255,7 @@ punter.stopSound('jump');
 
 `playSound` takes the short name you gave a sound in `setup()`'s `sounds` option, plus optional settings - `volume` (0 to 1), `loop` (repeat forever or not), and `speed` (1 is normal, 2 is double speed, etc.).
 
-`playSound` on an already-playing sound restarts it rather than layering. In practice: calling `playSound('jump')` twice quickly won't give you two overlapping jump sounds, it'll just restart the one sound.
+Short sound effects layer automatically — up to 3 instances of the same sound can overlap at once (useful for rapid-fire collisions). The 4th call evicts the oldest. Sounds played with `{ loop: true }` restart instead of stacking, as does any call with `{ restart: true }`.
 
 ## 6. Events
 
