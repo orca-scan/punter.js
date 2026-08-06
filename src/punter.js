@@ -17,8 +17,39 @@
 
     var images = {};
     var sounds = {};
-    var playingSounds = {};
+    var _activeSounds = {};
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // parens required so 'new' applies to the resolved constructor
+
+    // unlock on first user gesture; iOS Safari suspends AudioContext until then
+    function _unlockAudio() {
+        if (audioCtx.state !== 'running') audioCtx.resume();
+        try {
+            var buf = audioCtx.createBuffer(1, 1, 22050);
+            var src = audioCtx.createBufferSource();
+            src.buffer = buf;
+            src.connect(audioCtx.destination);
+            src.start(0);
+        } catch (e) { /* non-fatal if context is not yet usable */ }
+        document.removeEventListener('touchstart', _unlockAudio, true);
+        document.removeEventListener('pointerdown', _unlockAudio, true);
+        document.removeEventListener('mousedown', _unlockAudio, true);
+        document.removeEventListener('keydown', _unlockAudio, true);
+    }
+    document.addEventListener('touchstart', _unlockAudio, true);
+    document.addEventListener('pointerdown', _unlockAudio, true);
+    document.addEventListener('mousedown', _unlockAudio, true);
+    document.addEventListener('keydown', _unlockAudio, true);
+
+    // re-resume after iOS audio interruptions (phone calls, Siri, app switch)
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && audioCtx.state !== 'running') {
+            audioCtx.resume();
+        }
+    });
+    window.addEventListener('focus', function () {
+        if (audioCtx.state !== 'running') audioCtx.resume();
+    });
+
     var _isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
     var _canvas;
@@ -1853,7 +1884,8 @@
      * @param {string} name - name of the sound buffer
      * @param {Object} [options] - optional settings
      * @param {number} [options.volume] - volume from 0 to 1
-     * @param {boolean} [options.loop] - whether to loop the sound
+     * @param {boolean} [options.loop] - loops the sound; stops the previous instance of the same sound
+     * @param {boolean} [options.restart] - stop any existing instance before playing
      * @param {boolean} [options.once] - if true, don't track for stopping
      * @param {number} [options.speed] - playback speed multiplier (1 = normal)
      * @returns {void}
@@ -1865,40 +1897,48 @@
         var buffer = sounds[name];
         if (!buffer) return;
 
-        try {
+        options = options || {};
 
-            // always stop if sound already playing
+        // looped sounds and explicit restarts stop the previous instance; sfx allow up to 3 at once
+        if (options.restart === true || options.loop === true) {
             stopSound(name);
+        } else if (_activeSounds[name] && _activeSounds[name].length >= 3) {
+            // evict the oldest instance to stay within the cap
+            try { _activeSounds[name][0].stop(0); } catch (e) { /* already stopped */ }
+            _activeSounds[name].shift();
+        }
 
-            var source = audioCtx.createBufferSource();
-            source.buffer = buffer;
+        var source = audioCtx.createBufferSource();
+        source.buffer = buffer;
 
-            var gainNode = audioCtx.createGain();
-            gainNode.gain.value = (options && options.volume !== null && options.volume !== undefined) ? options.volume : 1;
+        var gainNode = audioCtx.createGain();
+        gainNode.gain.value = (options.volume !== null && options.volume !== undefined) ? options.volume : 1;
 
-            source.loop = !!(options && options.loop);
+        source.loop = !!options.loop;
+        source.playbackRate.value = (options.speed !== null && options.speed !== undefined) ? options.speed : 1;
 
-            // apply playback speed if provided
-            source.playbackRate.value = (options && options.speed !== null && options.speed !== undefined) ? options.speed : 1;
+        source.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
 
-            source.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            if (audioCtx.state === 'suspended') audioCtx.resume(); // browsers suspend AudioContext until the first user gesture
+        // fallback resume for post-interruption re-suspension (primary unlock is _unlockAudio)
+        if (audioCtx.state !== 'running') audioCtx.resume();
+
+        try {
             source.start(0);
-
-            if (!options || !options.once) {
-                if (!playingSounds[name]) playingSounds[name] = [];
-                playingSounds[name].push(source);
-                source.onended = function () {
-                    var arr = playingSounds[name];
-                    if (arr) {
-                        var idx = arr.indexOf(source);
-                        if (idx !== -1) arr.splice(idx, 1);
-                    }
-                };
-            }
         } catch (e) {
-            // audio errors are non-fatal; browser may restrict AudioContext
+            return; // audio errors are non-fatal; browser may restrict AudioContext
+        }
+
+        if (!options.once) {
+            if (!_activeSounds[name]) _activeSounds[name] = [];
+            _activeSounds[name].push(source);
+            source.onended = function () {
+                var arr = _activeSounds[name];
+                if (arr) {
+                    var idx = arr.indexOf(source);
+                    if (idx !== -1) arr.splice(idx, 1);
+                }
+            };
         }
     }
 
@@ -1907,7 +1947,7 @@
      * @returns {void}
      */
     function stopAllSounds() {
-        for (var name in playingSounds) {
+        for (var name in _activeSounds) {
             stopSound(name);
         }
     }
@@ -1921,12 +1961,12 @@
 
         if (!_initilised) throw new Error('punter.setup must be called first');
 
-        var arr = playingSounds[name];
+        var arr = _activeSounds[name];
         if (!arr || !arr.length) return;
         for (var i = 0; i < arr.length; i++) {
             try { arr[i].stop(0); } catch (e) { /* already stopped */ }
         }
-        playingSounds[name] = [];
+        _activeSounds[name] = [];
     }
 
     /**
