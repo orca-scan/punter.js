@@ -377,7 +377,6 @@ Property               | Description
 `punter.height`        | logical pixel height of the canvas
 `punter.frame`         | total frames since the loop started (never resets)
 `punter.canvas`        | the `<canvas>` element
-`punter.ctx`           | the canvas 2D rendering context
 `punter.paused`        | `true` if the loop is paused
 `punter.isMobile`      | `true` on mobile devices
 `punter.orientation`   | `'portrait'` or `'landscape'`

@@ -2267,15 +2267,15 @@
          * @returns {void}
          */
         redraw: function () {
-            if (!this.canvas || !this.ctx) return;
+            if (!_canvas || !_canvasCtx) return;
 
-            this.ctx.clearRect(0, 0, this.width, this.height);
+            _canvasCtx.clearRect(0, 0, _width, _height);
 
             for (var id in _sprites) {
                 if (Object.prototype.hasOwnProperty.call(_sprites, id)) {
                     var sprite = _sprites[id];
                     if (!sprite.destroyed) {
-                        sprite.draw(this.ctx);
+                        sprite.draw(_canvasCtx);
                     }
                 }
             }
@@ -2342,12 +2342,6 @@
         canvas: {
             get: function () {
                 return _canvas;
-            },
-            enumerable: true
-        },
-        ctx: {
-            get: function () {
-                return _canvasCtx ? _canvasCtx : null;
             },
             enumerable: true
         },
