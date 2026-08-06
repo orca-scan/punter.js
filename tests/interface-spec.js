@@ -84,9 +84,9 @@ describe('Interface', function () {
         expect(typeof result).toBe('boolean');
     });
 
-    it('sceneName is a string', async function () {
+    it('currentScene is a string', async function () {
         var result = await page.evaluate(function () {
-            return typeof punter.sceneName;
+            return typeof punter.currentScene;
         });
         expect(result).toBe('string');
     });

@@ -635,7 +635,7 @@
     paused:        {                                     info: 'true if the game loop is paused' },
     pointer:       {                                     info: 'pointer state object — x, y, down, clicked' },
     orientation:   {                                     info: "'portrait' or 'landscape'" },
-    sceneName:     {                                     info: 'name of the currently active scene' },
+    currentScene:  {                                     info: 'name of the currently active scene' },
     debug:         {                                     info: 'set true to enable the debug overlay' },
     isMobile:      {                                     info: 'true if running on a mobile device' }
   };

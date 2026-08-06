@@ -2076,8 +2076,8 @@
         setAttribute(htmlEl, 'data-punter-orientation', engine.orientation);
 
         // only set scene if we have a value (dev might hard code start scene)
-        if (engine.sceneName) {
-            setAttribute(htmlEl, 'data-punter-scene', engine.sceneName);
+        if (engine.currentScene) {
+            setAttribute(htmlEl, 'data-punter-scene', engine.currentScene);
         }
 
         // force a CSS reflow
@@ -2324,7 +2324,7 @@
     };
 
     Object.defineProperties(api, {
-        sceneName: {
+        currentScene: {
             get: function () {
                 return _currentScene || '';
             },

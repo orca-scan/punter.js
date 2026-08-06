@@ -500,7 +500,7 @@
       // rebuild the level on resize so everything stays proportional
 
       punter.on('resize', function () {
-        if (punter.sceneName === 'play') {
+        if (punter.currentScene === 'play') {
           punter.go('play');
         }
       });

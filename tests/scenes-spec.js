@@ -32,11 +32,11 @@ describe('Scenes', function () {
         expect(result).toBe(true);
     });
 
-    it('sceneName reflects the active scene after go()', async function () {
+    it('currentScene reflects the active scene after go()', async function () {
         var result = await page.evaluate(function () {
             punter.scene('levelA', function () {});
             punter.go('levelA');
-            return punter.sceneName;
+            return punter.currentScene;
         });
         expect(result).toBe('levelA');
     });
@@ -46,9 +46,9 @@ describe('Scenes', function () {
             punter.scene('sceneOne', function () {});
             punter.scene('sceneTwo', function () {});
             punter.go('sceneOne');
-            var first = punter.sceneName;
+            var first = punter.currentScene;
             punter.go('sceneTwo');
-            return { first: first, second: punter.sceneName };
+            return { first: first, second: punter.currentScene };
         });
         expect(result.first).toBe('sceneOne');
         expect(result.second).toBe('sceneTwo');

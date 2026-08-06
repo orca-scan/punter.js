@@ -91,7 +91,7 @@ describe('Game performance', function () {
     it('asteroids sustains 60 fps with at least 300 active sprites', async function () {
         page = await setup.newPageAt('/games/asteroids.html');
 
-        await page.waitForFunction('window.punter && !punter.paused && punter.sceneName === "play"', { timeout: 20000 });
+        await page.waitForFunction('window.punter && !punter.paused && punter.currentScene === "play"', { timeout: 20000 });
         await page.waitForFunction('Array.isArray(window.asteroids) && typeof window.makeAsteroid === "function" && window.ship', { timeout: 20000 });
 
         var spriteCount = await page.evaluate(function () {
@@ -137,7 +137,7 @@ describe('Game performance', function () {
     it('platform sustains 60 fps with at least 300 active sprites', async function () {
         page = await setup.newPageAt('/games/platform.html');
 
-        await page.waitForFunction('window.punter && !punter.paused && punter.sceneName === "play"', { timeout: 20000 });
+        await page.waitForFunction('window.punter && !punter.paused && punter.currentScene === "play"', { timeout: 20000 });
         await page.waitForFunction('window.player && window.flag && Array.isArray(window.clouds)', { timeout: 20000 });
 
         var spriteCount = await page.evaluate(function () {
