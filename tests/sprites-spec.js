@@ -777,7 +777,7 @@ describe('Sprites', function () {
     it('scroll moves sprite horizontally', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 100, y: 0, w: 20, h: 20 });
-            s.scroll(-3, 0);
+            s.scroll({ speedX: -3 });
             return s.x;
         });
         expect(result).toBe(97);
@@ -786,7 +786,7 @@ describe('Sprites', function () {
     it('scroll moves sprite vertically', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 100, w: 20, h: 20 });
-            s.scroll(0, 2);
+            s.scroll({ speedY: 2 });
             return s.y;
         });
         expect(result).toBe(102);
@@ -797,7 +797,7 @@ describe('Sprites', function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
             // move offscreen left manually
             s.x = -20;
-            s.scroll(-2, 0, { loop: true });
+            s.scroll({ speedX: -2, loop: true });
             return { x: s.x, width: punter.width };
         });
         // x was -22, wraps by +(width + w) to near the right edge
@@ -808,7 +808,7 @@ describe('Sprites', function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
             s.y = -20;
-            s.scroll(0, -2, { loop: true });
+            s.scroll({ speedY: -2, loop: true });
             return { y: s.y, height: punter.height };
         });
         // y was -22, wraps by +(height + h) to near the bottom edge
@@ -818,7 +818,7 @@ describe('Sprites', function () {
     it('scroll with loop wraps a small sprite correctly regardless of canvas size', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: punter.width + 1, y: 0, w: 32, h: 32 });
-            s.scroll(3, 0, { loop: true });
+            s.scroll({ speedX: 3, loop: true });
             // sprite was at width+1, moved to width+4, triggers wrap
             var xAfter = s.x;
             // wrapped x should be off the left edge (negative) entering from left
@@ -832,7 +832,7 @@ describe('Sprites', function () {
     it('scroll with respawnAfter sets respawnAt when offscreen', async function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: punter.width + 1, y: 0, w: 20, h: 20 });
-            s.scroll(2, 0, { respawnAfter: 1000 });
+            s.scroll({ speedX: 2, respawnAfter: 1000 });
             return typeof s.respawnAt === 'number' && s.respawnAt > 0;
         });
         expect(result).toBe(true);
@@ -843,7 +843,7 @@ describe('Sprites', function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 0, y: 0, w: 20, h: 20 });
             // manually set respawnAt in the past to simulate elapsed delay
             s.respawnAt = performance.now() - 1;
-            s.scroll(-2, 0, { respawnAfter: 1000 });
+            s.scroll({ speedX: -2, respawnAfter: 1000 });
             // should have respawned to right edge
             return s.x >= punter.width;
         });
@@ -856,7 +856,7 @@ describe('Sprites', function () {
             for (var i = 0; i < 20; i++) {
                 var s = punter.createSprite({ id: 's' + i, image: 'hero', x: 0, y: 0, w: 20, h: 20 });
                 s.respawnAt = performance.now() - 1;
-                s.scroll(-2, 0, { respawnAfter: 0, offset: 100 });
+                s.scroll({ speedX: -2, respawnAfter: 0, offset: 100 });
                 results.push(s.x);
                 s.destroy();
             }
@@ -873,7 +873,7 @@ describe('Sprites', function () {
         var result = await page.evaluate(function () {
             var s = punter.createSprite({ id: 's1', image: 'hero', x: 50, y: 50, w: 20, h: 20 });
             s.destroy();
-            s.scroll(-5, 0);
+            s.scroll({ speedX: -5 });
             return { x: s.x, y: s.y };
         });
         expect(result.x).toBe(50);

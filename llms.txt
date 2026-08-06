@@ -98,7 +98,7 @@ Punter.js is a zero-dependency, vanilla ES5 game engine designed for students, t
 - `sprite.animate(delayMs)` — advance animation frame (image must be an array)
 - `sprite.bounce(range, speed)` — smooth up-and-down float anchored to creation position
 - `sprite.blink(ms?, durationMs?)` — flash on/off; call blink(0) to stop
-- `sprite.scroll(speedX, speedY, options?)` — scroll and optionally loop or respawn when offscreen
+- `sprite.scroll(options)` — scroll and optionally loop or respawn when offscreen; options: speedX, speedY, loop, respawnAfter, offset
 - `sprite.rotate(amount)` — add radians to sprite.angle
 - `sprite.isCollidingWith(other)` — collision check (pixel or rect mode)
 - `sprite.destroy()` — remove from engine

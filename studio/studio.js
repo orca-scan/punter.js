@@ -659,7 +659,7 @@
     isCollidingWith: { params: 'target',                           info: 'true if bounding boxes overlap' },
     moveX:           { params: 'dx',                               info: 'move horizontally by dx pixels' },
     moveY:           { params: 'dy',                               info: 'move vertically by dy pixels' },
-    scroll:          { params: 'speedX, speedY [, options]',      info: 'scroll and optionally loop or respawn when offscreen' },
+    scroll:          { params: 'options',                          info: 'scroll and optionally loop or respawn when offscreen; options: speedX, speedY, loop, respawnAfter, offset' },
     rotate:          { params: 'amount',                           info: 'add amount (radians) to this.angle' },
     actualH:         { info: 'draw height accounting for clipHeight' },
     actualW:         { info: 'draw width as an integer' },

@@ -1255,19 +1255,21 @@
     };
     /**
      * Scrolls a sprite and optionally loops or respawns when offscreen
-     * @param {number} speedX - horizontal speed (use one axis at a time)
-     * @param {number} speedY - vertical speed
-     * @param {object} [options]
+     * @param {object} options
+     * @param {number} [options.speedX=0] - horizontal speed
+     * @param {number} [options.speedY=0] - vertical speed
      * @param {boolean} [options.loop] - wrap by sprite size for seamless tiling
      * @param {number} [options.respawnAfter] - ms to wait before respawning
      * @param {number} [options.offset=0] - max random distance beyond edge on respawn
      * @returns {void}
      */
-    Sprite.prototype.scroll = function(speedX, speedY, options) {
+    Sprite.prototype.scroll = function(options) {
         if (this.destroyed) return;
 
         options = options || {};
 
+        var speedX = options.speedX || 0;
+        var speedY = options.speedY || 0;
         var now = performance.now();
         var shouldLoop = options.loop === true;
         var delay = options.respawnAfter || 0;
