@@ -380,7 +380,6 @@ Property               | Description
 `punter.canvas`        | the `<canvas>` element
 `punter.ctx`           | the canvas 2D rendering context
 `punter.paused`        | `true` if the loop is paused
-`punter.resized`       | `true` for the frame in which a resize occurred
 `punter.isMobile`      | `true` on mobile devices
 `punter.orientation`   | `'portrait'` or `'landscape'`
 

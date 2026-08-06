@@ -65,7 +65,6 @@
     var _pendingGo = null;  // scene name queued before init completes
     var _paused = false;
     var _frame = 0;
-    var _resized = false;
     var _loopId = null;
     var _loopLast = 0;
     var _loopAccumulator = 0;
@@ -1797,9 +1796,6 @@
             eventHandlers.draw.call(_canvasCtx, _canvasCtx);
         }
 
-        // reset the flag after draw
-        _resized = false;
-
         _loopFpsCounter++;
 
         // update fps every 1000ms
@@ -2163,7 +2159,6 @@
         _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';  // scale to fill the viewport
 
         setDevVars();
-        _resized = true;
 
         for (var id in _sprites) {
             if (Object.prototype.hasOwnProperty.call(_sprites, id)) {
@@ -2375,12 +2370,6 @@
         paused: {
             get: function () {
                 return _paused;
-            },
-            enumerable: true
-        },
-        resized: {
-            get: function () {
-                return _resized;
             },
             enumerable: true
         },
