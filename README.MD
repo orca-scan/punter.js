@@ -383,7 +383,6 @@ Property               | Description
 `punter.paused`        | `true` if the loop is paused
 `punter.resized`       | `true` for the frame in which a resize occurred
 `punter.isMobile`      | `true` on mobile devices
-`punter.isDesktop`     | `true` on non-mobile devices
 `punter.orientation`   | `'portrait'` or `'landscape'`
 
 ## License

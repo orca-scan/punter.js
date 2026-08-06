@@ -640,8 +640,7 @@
     orientation:   {                                     info: "'portrait' or 'landscape'" },
     sceneName:     {                                     info: 'name of the currently active scene' },
     debug:         {                                     info: 'set true to enable the debug overlay' },
-    isMobile:      {                                     info: 'true if running on a mobile device' },
-    isDesktop:     {                                     info: 'true if running on a desktop device' }
+    isMobile:      {                                     info: 'true if running on a mobile device' }
   };
 
   var POINTER_DEFS = {

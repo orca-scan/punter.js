@@ -84,13 +84,11 @@ describe('Interface', function () {
         expect(['portrait', 'landscape']).toContain(result);
     });
 
-    it('isMobile and isDesktop are booleans and mutually exclusive', async function () {
+    it('isMobile is a boolean', async function () {
         var result = await page.evaluate(function () {
-            return { isMobile: punter.isMobile, isDesktop: punter.isDesktop };
+            return punter.isMobile;
         });
-        expect(typeof result.isMobile).toBe('boolean');
-        expect(typeof result.isDesktop).toBe('boolean');
-        expect(result.isMobile).not.toBe(result.isDesktop);
+        expect(typeof result).toBe('boolean');
     });
 
     it('sceneName is a string', async function () {

@@ -2409,11 +2409,6 @@
                 return _isMobile;
             }
         },
-        isDesktop: {
-            get: function() {
-                return !_isMobile;
-            }
-        },
         orientation: {
             get: function () {
                 return window.innerHeight >= window.innerWidth ? 'portrait' : 'landscape';
