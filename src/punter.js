@@ -862,11 +862,6 @@
         return this.image[index % this.image.length];
     };
     /**
-     * Per-frame update hook; override on a sprite instance to run custom game logic each tick
-     * @returns {void}
-     */
-    Sprite.prototype.update = function () {};
-    /**
      * Draws the sprite onto the canvas, handling clipping, offscreen culling, outlines, and debug overlays
      * @param {CanvasRenderingContext2D} [ctx] - canvas context to draw into; defaults to the main game canvas
      * @returns {void}
