@@ -63,7 +63,6 @@
     var _scenes = {};
     var _currentScene = null;
     var _pendingGo = null;  // scene name queued before init completes
-    var _running = false;
     var _paused = false;
     var _frame = 0;
     var _resized = false;
@@ -1838,7 +1837,6 @@
 
         _paused = false;
         _loopId = requestAnimationFrame(loop);
-        _running = true;
     }
 
     /**
@@ -1855,7 +1853,6 @@
         }
 
         _paused = true;
-        _running = false;
     }
 
     /**
@@ -1866,7 +1863,6 @@
         _loopLast = performance.now();
         _paused = false;
         _loopId = requestAnimationFrame(loop);
-        _running = true;
     }
 
     /**
@@ -2373,12 +2369,6 @@
         frame: {
             get: function () {
                 return _frame;
-            },
-            enumerable: true
-        },
-        running: {
-            get: function () {
-                return _running;
             },
             enumerable: true
         },

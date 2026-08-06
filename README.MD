@@ -379,7 +379,6 @@ Property               | Description
 `punter.frame`         | total frames since the loop started (never resets)
 `punter.canvas`        | the `<canvas>` element
 `punter.ctx`           | the canvas 2D rendering context
-`punter.running`       | `true` if the game loop is running
 `punter.paused`        | `true` if the loop is paused
 `punter.resized`       | `true` for the frame in which a resize occurred
 `punter.isMobile`      | `true` on mobile devices

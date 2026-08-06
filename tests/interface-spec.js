@@ -147,27 +147,25 @@ describe('Interface', function () {
 
     // --- pause / resume ---
 
-    it('pause() sets paused to true and running to false', async function () {
+    it('pause() sets paused to true', async function () {
         var result = await page.evaluate(function () {
             punter.scene('pauseScene', function () {});
             punter.go('pauseScene');
             punter.pause();
-            return { paused: punter.paused, running: punter.running };
+            return punter.paused;
         });
-        expect(result.paused).toBe(true);
-        expect(result.running).toBe(false);
+        expect(result).toBe(true);
     });
 
-    it('resume() sets running to true and paused to false', async function () {
+    it('resume() sets paused to false', async function () {
         var result = await page.evaluate(function () {
             punter.scene('resumeScene', function () {});
             punter.go('resumeScene');
             punter.pause();
             punter.resume();
-            return { paused: punter.paused, running: punter.running };
+            return punter.paused;
         });
-        expect(result.running).toBe(true);
-        expect(result.paused).toBe(false);
+        expect(result).toBe(false);
     });
 
     // --- redraw ---

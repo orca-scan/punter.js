@@ -632,7 +632,6 @@
     width:         {                                     info: 'canvas logical width in pixels' },
     height:        {                                     info: 'canvas logical height in pixels' },
     frame:         {                                     info: 'total frames elapsed since the game started' },
-    running:       {                                     info: 'true if the game loop is active' },
     paused:        {                                     info: 'true if the game loop is paused' },
     resized:       {                                     info: 'true on the first frame after a resize event' },
     sprites:       {                                     info: 'array of all active (non-destroyed) sprites' },
