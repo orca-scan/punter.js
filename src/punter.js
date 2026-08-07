@@ -317,7 +317,7 @@
         _canvas.style.bottom = '';
         _canvas.style.right = '';
         _canvas.style.transformOrigin = 'center center';
-        _canvas.style.imageRendering = 'pixelated';
+        _canvas.style.imageRendering = '';
         _canvas.style.touchAction = 'none';
         _canvas.style.overflow = 'hidden';
         _canvas.style.webkitTouchCallout = 'none';
