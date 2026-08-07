@@ -56,6 +56,7 @@
     var _canvasCtx;
     var _boundsCanvas;
     var _dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var _renderScale = _dpr; // full transform from game coords to buffer pixels
     var _width = 0;
     var _height = 0;
     var _boundsCtx;
@@ -472,10 +473,17 @@
                         return;
                     }
 
+                    // rasterize SVGs at higher resolution so they stay crisp on large screens
+                    var svgUpscale = Math.max(_dpr, 2);
+                    svg.setAttribute('width', String(w * svgUpscale));
+                    svg.setAttribute('height', String(h * svgUpscale));
+
                     var svgText = new XMLSerializer().serializeToString(svg);
                     var blob = new Blob([svgText], { type: 'image/svg+xml' });
                     var img = new Image();
                     img.key = key;
+                    img._logicalW = w;
+                    img._logicalH = h;
                     img.onload = handleLoad.bind(img, key);
                     img.onerror = handleError.bind(img, key, url);
                     img.src = URL.createObjectURL(blob);
@@ -553,6 +561,24 @@
                 })(soundKeys[i], audioMap[soundKeys[i]]);
             }
         });
+    }
+
+    /**
+     * Returns the logical width of an image (original size before SVG upscaling)
+     * @param {HTMLImageElement} img
+     * @returns {number}
+     */
+    function imgLogicalW(img) {
+        return img._logicalW || img.naturalWidth;
+    }
+
+    /**
+     * Returns the logical height of an image (original size before SVG upscaling)
+     * @param {HTMLImageElement} img
+     * @returns {number}
+     */
+    function imgLogicalH(img) {
+        return img._logicalH || img.naturalHeight;
     }
 
     /**
@@ -811,9 +837,9 @@
             }
 
             // infer size from the image if w or h were not provided
-            this.aspectRatio = img.naturalHeight > 0 ? img.naturalWidth / img.naturalHeight : 1;
+            this.aspectRatio = imgLogicalH(img) > 0 ? imgLogicalW(img) / imgLogicalH(img) : 1;
 
-            var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, img.naturalWidth, img.naturalHeight);
+            var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, imgLogicalW(img), imgLogicalH(img));
             this.w = finalSize.w;
             this.h = finalSize.h;
 
@@ -1079,7 +1105,7 @@
         this.y = this.initialY = (resolvedY > 0) ? resolvedY : this.y;
 
         // now get the final size
-        var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, img.naturalWidth, img.naturalHeight);
+        var finalSize = finalizeSize(this.w, this.h, this.preserveAspect, this.aspectRatio, imgLogicalW(img), imgLogicalH(img));
         this.w = finalSize.w;
         this.h = finalSize.h;
 
@@ -2109,8 +2135,8 @@
      */
     function scaleCanvasContext() {
         if (!_canvasCtx) return;
-        _canvasCtx.setTransform(_dpr, 0, 0, _dpr, 0, 0);
-        _canvasCtx.imageSmoothingEnabled = false;
+        _canvasCtx.setTransform(_renderScale, 0, 0, _renderScale, 0, 0);
+        _canvasCtx.imageSmoothingEnabled = true;
     }
 
     /**
@@ -2145,20 +2171,35 @@
         _height = internalH;
         _dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-        // use a larger backing buffer while keeping game coordinates logical
-        _canvas.width = _width * _dpr;
-        _canvas.height = _height * _dpr;
-
-        scaleCanvasContext();
-
         var scaleX = screenW / _width;
         var scaleY = screenH / _height;
         var scale = Math.min(scaleX, scaleY);
 
-        // css size stays at logical pixels; translate(-50%,-50%) centers the absolute-positioned canvas
-        _canvas.style.width = _width + 'px';
-        _canvas.style.height = _height + 'px';
-        _canvas.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';  // scale to fill the viewport
+        // render scale maps game coordinates directly to physical pixels
+        _renderScale = scale * _dpr;
+
+        // cap buffer at ~4M pixels to stay performant on very large screens
+        var maxPixels = 4194304;
+        var bufferW = Math.round(_width * _renderScale);
+        var bufferH = Math.round(_height * _renderScale);
+        if (bufferW * bufferH > maxPixels) {
+            var capScale = Math.sqrt(maxPixels / (_width * _height));
+            _renderScale = capScale;
+            bufferW = Math.round(_width * capScale);
+            bufferH = Math.round(_height * capScale);
+        }
+
+        _canvas.width = bufferW;
+        _canvas.height = bufferH;
+
+        scaleCanvasContext();
+
+        // css size matches the logical display area; no CSS upscaling needed
+        var displayW = Math.round(_width * scale);
+        var displayH = Math.round(_height * scale);
+        _canvas.style.width = displayW + 'px';
+        _canvas.style.height = displayH + 'px';
+        _canvas.style.transform = 'translate(-50%, -50%)';
 
         setDevVars();
 
@@ -2182,14 +2223,36 @@
      */
     function setupResponsiveResize() {
         var resizeTimer;
+        var resumeTimer;
+        var pausedByResize = false;
 
         function handleResizeEvent() {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(resize, 3);
+            clearTimeout(resumeTimer);
+
+            // pause during resize to avoid wasted frames
+            if (!_paused && _initilised) {
+                pauseLoop();
+                pausedByResize = true;
+            }
+
+            resizeTimer = setTimeout(function () {
+                resize();
+                // resume after resize settles
+                resumeTimer = setTimeout(function () {
+                    if (pausedByResize) {
+                        pausedByResize = false;
+                        resumeLoop();
+                    }
+                }, 100);
+            }, 3);
         }
 
         window.addEventListener('resize', handleResizeEvent);
         window.addEventListener('orientationchange', handleResizeEvent);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', handleResizeEvent);
+        }
     }
 
     /* --- public api --- */
