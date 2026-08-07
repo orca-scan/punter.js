@@ -399,9 +399,10 @@
         _boundsCanvas = document.createElement('canvas');
         _boundsCtx = _boundsCanvas.getContext('2d', { willReadFrequently: true });
 
-        loadImages(config.images || {}).then(function() {
-            return loadSounds(config.sounds || {});
-        })
+        Promise.all([
+            loadImages(config.images || {}),
+            loadSounds(config.sounds || {})
+        ])
         .then(function() {
             _initilised = true;
             htmlEl.removeAttribute('data-punter-loading');
