@@ -18,48 +18,102 @@
     var images = {};
     var sounds = {};
     var _activeSounds = {};
-    var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // parens required so 'new' applies to the resolved constructor
+    var _audioUnlocked = false;
+    var _lastAudioTime = -1;
+    var _audioStallChecks = 0;
+    var audioCtx = _createAudioContext();
+
+    function _createAudioContext() {
+        var Ctor = window.AudioContext || window.webkitAudioContext;
+        return new Ctor();
+    }
+
+    // iOS uses 'interrupted' in addition to 'suspended'; treat both as needing resume
+    function _isContextBlocked() {
+        return audioCtx.state === 'suspended' || audioCtx.state === 'interrupted';
+    }
 
     // unlock on first user gesture; iOS Safari suspends AudioContext until then
     function _removeUnlockListeners() {
         document.removeEventListener('touchstart', _unlockAudio, true);
         document.removeEventListener('touchend', _unlockAudio, true);
+        document.removeEventListener('click', _unlockAudio, true);
         document.removeEventListener('pointerdown', _unlockAudio, true);
         document.removeEventListener('mousedown', _unlockAudio, true);
         document.removeEventListener('keydown', _unlockAudio, true);
     }
     function _unlockAudio() {
+        if (_audioUnlocked) return;
         if (audioCtx.state === 'running') {
+            _audioUnlocked = true;
             _removeUnlockListeners();
             return;
         }
-        audioCtx.resume().then(function () {
-            _removeUnlockListeners();
-        });
-        // play a silent buffer inside the gesture to satisfy iOS Safari
+        audioCtx.resume();
+        // play a silent buffer and wait for onended to confirm audio is truly unlocked
         try {
             var buf = audioCtx.createBuffer(1, 1, 22050);
             var src = audioCtx.createBufferSource();
             src.buffer = buf;
             src.connect(audioCtx.destination);
+            src.onended = function () {
+                _audioUnlocked = true;
+                _removeUnlockListeners();
+            };
             src.start(0);
         } catch (e) { /* non-fatal if context is not yet usable */ }
     }
     document.addEventListener('touchstart', _unlockAudio, true);
     document.addEventListener('touchend', _unlockAudio, true);
+    document.addEventListener('click', _unlockAudio, true);
     document.addEventListener('pointerdown', _unlockAudio, true);
     document.addEventListener('mousedown', _unlockAudio, true);
     document.addEventListener('keydown', _unlockAudio, true);
 
-    // re-resume after iOS audio interruptions (phone calls, Siri, app switch)
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible' && audioCtx.state !== 'running') {
+    // recover from iOS audio interruptions (phone calls, Siri, Control Center, app switch)
+    function _resumeAudioContext() {
+        if (audioCtx.state !== 'running') {
             audioCtx.resume();
         }
+    }
+    // detect and recover from the iOS bug where state is 'running' but currentTime is frozen
+    function _checkAudioStall() {
+        if (audioCtx.state === 'running') {
+            if (_lastAudioTime === audioCtx.currentTime) {
+                _audioStallChecks++;
+                // if currentTime hasn't moved for ~3 checks, force a suspend/resume cycle
+                if (_audioStallChecks >= 3) {
+                    _audioStallChecks = 0;
+                    audioCtx.suspend().then(function () { audioCtx.resume(); });
+                }
+            } else {
+                _audioStallChecks = 0;
+            }
+            _lastAudioTime = audioCtx.currentTime;
+        }
+    }
+
+    // listen for iOS statechange to detect 'interrupted' transitions
+    if (audioCtx.addEventListener) {
+        audioCtx.addEventListener('statechange', function () {
+            if (audioCtx.state === 'interrupted') {
+                // iOS interrupted audio; attempt immediate resume
+                audioCtx.resume();
+            }
+        });
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            _resumeAudioContext();
+            // delayed retry for iOS contexts that don't resume immediately
+            setTimeout(_resumeAudioContext, 100);
+            setTimeout(_resumeAudioContext, 500);
+        }
     });
-    window.addEventListener('focus', function () {
-        if (audioCtx.state !== 'running') audioCtx.resume();
-    });
+    window.addEventListener('focus', _resumeAudioContext);
+    // iOS sometimes fires pageshow instead of focus on restore
+    window.addEventListener('pageshow', _resumeAudioContext);
 
     var _isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
@@ -1876,6 +1930,8 @@
             _loopFps = _loopFpsCounter;
             _loopFpsCounter = 0;
             _loopFpsTimer = timestamp;
+            // periodic check for iOS audio stall (context reports 'running' but is frozen)
+            _checkAudioStall();
         }
 
         // debug overlay
@@ -1975,8 +2031,8 @@
         source.connect(gainNode);
         gainNode.connect(audioCtx.destination);
 
-        // fallback resume for post-interruption re-suspension (primary unlock is _unlockAudio)
-        if (audioCtx.state !== 'running') audioCtx.resume();
+        // resume from suspended or interrupted states (iOS 'interrupted' is a distinct state)
+        if (_isContextBlocked()) audioCtx.resume();
 
         try {
             source.start(0);
