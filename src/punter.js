@@ -21,8 +21,22 @@
     var audioCtx = new (window.AudioContext || window.webkitAudioContext)(); // parens required so 'new' applies to the resolved constructor
 
     // unlock on first user gesture; iOS Safari suspends AudioContext until then
+    function _removeUnlockListeners() {
+        document.removeEventListener('touchstart', _unlockAudio, true);
+        document.removeEventListener('touchend', _unlockAudio, true);
+        document.removeEventListener('pointerdown', _unlockAudio, true);
+        document.removeEventListener('mousedown', _unlockAudio, true);
+        document.removeEventListener('keydown', _unlockAudio, true);
+    }
     function _unlockAudio() {
-        if (audioCtx.state !== 'running') audioCtx.resume();
+        if (audioCtx.state === 'running') {
+            _removeUnlockListeners();
+            return;
+        }
+        audioCtx.resume().then(function () {
+            _removeUnlockListeners();
+        });
+        // play a silent buffer inside the gesture to satisfy iOS Safari
         try {
             var buf = audioCtx.createBuffer(1, 1, 22050);
             var src = audioCtx.createBufferSource();
@@ -30,12 +44,9 @@
             src.connect(audioCtx.destination);
             src.start(0);
         } catch (e) { /* non-fatal if context is not yet usable */ }
-        document.removeEventListener('touchstart', _unlockAudio, true);
-        document.removeEventListener('pointerdown', _unlockAudio, true);
-        document.removeEventListener('mousedown', _unlockAudio, true);
-        document.removeEventListener('keydown', _unlockAudio, true);
     }
     document.addEventListener('touchstart', _unlockAudio, true);
+    document.addEventListener('touchend', _unlockAudio, true);
     document.addEventListener('pointerdown', _unlockAudio, true);
     document.addEventListener('mousedown', _unlockAudio, true);
     document.addEventListener('keydown', _unlockAudio, true);
