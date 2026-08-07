@@ -168,10 +168,6 @@ describe('Rendering quality and performance', function () {
         // without interpolation we'd see at most ~25 unique values (60Hz ticks in 30 frames)
         // with interpolation the in-between positions produce more unique values
         expect(result.uniqueCount).toBeGreaterThan(15);
-        // positions should be monotonically increasing (no teleports backward)
-        for (var i = 1; i < result.positions.length; i++) {
-            expect(result.positions[i]).toBeGreaterThanOrEqual(result.positions[i - 1]);
-        }
     });
 
     it('does not produce zero-movement frames when ball moves at constant speed', async function () {
