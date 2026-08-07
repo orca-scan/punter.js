@@ -129,4 +129,80 @@ describe('Rendering quality and performance', function () {
         // clean up
         await page.evaluate(function () { punter.resume(); });
     });
+
+    // --- render interpolation ---
+
+    it('interpolates sprite draw positions between physics ticks', async function () {
+        await page.setViewport({ width: 800, height: 600, deviceScaleFactor: 1 });
+
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                punter.scene('lerpTest', function () {
+                    var s = punter.createSprite({ image: 'hero', x: 100, y: 100, w: 10, h: 10 });
+
+                    punter.on('update', function () {
+                        s.moveX(6);
+                    });
+
+                    // sample draw positions over multiple render frames
+                    var positions = [];
+                    var count = 0;
+                    punter.on('draw', function () {
+                        positions.push(s._lerpX());
+                        count++;
+                        if (count >= 30) {
+                            punter.pause();
+                            // count unique draw positions (interpolation creates more than just tick positions)
+                            var unique = [];
+                            for (var i = 0; i < positions.length; i++) {
+                                if (unique.indexOf(positions[i]) === -1) unique.push(positions[i]);
+                            }
+                            resolve({ positions: positions, uniqueCount: unique.length });
+                        }
+                    });
+                });
+                punter.go('lerpTest');
+            });
+        });
+
+        // without interpolation we'd see at most ~25 unique values (60Hz ticks in 30 frames)
+        // with interpolation the in-between positions produce more unique values
+        expect(result.uniqueCount).toBeGreaterThan(15);
+    });
+
+    it('does not produce zero-movement frames when ball moves at constant speed', async function () {
+        await page.setViewport({ width: 800, height: 600, deviceScaleFactor: 1 });
+
+        var result = await page.evaluate(function () {
+            return new Promise(function (resolve) {
+                punter.scene('stutterTest', function () {
+                    var s = punter.createSprite({ image: 'hero', x: 0, y: 0, w: 10, h: 10 });
+
+                    punter.on('update', function () {
+                        s.moveX(5);
+                    });
+
+                    var drawPositions = [];
+                    var count = 0;
+                    punter.on('draw', function () {
+                        drawPositions.push(s._lerpX());
+                        count++;
+                        if (count >= 60) {
+                            punter.pause();
+                            var zeroMovement = 0;
+                            for (var i = 1; i < drawPositions.length; i++) {
+                                if (drawPositions[i] === drawPositions[i - 1]) zeroMovement++;
+                            }
+                            resolve({ zeroFrames: zeroMovement, total: drawPositions.length });
+                        }
+                    });
+                });
+                punter.go('stutterTest');
+            });
+        });
+
+        // with interpolation, fewer than 5% of frames should show zero movement
+        var stutterRatio = result.zeroFrames / result.total;
+        expect(stutterRatio).toBeLessThan(0.05);
+    });
 });

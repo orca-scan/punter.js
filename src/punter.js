@@ -70,6 +70,7 @@
     var _loopLast = 0;
     var _loopAccumulator = 0;
     var _loopStep = 1000 / 60;
+    var _loopAlpha = 1; // interpolation fraction between previous and current position
     var _loopFps = 0;
     var _loopFpsCounter = 0;
     var _loopFpsTimer = 0;
@@ -870,6 +871,9 @@
 
         if (this.collidable) this._refreshBounds();
 
+        this._prevX = this.x;
+        this._prevY = this.y;
+
         // cache sprite in memory
         _sprites[this.id] = this;
     }
@@ -915,8 +919,8 @@
 
         // vector-only sprite: call the vector function and return early
         if (!this.image && this.vector) {
-            var vx = Math.floor(this.x);
-            var vy = Math.floor(this.y);
+            var vx = this._lerpX();
+            var vy = this._lerpY();
             var vw = Math.floor(this.w);
             var vh = Math.floor(this.h);
 
@@ -940,8 +944,8 @@
 
         var dw = Math.floor(this.w);    // draw width (scaled)
         var dh = Math.floor(this.h);    // draw height (scaled)
-        var dx = Math.floor(this.x);    // draw x position
-        var dy = Math.floor(this.y);    // draw y position
+        var dx = this._lerpX();         // draw x position (interpolated)
+        var dy = this._lerpY();         // draw y position (interpolated)
 
         var canvasW = engine.width;    // canvas width
         var canvasH = engine.height;   // canvas height
@@ -1144,8 +1148,8 @@
         var img = images[imgKey];
         if (!img || !img.complete || !img.naturalWidth) return;
 
-        var x = Math.floor(this.x);
-        var y = Math.floor(this.y);
+        var x = this._lerpX();
+        var y = this._lerpY();
         var w = this.w;
         var h = this.h;
 
@@ -1172,8 +1176,8 @@
         var img = images[imgKey];
         if (!img || !img.naturalHeight) return;
 
-        var x = Math.floor(this.x);
-        var y = Math.floor(this.y);
+        var x = this._lerpX();
+        var y = this._lerpY();
         var w = this.w;
         var h = this.h;
 
@@ -1220,6 +1224,22 @@
      */
     Sprite.prototype.moveY = function (dy) {
         this.y = this.y + dy;
+    };
+    /**
+     * Returns the interpolated draw X position (smooths movement between physics ticks)
+     * @returns {number}
+     */
+    Sprite.prototype._lerpX = function () {
+        if (typeof this._prevX !== 'number') return Math.round(this.x);
+        return Math.round(this._prevX + (this.x - this._prevX) * _loopAlpha);
+    };
+    /**
+     * Returns the interpolated draw Y position (smooths movement between physics ticks)
+     * @returns {number}
+     */
+    Sprite.prototype._lerpY = function () {
+        if (typeof this._prevY !== 'number') return Math.round(this.y);
+        return Math.round(this._prevY + (this.y - this._prevY) * _loopAlpha);
     };
     /**
      * Centers the sprite on both canvas axes with optional pixel offsets
@@ -1796,6 +1816,13 @@
 
         // fixed timestep: run update() once per logical tick until we've consumed all elapsed time
         while (_loopAccumulator >= _loopStep) {
+            // snapshot positions before the update so draw can interpolate
+            for (var _sid in _sprites) {
+                if (Object.prototype.hasOwnProperty.call(_sprites, _sid)) {
+                    _sprites[_sid]._prevX = _sprites[_sid].x;
+                    _sprites[_sid]._prevY = _sprites[_sid].y;
+                }
+            }
             eventHandlers.update();
             pointer.clicked = false;
             pointer.swiped = false;
@@ -1807,6 +1834,9 @@
             _frame++;
             _loopAccumulator -= _loopStep;
         }
+
+        // how far between the last tick and the next — used to smooth sprite positions during draw
+        _loopAlpha = _loopAccumulator / _loopStep;
 
         // clear screen
         _canvasCtx.clearRect(0, 0, engine.width, engine.height);
