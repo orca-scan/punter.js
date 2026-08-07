@@ -1330,6 +1330,10 @@
             if (speedY < 0) this.y = engine.height + Math.floor(Math.random() * (offset + 1));
             if (speedY > 0) this.y = -this.h - Math.floor(Math.random() * (offset + 1));
 
+            // snap interpolation to avoid a one-frame flicker between old and new position
+            this._prevX = this.x;
+            this._prevY = this.y;
+
             this.respawnAt = null;
             return;
         }
