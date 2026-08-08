@@ -1297,7 +1297,10 @@
      */
     Sprite.prototype._lerpX = function () {
         if (typeof this._prevX !== 'number') return Math.round(this.x);
-        return Math.round(this._prevX + (this.x - this._prevX) * _loopAlpha);
+        var dx = this.x - this._prevX;
+        // skip interpolation when the jump exceeds half the canvas (wrap/teleport)
+        if (dx > engine.width / 2 || dx < -engine.width / 2) return Math.round(this.x);
+        return Math.round(this._prevX + dx * _loopAlpha);
     };
     /**
      * Returns the interpolated draw Y position (smooths movement between physics ticks)
@@ -1305,7 +1308,10 @@
      */
     Sprite.prototype._lerpY = function () {
         if (typeof this._prevY !== 'number') return Math.round(this.y);
-        return Math.round(this._prevY + (this.y - this._prevY) * _loopAlpha);
+        var dy = this.y - this._prevY;
+        // skip interpolation when the jump exceeds half the canvas (wrap/teleport)
+        if (dy > engine.height / 2 || dy < -engine.height / 2) return Math.round(this.y);
+        return Math.round(this._prevY + dy * _loopAlpha);
     };
     /**
      * Centers the sprite on both canvas axes with optional pixel offsets
