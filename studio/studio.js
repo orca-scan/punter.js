@@ -612,6 +612,20 @@
 
   // --- autocomplete ---
 
+  // longer descriptions shown in the hover tooltip (falls back to PUNTER_DEFS.info)
+  var PUNTER_HELP = {
+    setup:        'Call once to initialise the engine. Pass an object with canvas, width, height, images and sounds. The engine loads all assets before firing the ready event.',
+    scene:        'Define a named scene. The callback runs when you switch to it with punter.go(name). Use scenes to separate menu, gameplay and game-over logic.',
+    go:           'Switch to a scene registered with punter.scene(). The callback runs immediately and previous update/draw handlers are replaced.',
+    on:           'Register a callback for an engine event: ready (assets loaded), update (each tick), draw (after sprites render), resize or go (scene changed).',
+    createSprite: 'Create a new sprite. Pass an object with id, image (key or array for animation), x, y, w, h and optional properties like collidable, visible, angle or vector.',
+    getSprite:    'Retrieve a sprite by its id string. Returns null if not found.',
+    isKeyDown:    'Returns true while any of the given keys are held. Accepts names like left, right, space or combos like shift+a.',
+    playSound:    'Play a sound loaded during setup. Pass the key and an optional options object with volume, loop or playbackRate.',
+    pause:        'Pause the game loop. Sprites stop updating but the canvas stays visible. Call punter.resume() to continue.',
+    resume:       'Resume the game loop after punter.pause() was called.'
+  };
+
   // methods carry a params string; properties omit it so they display without ()
   var PUNTER_DEFS = {
     setup:         { params: 'config',                   info: 'initialise the engine with images, sounds and canvas' },
@@ -890,6 +904,103 @@
     return null;
   }
 
+  // --- API hover tooltip ---
+
+  var infoTooltipEl = null;
+  var infoHoverName = null;
+  var infoHideTimer = null;
+
+  /**
+   * Returns the punter method name under the mouse, or null
+   * @param {Object} cm - CodeMirror instance
+   * @param {MouseEvent} e
+   * @returns {string|null}
+   */
+  function punterMethodAt(cm, e) {
+    var pos = cm.coordsChar({ left: e.clientX, top: e.clientY });
+    if (pos.outside) return null;
+
+    var line = cm.getLine(pos.line);
+    var re = /punter\.([a-zA-Z]\w*)\s*\(/g;
+    var m;
+
+    while ((m = re.exec(line)) !== null) {
+      // check the cursor is inside "punter.methodName"
+      var end = m.index + 'punter.'.length + m[1].length;
+      if (pos.ch >= m.index && pos.ch <= end && PUNTER_DEFS[m[1]]) {
+        return m[1];
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Shows the API tooltip for a punter method below the hovered token
+   * @param {Object} cm - CodeMirror instance
+   * @param {string} name - method name
+   * @param {MouseEvent} e
+   */
+  function showInfoTooltip(cm, name, e) {
+    clearTimeout(infoHideTimer);
+
+    // already showing this tooltip
+    if (infoHoverName === name && infoTooltipEl) return;
+    dismissInfoTooltip();
+    infoHoverName = name;
+
+    var def = PUNTER_DEFS[name];
+    var sig = typeof def.params !== 'undefined'
+      ? 'punter.' + name + '(' + def.params + ')'
+      : 'punter.' + name;
+
+    var tip = document.createElement('div');
+    tip.className = 'st-info-tooltip';
+    tip.innerHTML =
+      '<div class="st-info-tooltip-sig">' + sig + '</div>' +
+      '<div class="st-info-tooltip-desc">' + (PUNTER_HELP[name] || def.info) + '</div>';
+
+    // keep tooltip open while the mouse is over it
+    tip.addEventListener('mouseenter', function () { clearTimeout(infoHideTimer); });
+    tip.addEventListener('mouseleave', scheduleDismiss);
+
+    document.body.appendChild(tip);
+    infoTooltipEl = tip;
+
+    // place below the hovered token, nudge if it overflows
+    var pos = cm.coordsChar({ left: e.clientX, top: e.clientY });
+    var coords = cm.charCoords(pos, 'page');
+    tip.style.top = (coords.bottom + 4) + 'px';
+    tip.style.left = coords.left + 'px';
+
+    var rect = tip.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      tip.style.left = (window.innerWidth - rect.width - 8) + 'px';
+    }
+    if (rect.bottom > window.innerHeight - 8) {
+      tip.style.top = (coords.top - rect.height - 4) + 'px';
+    }
+  }
+
+  /**
+   * Hides the tooltip after a short delay so the user can hover onto it
+   */
+  function scheduleDismiss() {
+    clearTimeout(infoHideTimer);
+    infoHideTimer = setTimeout(dismissInfoTooltip, 200);
+  }
+
+  /**
+   * Removes the tooltip immediately
+   */
+  function dismissInfoTooltip() {
+    clearTimeout(infoHideTimer);
+    if (infoTooltipEl) {
+      infoTooltipEl.remove();
+      infoTooltipEl = null;
+    }
+    infoHoverName = null;
+  }
+
   /**
    * Context-aware hint dispatcher: routes to HTML, CSS, or Punter/JS hints based on inner mode
    * @param {Object} cm - CodeMirror instance
@@ -956,6 +1067,19 @@
     window.studioEditor.setOption('foldGutter', true);
     window.studioEditor.setOption('gutters', ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']);
     window.studioEditor.on('change', scheduleAutoSave);
+
+    // show API tooltip when hovering punter.* calls
+    var editorEl = window.studioEditor.getWrapperElement();
+    editorEl.addEventListener('mousemove', function (e) {
+      var name = punterMethodAt(window.studioEditor, e);
+      if (name) {
+        showInfoTooltip(window.studioEditor, name, e);
+      } else if (infoTooltipEl) {
+        scheduleDismiss();
+      }
+    });
+    editorEl.addEventListener('mouseleave', scheduleDismiss);
+
     // save <head> fold state when user clicks the fold gutter
     window.studioEditor.on('gutterClick', function (cm, line, gutter) {
       if (gutter !== 'CodeMirror-foldgutter') return;

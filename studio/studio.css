@@ -433,6 +433,34 @@ li.CodeMirror-hint-active {
   }
 }
 
+/* --- API hover tooltip --- */
+
+.st-info-tooltip {
+  position: fixed;
+  z-index: 200;
+  background: var(--app-foreground-color);
+  border: 1px solid var(--app-border-color-primary);
+  border-radius: 8px;
+  padding: 10px 14px;
+  max-width: 340px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-family-system);
+  color: var(--app-text-color-primary);
+  line-height: 1.5;
+}
+
+.st-info-tooltip-sig {
+  font-family: var(--font-family-mono);
+  font-size: 12px;
+  color: var(--primary-button-background-color);
+  margin-bottom: 6px;
+}
+
+.st-info-tooltip-desc {
+  color: var(--app-text-color-secondary);
+  font-size: 12px;
+}
+
 /* utility: visually hidden but accessible to screen readers */
 .visually-hidden {
   position: absolute;
