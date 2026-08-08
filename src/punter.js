@@ -16,119 +16,271 @@
     var log = (typeof SimpleLog === 'function') ? new SimpleLog('punter.js', '#6899E1', true) : console.log.bind(console, '[punter.js]'); // eslint-disable-line no-console
 
     var images = {};
-    var sounds = {};
-    var _activeSounds = {};
-    var _audioUnlocked = false;
-    var _pendingSounds = [];
-    var _lastAudioTime = -1;
-    var _audioStallChecks = 0;
-    var audioCtx = _createAudioContext();
+    var audio = (function () {
 
-    function _createAudioContext() {
+        var sounds = {};
+        var activeSounds = {};
+        var unlocked = false;
+        var pendingSounds = [];
+        var lastAudioTime = -1;
+        var stallChecks = 0;
+
         var Ctor = window.AudioContext || window.webkitAudioContext;
-        return new Ctor();
-    }
+        var ctx = new Ctor();
 
-    // iOS uses 'interrupted' in addition to 'suspended'; treat both as needing resume
-    function _isContextBlocked() {
-        return audioCtx.state === 'suspended' || audioCtx.state === 'interrupted';
-    }
+        // iOS uses 'interrupted' in addition to 'suspended'; treat both as needing resume
+        function isBlocked() {
+            return ctx.state === 'suspended' || ctx.state === 'interrupted';
+        }
 
-    // unlock on first user gesture; iOS Safari suspends AudioContext until then
-    function _removeUnlockListeners() {
-        document.removeEventListener('touchstart', _unlockAudio, true);
-        document.removeEventListener('touchend', _unlockAudio, true);
-        document.removeEventListener('pointerup', _unlockAudio, true);
-        document.removeEventListener('mouseup', _unlockAudio, true);
-        document.removeEventListener('click', _unlockAudio, true);
-        document.removeEventListener('pointerdown', _unlockAudio, true);
-        document.removeEventListener('mousedown', _unlockAudio, true);
-        document.removeEventListener('keydown', _unlockAudio, true);
-    }
-    function _unlockAudio() {
-        if (_audioUnlocked) return;
-        if (audioCtx.state === 'running') {
-            _audioUnlocked = true;
-            _removeUnlockListeners();
-            _flushPendingSounds();
-            return;
+        // unlock on first user gesture; iOS Safari suspends AudioContext until then
+        function removeUnlockListeners() {
+            document.removeEventListener('touchstart', unlock, true);
+            document.removeEventListener('touchend', unlock, true);
+            document.removeEventListener('pointerup', unlock, true);
+            document.removeEventListener('mouseup', unlock, true);
+            document.removeEventListener('click', unlock, true);
+            document.removeEventListener('pointerdown', unlock, true);
+            document.removeEventListener('mousedown', unlock, true);
+            document.removeEventListener('keydown', unlock, true);
         }
-        // resume() is async on iOS; play the silent buffer only after the context is running
-        audioCtx.resume().then(function () {
-            try {
-                var buf = audioCtx.createBuffer(1, 1, 22050);
-                var src = audioCtx.createBufferSource();
-                src.buffer = buf;
-                src.connect(audioCtx.destination);
-                src.onended = function () {
-                    _audioUnlocked = true;
-                    _removeUnlockListeners();
-                    _flushPendingSounds();
-                };
-                src.start(0);
-            } catch (e) { /* non-fatal if context is not yet usable */ }
-        });
-    }
-    function _flushPendingSounds() {
-        var pending = _pendingSounds;
-        _pendingSounds = [];
-        for (var i = 0; i < pending.length; i++) {
-            playSound(pending[i].name, pending[i].options);
-        }
-    }
-    document.addEventListener('touchstart', _unlockAudio, true);
-    document.addEventListener('touchend', _unlockAudio, true);
-    document.addEventListener('pointerup', _unlockAudio, true);
-    document.addEventListener('mouseup', _unlockAudio, true);
-    document.addEventListener('click', _unlockAudio, true);
-    document.addEventListener('pointerdown', _unlockAudio, true);
-    document.addEventListener('mousedown', _unlockAudio, true);
-    document.addEventListener('keydown', _unlockAudio, true);
 
-    // recover from iOS audio interruptions (phone calls, Siri, Control Center, app switch)
-    function _resumeAudioContext() {
-        if (audioCtx.state !== 'running') {
-            audioCtx.resume();
+        function flush() {
+            var pending = pendingSounds;
+            pendingSounds = [];
+            for (var i = 0; i < pending.length; i++) {
+                play(pending[i].name, pending[i].options);
+            }
         }
-    }
-    // detect and recover from the iOS bug where state is 'running' but currentTime is frozen
-    function _checkAudioStall() {
-        if (audioCtx.state === 'running') {
-            if (_lastAudioTime === audioCtx.currentTime) {
-                _audioStallChecks++;
-                // if currentTime hasn't moved for ~3 checks, force a suspend/resume cycle
-                if (_audioStallChecks >= 3) {
-                    _audioStallChecks = 0;
-                    audioCtx.suspend().then(function () { audioCtx.resume(); });
+
+        function unlock() {
+            if (unlocked) return;
+            if (ctx.state === 'running') {
+                unlocked = true;
+                removeUnlockListeners();
+                flush();
+                return;
+            }
+            // resume() is async on iOS; play the silent buffer only after the context is running
+            ctx.resume().then(function () {
+                try {
+                    var buf = ctx.createBuffer(1, 1, 22050);
+                    var src = ctx.createBufferSource();
+                    src.buffer = buf;
+                    src.connect(ctx.destination);
+                    src.onended = function () {
+                        unlocked = true;
+                        removeUnlockListeners();
+                        flush();
+                    };
+                    src.start(0);
+                } catch (e) { /* non-fatal if context is not yet usable */ }
+            });
+        }
+
+        document.addEventListener('touchstart', unlock, true);
+        document.addEventListener('touchend', unlock, true);
+        document.addEventListener('pointerup', unlock, true);
+        document.addEventListener('mouseup', unlock, true);
+        document.addEventListener('click', unlock, true);
+        document.addEventListener('pointerdown', unlock, true);
+        document.addEventListener('mousedown', unlock, true);
+        document.addEventListener('keydown', unlock, true);
+
+        // recover from iOS audio interruptions (phone calls, Siri, Control Center, app switch)
+        function resume() {
+            if (ctx.state !== 'running') {
+                ctx.resume();
+            }
+        }
+
+        // detect and recover from the iOS bug where state is 'running' but currentTime is frozen
+        function checkStall() {
+            if (ctx.state === 'running') {
+                if (lastAudioTime === ctx.currentTime) {
+                    stallChecks++;
+                    // if currentTime hasn't moved for ~3 checks, force a suspend/resume cycle
+                    if (stallChecks >= 3) {
+                        stallChecks = 0;
+                        ctx.suspend().then(function () { ctx.resume(); });
+                    }
+                } else {
+                    stallChecks = 0;
                 }
-            } else {
-                _audioStallChecks = 0;
+                lastAudioTime = ctx.currentTime;
             }
-            _lastAudioTime = audioCtx.currentTime;
         }
-    }
 
-    // listen for iOS statechange to detect 'interrupted' transitions
-    if (audioCtx.addEventListener) {
-        audioCtx.addEventListener('statechange', function () {
-            if (audioCtx.state === 'interrupted') {
-                // iOS interrupted audio; attempt immediate resume
-                audioCtx.resume();
+        // listen for iOS statechange to detect 'interrupted' transitions
+        if (ctx.addEventListener) {
+            ctx.addEventListener('statechange', function () {
+                if (ctx.state === 'interrupted') {
+                    // iOS interrupted audio; attempt immediate resume
+                    ctx.resume();
+                }
+            });
+        }
+
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState === 'visible') {
+                resume();
+                // delayed retry for iOS contexts that don't resume immediately
+                setTimeout(resume, 100);
+                setTimeout(resume, 500);
             }
         });
-    }
+        window.addEventListener('focus', resume);
+        // iOS sometimes fires pageshow instead of focus on restore
+        window.addEventListener('pageshow', resume);
 
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') {
-            _resumeAudioContext();
-            // delayed retry for iOS contexts that don't resume immediately
-            setTimeout(_resumeAudioContext, 100);
-            setTimeout(_resumeAudioContext, 500);
+        /**
+         * Fetches, decodes, and stores all audio buffers
+         * @param {Object} audioMap - key-value map of sound names to audio file URLs
+         * @returns {Promise} resolves when all sounds are decoded and ready to play
+         */
+        function load(audioMap) {
+
+            var soundKeys = Object.keys(audioMap);
+            var total = soundKeys.length;
+            if (!total) return Promise.resolve();
+
+            return new Promise(function (resolve, reject) {
+                var loaded = 0;
+                var failed = false;
+
+                function handleSuccess(key, buffer) {
+                    sounds[key] = buffer;
+                    loaded++;
+                    if (loaded === total && !failed) resolve();
+                }
+
+                function handleError(key, url) {
+                    if (failed) return;
+                    failed = true;
+                    reject(new Error('Failed to load sound "' + key + '" from ' + url));
+                }
+
+                function decodeAndStore(key, url, buf) {
+                    ctx.decodeAudioData(buf, function (decoded) {
+                        handleSuccess(key, decoded);
+                    }, function () {
+                        handleError(key, url);
+                    });
+                }
+
+                for (var i = 0; i < total; i++) {
+                    // iife captures key and url per-iteration (var has no block scope)
+                    (function (key, url) {
+                        fetch(url).then(function (res) {
+                            return res.arrayBuffer();
+                        }).then(function (buffer) {
+                            decodeAndStore(key, url, buffer);
+                        }).catch(function () {
+                            handleError(key, url);
+                        });
+                    })(soundKeys[i], audioMap[soundKeys[i]]);
+                }
+            });
         }
-    });
-    window.addEventListener('focus', _resumeAudioContext);
-    // iOS sometimes fires pageshow instead of focus on restore
-    window.addEventListener('pageshow', _resumeAudioContext);
+
+        /**
+         * Plays a sound from the loaded buffer
+         * @param {string} name - sound name from config.sounds
+         * @param {Object} [options] - volume, loop, restart, once, speed
+         * @returns {void}
+         */
+        function play(name, options) {
+
+            var buffer = sounds[name];
+            if (!buffer) return;
+
+            // queue sounds until iOS audio is genuinely unlocked; flush on first qualifying gesture
+            if (!unlocked && ctx.state !== 'running') {
+                if (pendingSounds.length >= 8) pendingSounds.shift();
+                pendingSounds.push({ name: name, options: options });
+                return;
+            }
+
+            options = options || {};
+
+            // looped sounds and explicit restarts stop the previous instance; sfx allow up to 3 at once
+            if (options.restart === true || options.loop === true) {
+                stop(name);
+            } else if (activeSounds[name] && activeSounds[name].length >= 3) {
+                // evict the oldest instance to stay within the cap
+                try { activeSounds[name][0].stop(0); } catch (e) { /* already stopped */ }
+                activeSounds[name].shift();
+            }
+
+            var source = ctx.createBufferSource();
+            source.buffer = buffer;
+
+            var gainNode = ctx.createGain();
+            gainNode.gain.value = (options.volume !== null && options.volume !== undefined) ? options.volume : 1;
+
+            source.loop = !!options.loop;
+            source.playbackRate.value = (options.speed !== null && options.speed !== undefined) ? options.speed : 1;
+
+            source.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            var doStart = function () {
+                try { source.start(0); } catch (e) { return; }
+                if (!options.once) {
+                    if (!activeSounds[name]) activeSounds[name] = [];
+                    activeSounds[name].push(source);
+                    source.onended = function () {
+                        var arr = activeSounds[name];
+                        if (arr) {
+                            var idx = arr.indexOf(source);
+                            if (idx !== -1) arr.splice(idx, 1);
+                        }
+                    };
+                }
+            };
+
+            // on iOS, resume() is async; await it before start() to avoid silent failure on a suspended context
+            if (isBlocked()) {
+                ctx.resume().then(doStart);
+                return;
+            }
+
+            doStart();
+        }
+
+        /**
+         * Stops all currently playing instances of a named sound
+         * @param {string} name - sound name as defined in config.sounds
+         * @returns {void}
+         */
+        function stop(name) {
+            var arr = activeSounds[name];
+            if (!arr || !arr.length) return;
+            for (var i = 0; i < arr.length; i++) {
+                try { arr[i].stop(0); } catch (e) { /* already stopped */ }
+            }
+            activeSounds[name] = [];
+        }
+
+        /**
+         * Stops all currently playing sounds
+         * @returns {void}
+         */
+        function stopAll() {
+            for (var name in activeSounds) {
+                stop(name);
+            }
+        }
+
+        return {
+            load: load,
+            play: play,
+            stop: stop,
+            stopAll: stopAll,
+            checkStall: checkStall
+        };
+
+    })();
 
     var _isMobile = /Mobi|Android|iPhone/i.test(navigator.userAgent);
 
@@ -416,7 +568,7 @@
 
         Promise.all([
             loadImages(config.images || {}),
-            loadSounds(config.sounds || {})
+            audio.load(config.sounds || {})
         ])
         .then(function() {
             _initilised = true;
@@ -591,56 +743,6 @@
                     img.onerror = handleError.bind(img, key, url);
                     img.src = url;
                 }
-            }
-        });
-    }
-
-    /**
-     * Fetches, decodes, and stores all audio buffers for later use with playSound
-     * @param {Object} audioMap - key-value map of sound names to audio file URLs
-     * @returns {Promise} resolves when all sounds are decoded and ready to play
-     */
-    function loadSounds(audioMap) {
-
-        var soundKeys = Object.keys(audioMap);
-        var total = soundKeys.length;
-        if (!total) return Promise.resolve();
-
-        return new Promise(function (resolve, reject) {
-            var loaded = 0;
-            var failed = false;
-
-            function handleSuccess(key, buffer) {
-                sounds[key] = buffer;
-                loaded++;
-                if (loaded === total && !failed) resolve();
-            }
-
-            function handleError(key, url) {
-                if (failed) return;
-                failed = true;
-                reject(new Error('Failed to load sound "' + key + '" from ' + url));
-            }
-
-            function decodeAndStore(key, url, buf) {
-                audioCtx.decodeAudioData(buf, function (decoded) {
-                    handleSuccess(key, decoded);
-                }, function () {
-                    handleError(key, url);
-                });
-            }
-
-            for (var i = 0; i < total; i++) {
-                // iife captures key and url per-iteration (var has no block scope)
-                (function (key, url) {
-                    fetch(url).then(function (res) {
-                        return res.arrayBuffer();
-                    }).then(function (buffer) {
-                        decodeAndStore(key, url, buffer);
-                    }).catch(function () {
-                        handleError(key, url);
-                    });
-                })(soundKeys[i], audioMap[soundKeys[i]]);
             }
         });
     }
@@ -1953,7 +2055,7 @@
             _loopFpsCounter = 0;
             _loopFpsTimer = timestamp;
             // periodic check for iOS audio stall (context reports 'running' but is frozen)
-            _checkAudioStall();
+            audio.checkStall();
         }
 
         // debug overlay
@@ -2012,103 +2114,14 @@
         _loopId = requestAnimationFrame(loop);
     }
 
-    /**
-     * Plays a sound from the loaded buffer
-     * @param {string} name - name of the sound buffer
-     * @param {Object} [options] - optional settings
-     * @param {number} [options.volume] - volume from 0 to 1
-     * @param {boolean} [options.loop] - loops the sound; stops the previous instance of the same sound
-     * @param {boolean} [options.restart] - stop any existing instance before playing
-     * @param {boolean} [options.once] - if true, don't track for stopping
-     * @param {number} [options.speed] - playback speed multiplier (1 = normal)
-     * @returns {void}
-     */
     function playSound(name, options) {
-
         if (!_initilised) throw new Error('punter.setup must be called first');
-
-        var buffer = sounds[name];
-        if (!buffer) return;
-
-        // queue sounds until iOS audio is genuinely unlocked; flush on first qualifying gesture
-        if (!_audioUnlocked && audioCtx.state !== 'running') {
-            if (_pendingSounds.length >= 8) _pendingSounds.shift();
-            _pendingSounds.push({ name: name, options: options });
-            return;
-        }
-
-        options = options || {};
-
-        // looped sounds and explicit restarts stop the previous instance; sfx allow up to 3 at once
-        if (options.restart === true || options.loop === true) {
-            stopSound(name);
-        } else if (_activeSounds[name] && _activeSounds[name].length >= 3) {
-            // evict the oldest instance to stay within the cap
-            try { _activeSounds[name][0].stop(0); } catch (e) { /* already stopped */ }
-            _activeSounds[name].shift();
-        }
-
-        var source = audioCtx.createBufferSource();
-        source.buffer = buffer;
-
-        var gainNode = audioCtx.createGain();
-        gainNode.gain.value = (options.volume !== null && options.volume !== undefined) ? options.volume : 1;
-
-        source.loop = !!options.loop;
-        source.playbackRate.value = (options.speed !== null && options.speed !== undefined) ? options.speed : 1;
-
-        source.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        var doStart = function () {
-            try { source.start(0); } catch (e) { return; }
-            if (!options.once) {
-                if (!_activeSounds[name]) _activeSounds[name] = [];
-                _activeSounds[name].push(source);
-                source.onended = function () {
-                    var arr = _activeSounds[name];
-                    if (arr) {
-                        var idx = arr.indexOf(source);
-                        if (idx !== -1) arr.splice(idx, 1);
-                    }
-                };
-            }
-        };
-
-        // on iOS, resume() is async; await it before start() to avoid silent failure on a suspended context
-        if (_isContextBlocked()) {
-            audioCtx.resume().then(doStart);
-            return;
-        }
-
-        doStart();
+        audio.play(name, options);
     }
 
-    /**
-     * Stops all currently playing sounds
-     * @returns {void}
-     */
-    function stopAllSounds() {
-        for (var name in _activeSounds) {
-            stopSound(name);
-        }
-    }
-
-    /**
-     * Stops all currently playing instances of a named sound
-     * @param {string} name - name of the sound to stop, as defined in config.sounds
-     * @returns {void}
-     */
     function stopSound(name) {
-
         if (!_initilised) throw new Error('punter.setup must be called first');
-
-        var arr = _activeSounds[name];
-        if (!arr || !arr.length) return;
-        for (var i = 0; i < arr.length; i++) {
-            try { arr[i].stop(0); } catch (e) { /* already stopped */ }
-        }
-        _activeSounds[name] = [];
+        audio.stop(name);
     }
 
     /**
@@ -2427,7 +2440,7 @@
 
             // ensure we clear all input from last scene
             engine.clearInput();
-            stopAllSounds();
+            audio.stopAll();
 
             // switch scenes
             _currentScene = name;
