@@ -293,6 +293,7 @@
     var _height = 0;
     var _boundsCtx;
     var _initilised = false;
+    var _canvasVisible = false;
     var _scenes = {};
     var _currentScene = null;
     var _pendingGo = null;  // scene name queued before init completes
@@ -320,6 +321,13 @@
     var htmlEl = document.documentElement;
 
     htmlEl.setAttribute('data-punter-loading', 'true');
+
+    // hide all canvases the moment punter.js loads — before setup() and before the canvas element exists
+    (function () {
+        var s = document.createElement('style');
+        s.textContent = 'html[data-punter-loading] canvas{visibility:hidden!important}';
+        (document.head || document.documentElement).appendChild(s);
+    })();
 
     var keys = {};
     var pointer = { x: 0, y: 0, clicked: false, down: false, swiped: false, swipedUp: false, swipedDown: false, swipedLeft: false, swipedRight: false, swipeDistance: 0 };
@@ -558,6 +566,7 @@
         _canvas.style.contain = 'strict';
         _canvas.style.willChange = 'transform';
         _canvas.style.transform = 'translateZ(0)';
+        _canvas.style.visibility = 'hidden';
 
         setTimeout(resize, 0); // defer to let the browser apply canvas styles before measuring
         setupResponsiveResize();
@@ -2063,6 +2072,11 @@
             drawDebugInfo(_canvasCtx, _frame, _loopFps, engine.width, engine.height);
         }
 
+        if (!_canvasVisible) {
+            _canvasVisible = true;
+            _canvas.style.visibility = '';
+        }
+
         _loopId = requestAnimationFrame(loop);
     }
 
@@ -2334,8 +2348,11 @@
             bufferH = Math.round(_height * capScale);
         }
 
-        _canvas.width = bufferW;
-        _canvas.height = bufferH;
+        // only reassign when dimensions actually change — assigning always clears the canvas
+        if (_canvas.width !== bufferW || _canvas.height !== bufferH) {
+            _canvas.width = bufferW;
+            _canvas.height = bufferH;
+        }
 
         scaleCanvasContext();
 
