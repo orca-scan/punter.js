@@ -567,6 +567,8 @@
         _canvas.style.willChange = 'transform';
         _canvas.style.transform = 'translateZ(0)';
         _canvas.style.visibility = 'hidden';
+        _canvas.style.userSelect = 'none';
+        _canvas.style.webkitUserSelect = 'none';
 
         setTimeout(resize, 0); // defer to let the browser apply canvas styles before measuring
         setupResponsiveResize();
