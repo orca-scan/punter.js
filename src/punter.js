@@ -19,6 +19,7 @@
     var sounds = {};
     var _activeSounds = {};
     var _audioUnlocked = false;
+    var _pendingSounds = [];
     var _lastAudioTime = -1;
     var _audioStallChecks = 0;
     var audioCtx = _createAudioContext();
@@ -37,6 +38,8 @@
     function _removeUnlockListeners() {
         document.removeEventListener('touchstart', _unlockAudio, true);
         document.removeEventListener('touchend', _unlockAudio, true);
+        document.removeEventListener('pointerup', _unlockAudio, true);
+        document.removeEventListener('mouseup', _unlockAudio, true);
         document.removeEventListener('click', _unlockAudio, true);
         document.removeEventListener('pointerdown', _unlockAudio, true);
         document.removeEventListener('mousedown', _unlockAudio, true);
@@ -47,6 +50,7 @@
         if (audioCtx.state === 'running') {
             _audioUnlocked = true;
             _removeUnlockListeners();
+            _flushPendingSounds();
             return;
         }
         // resume() is async on iOS; play the silent buffer only after the context is running
@@ -59,13 +63,23 @@
                 src.onended = function () {
                     _audioUnlocked = true;
                     _removeUnlockListeners();
+                    _flushPendingSounds();
                 };
                 src.start(0);
             } catch (e) { /* non-fatal if context is not yet usable */ }
         });
     }
+    function _flushPendingSounds() {
+        var pending = _pendingSounds;
+        _pendingSounds = [];
+        for (var i = 0; i < pending.length; i++) {
+            playSound(pending[i].name, pending[i].options);
+        }
+    }
     document.addEventListener('touchstart', _unlockAudio, true);
     document.addEventListener('touchend', _unlockAudio, true);
+    document.addEventListener('pointerup', _unlockAudio, true);
+    document.addEventListener('mouseup', _unlockAudio, true);
     document.addEventListener('click', _unlockAudio, true);
     document.addEventListener('pointerdown', _unlockAudio, true);
     document.addEventListener('mousedown', _unlockAudio, true);
@@ -2015,6 +2029,13 @@
 
         var buffer = sounds[name];
         if (!buffer) return;
+
+        // queue sounds until iOS audio is genuinely unlocked; flush on first qualifying gesture
+        if (!_audioUnlocked && audioCtx.state !== 'running') {
+            if (_pendingSounds.length >= 8) _pendingSounds.shift();
+            _pendingSounds.push({ name: name, options: options });
+            return;
+        }
 
         options = options || {};
 
