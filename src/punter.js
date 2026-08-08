@@ -49,19 +49,20 @@
             _removeUnlockListeners();
             return;
         }
-        audioCtx.resume();
-        // play a silent buffer and wait for onended to confirm audio is truly unlocked
-        try {
-            var buf = audioCtx.createBuffer(1, 1, 22050);
-            var src = audioCtx.createBufferSource();
-            src.buffer = buf;
-            src.connect(audioCtx.destination);
-            src.onended = function () {
-                _audioUnlocked = true;
-                _removeUnlockListeners();
-            };
-            src.start(0);
-        } catch (e) { /* non-fatal if context is not yet usable */ }
+        // resume() is async on iOS; play the silent buffer only after the context is running
+        audioCtx.resume().then(function () {
+            try {
+                var buf = audioCtx.createBuffer(1, 1, 22050);
+                var src = audioCtx.createBufferSource();
+                src.buffer = buf;
+                src.connect(audioCtx.destination);
+                src.onended = function () {
+                    _audioUnlocked = true;
+                    _removeUnlockListeners();
+                };
+                src.start(0);
+            } catch (e) { /* non-fatal if context is not yet usable */ }
+        });
     }
     document.addEventListener('touchstart', _unlockAudio, true);
     document.addEventListener('touchend', _unlockAudio, true);
@@ -2038,26 +2039,28 @@
         source.connect(gainNode);
         gainNode.connect(audioCtx.destination);
 
-        // resume from suspended or interrupted states (iOS 'interrupted' is a distinct state)
-        if (_isContextBlocked()) audioCtx.resume();
+        var doStart = function () {
+            try { source.start(0); } catch (e) { return; }
+            if (!options.once) {
+                if (!_activeSounds[name]) _activeSounds[name] = [];
+                _activeSounds[name].push(source);
+                source.onended = function () {
+                    var arr = _activeSounds[name];
+                    if (arr) {
+                        var idx = arr.indexOf(source);
+                        if (idx !== -1) arr.splice(idx, 1);
+                    }
+                };
+            }
+        };
 
-        try {
-            source.start(0);
-        } catch (e) {
-            return; // audio errors are non-fatal; browser may restrict AudioContext
+        // on iOS, resume() is async; await it before start() to avoid silent failure on a suspended context
+        if (_isContextBlocked()) {
+            audioCtx.resume().then(doStart);
+            return;
         }
 
-        if (!options.once) {
-            if (!_activeSounds[name]) _activeSounds[name] = [];
-            _activeSounds[name].push(source);
-            source.onended = function () {
-                var arr = _activeSounds[name];
-                if (arr) {
-                    var idx = arr.indexOf(source);
-                    if (idx !== -1) arr.splice(idx, 1);
-                }
-            };
-        }
+        doStart();
     }
 
     /**
